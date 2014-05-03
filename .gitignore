@@ -24,3 +24,7 @@
 .gdb_breakpoints
 makefile.include
 exports
+test.full_log
+
+# vim
+.*.swp

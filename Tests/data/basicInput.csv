@@ -1,0 +1,5 @@
+"20140703 10:11:02.194930","ENTER","main(int argc,char** argv)"
+"20140703 10:11:02.194955","ENTER","Test()"
+"20140703 10:11:02.394930","LEAVE","Test()"
+"20140703 10:11:02.394930","LEAVE","main(int argc,char** argv)"
+"20140703 10:11:02.394930","ERROR","main(int argc,char** argv)"
