@@ -19,3 +19,8 @@
 *.exe
 *.out
 *.app
+
+# DEV_TOOLS
+.gdb_breakpoints
+makefile.include
+exports
