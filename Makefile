@@ -1,4 +1,4 @@
-MAKE_DIRS= DEV_TOOLS libProfData Tests
+MAKE_DIRS= DEV_TOOLS libProfData libExec Tests 
 
 # makefile tools library  for bulding multi-directory projects
 #
