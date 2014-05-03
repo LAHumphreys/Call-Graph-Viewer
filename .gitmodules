@@ -1,0 +1,3 @@
+[submodule "DEV_TOOLS"]
+	path = DEV_TOOLS
+	url = git@github.com:Grauniad/dev_tools.git
