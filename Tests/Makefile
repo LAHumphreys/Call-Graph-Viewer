@@ -3,7 +3,7 @@ LINKED_LIBS= libProfData\
 			 libIOInterface \
 			 libTest
 
-BUILD_TIME_TESTS=load
+BUILD_TIME_TESTS=load path
 CPP_TAGS_FILE=profiler-tests-c++.tags
 MODE=CPP
 
