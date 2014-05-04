@@ -42,7 +42,12 @@ public:
     NodePtr Parent() const { return parent; }
     NodePtr THIS() { return this;}
 
-    // Element Modification
+    /*
+     * Navigate to the leaf node at the end of the path, and then add a function
+     * call to <name> for duration <usecs>
+     *
+     * Return a pointer to the updated (or created) node.
+     */
     NodePtr AddCall(Path::PathNode node,const std::string& name, long usecs);
 
     std::string PrintResults(unsigned indent=0);

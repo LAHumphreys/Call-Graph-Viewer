@@ -17,7 +17,7 @@ Node::Node()
 }
 
 Node::Node(const std::string& _name, Node* _parent, long _usecs)
-    : callCount(1), 
+    : callCount(0), 
       usecs(_usecs), 
       name(_name), 
       parent(_parent)
@@ -30,48 +30,69 @@ Node::~Node() {
     }
 }
 
+// Update the node <name> with a call for <usecs>
 NodePtr Node::AddCall(const std::string& name, 
                       long usecs)
 {
-    auto it = children.find(name);
+    NodePtr child = GetChild(name);
 
-    Node* node = nullptr; 
-
-    if ( it != children.end() ) {
-        node = it->second;
-        ++(it->second->callCount);
-        it->second->usecs += usecs;
+    if ( !child.IsNull() ) {
+        // Child exists - update it.
+        ++child->callCount;
+        child->usecs += usecs;
     } else {
-        node = new Node(name,this,usecs);
+        // No such child - create it
+        Node* node = new Node(name,this,usecs);
+        node->callCount = 1;
         children.emplace(std::string(name),
                          node);
+
+        // The node to be returned to the caller
+        child = node;
     }
-    return node;
+    return child;
 }
 
 NodePtr Node::AddCall(Path::PathNode node,const string& name, long usecs) {
     NodePtr child = nullptr;
     if ( node.IsEnd() ) {
+
+        // Reached the end of the path - add the call details
         child = AddCall(name,usecs);
     } else {
+
+        // We need to go down the tree - check if the node alredy exists...
         child = GetChild(node.Name());
         if ( !child.IsNull() ) {
+
+            // it does! - recurse into it
             child = child->AddCall(node.Next(),name,usecs);
         } else {
-            SLOG_FROM(LOG_ERROR,"Node::AddCall",
-                "Failed to add function call because node " << this->name
-                    << " does not have a node called " << node.Name())
+
+            // No such node - create it 
+            Node* newNode = new Node(node.Name(), this, 0);
+            children.emplace(node.Name(),
+                             newNode);
+
+            // Now recurse into the new node ...
+            child = newNode->AddCall(node.Next(),name,usecs);
         }
     }
     return child;
 }
 
+// Find the node with name <name>
 NodePtr Node::GetChild(const string& name ) {
-    auto it = children.find(name);
+
+    // Default to the null node
     NodePtr child = nullptr;
+
+    // If it exists, update the pointer
+    auto it = children.find(name);
     if ( it != children.end() ) {
         child = it->second;
     }
+
     return child;
 }
 

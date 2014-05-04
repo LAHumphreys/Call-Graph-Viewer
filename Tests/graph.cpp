@@ -86,12 +86,6 @@ int AddNodes(testLogger& log) {
      *      --F3 (2x103)
      */
 
-    // Add main to root
-    NodePtr main = rootNode.AddCall(rootPath.Root(),"main",100);
-
-    // Add F1 to main
-    NodePtr f1 = rootNode.AddCall(mainPath.Root(),"f1",101);
-
     // Add F2 and F3 to F1
     NodePtr f2 = rootNode.AddCall(f1path.Root(),"f2",102);
     rootNode.AddCall(f1path.Root(),"f2",102);
@@ -103,6 +97,12 @@ int AddNodes(testLogger& log) {
 
     // Add F1 to main (again)
     rootNode.AddCall(mainPath.Root(),"f1",101);
+
+    // Add F1 to main
+    NodePtr f1 = rootNode.AddCall(mainPath.Root(),"f1",101);
+
+    // Add main to root
+    NodePtr main = rootNode.AddCall(rootPath.Root(),"main",100);
 
 
     int ok = CheckNode(log,main, false,  // isRoot
