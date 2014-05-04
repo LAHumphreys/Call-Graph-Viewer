@@ -12,7 +12,6 @@ Node::Node()
     : callCount(0), 
       usecs(0), 
       name("ROOT"), 
-      myPath("ROOT"),
       parent(nullptr)
 {
 }
@@ -21,7 +20,6 @@ Node::Node(const std::string& _name, Node* _parent, long _usecs)
     : callCount(0), 
       usecs(_usecs), 
       name(_name), 
-      myPath(_parent->myPath + "/" + _name),
       parent(_parent)
 {
 }
@@ -98,15 +96,23 @@ NodePtr Node::GetChild(const string& name ) {
     return child;
 }
 
-std::string Node::PrintResults(unsigned int indent) {
+std::string Node::PrintResults(unsigned int indent,
+                               unsigned int depth) 
+{
     std::stringstream results("");
-    PrintResults(indent,results);
+    PrintResults(indent,depth,"",results);
     return results.str();
 }
 
-void Node::PrintResults(unsigned int indent, stringstream& s) {
+void Node::PrintResults(unsigned int indent, 
+                        unsigned int depth, 
+                        const string& path,
+                        stringstream& s) {
+    string myPath = ( path == "" ? 
+                         name : 
+                         path + "/" + name);
     // First add our info line
-    s << PrintInfo(indent);
+    s << PrintInfo(indent,myPath);
 
     // Now add child nodes...
     indent+=INDENT_TAB_SIZE;
@@ -114,14 +120,18 @@ void Node::PrintResults(unsigned int indent, stringstream& s) {
     vector<PAIR> sortedNodes;
     SortByTime(sortedNodes);
 
-    for (auto& pair: sortedNodes ) {
-        pair.second->PrintResults(indent,s);
+    if ( depth != 0 ) {
+        --depth;
+        for (auto& pair: sortedNodes ) {
+            pair.second->PrintResults(indent,depth,myPath,s);
+        }
     }
 }
 
-std::string Node::PrintInfo(unsigned int indent) {
+std::string Node::PrintInfo(unsigned int indent,
+                            const std::string& path) {
     stringstream s("");
-    s << setw(indent) << "" << name << " (" << myPath << ")" << endl;
+    s << setw(indent) << "" << name << " (" << path << ")" << endl;
     indent+=INDENT_TAB_SIZE;
     s << setw(indent) << "" << "Calls: " << callCount;
     s << ", Time: " << usecs << ", Av. Time: " << (callCount == 0 ? 0: usecs/callCount) << endl;
@@ -138,4 +148,26 @@ void Node::SortByTime(vector<PAIR>& sortedNodes) {
                           return lhs.second->usecs>rhs.second->usecs;
                       });
 
+}
+
+NodePtr Node::GetNode(const Path& path) {
+    return GetNode(path.Root());
+}
+
+NodePtr Node::GetNode(Path::PathNode&& pathNode) {
+    NodePtr node = nullptr;
+
+    if ( pathNode.IsEnd() ) {
+        node = this;
+    } else {
+        node = GetChild(pathNode.Name());
+        if ( !node.IsNull() ) {
+            node = node->GetNode(pathNode.Next());
+        } else {
+            SLOG_FROM(LOG_WARNING, "Node::GetNode",
+               "No such node '" << pathNode.Name() << "' in node '" 
+                    << name << "'" << endl;)
+        }
+    } 
+    return node;
 }

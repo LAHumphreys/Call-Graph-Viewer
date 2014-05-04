@@ -4,12 +4,16 @@
 int RootNode(testLogger& log);
 int AddNodes(testLogger& log);
 int CheckResults(testLogger& log);
+int CheckShortResults(testLogger& log);
+int PathAccess(testLogger& log);
 
 int main(int argc, const char *argv[])
 {
     Test("Checking root node...",RootNode).RunTest();
     Test("Adding some nodes...",AddNodes).RunTest();
+    Test("Checking path retrieval...",PathAccess).RunTest();
     Test("Printing Results...",CheckResults).RunTest();
+    Test("Printing Short Results...",CheckShortResults).RunTest();
     return 0;
 }
 
@@ -222,4 +226,108 @@ int CheckResults(testLogger& log) {
     }
 
     return 0;
+}
+
+int CheckShortResults(testLogger& log) {
+    Node rootNode;
+    Path rootPath("");
+
+    Path mainPath("main");
+    Path f1path("main/f1");
+
+    /*
+     * ROOT
+     * |
+     * main---F1 (2x101)---F2 (2x102)--NULL
+     *      |            |
+     *      |            --F3 (1x103)--NULL
+     *      --F3 (2x103)
+     */
+
+    // Add main to root
+    NodePtr mainNode = rootNode.AddCall(rootPath.Root(),"main",100);
+
+    // Add F1 to main 
+    rootNode.AddCall(mainPath.Root(),"f1",101); 
+
+    // Add F2 and F3 to F1
+    rootNode.AddCall(f1path.Root(),"f2",102);
+    rootNode.AddCall(f1path.Root(),"f2",102);
+    rootNode.AddCall(f1path.Root(),"f3",103);
+
+    // Add F3 to main 
+    rootNode.AddCall(mainPath.Root(),"f3",103);
+    rootNode.AddCall(mainPath.Root(),"f3",103);
+
+    // Add F1 to main (again)
+    rootNode.AddCall(mainPath.Root(),"f1",101);
+
+    string actual = mainNode->PrintResults(0,1);
+    string expected = 
+       "main (main)\n"
+       "    Calls: 1, Time: 100, Av. Time: 100\n"
+       "    f3 (main/f3)\n"
+       "        Calls: 2, Time: 206, Av. Time: 103\n"
+       "    f1 (main/f1)\n"
+       "        Calls: 2, Time: 202, Av. Time: 101\n";
+
+    if ( expected != actual ) {
+       log << expected <<endl;
+       log << "------------------------" << endl;
+       log << actual <<endl;
+       return 1;
+    }
+
+    return 0;
+}
+
+int PathAccess(testLogger& log) {
+    Node rootNode;
+    Path rootPath("");
+
+    Path mainPath("main");
+    Path f1path("main/f1");
+
+    /*
+     * ROOT
+     * |
+     * main---F1 (2x101)---F2 (2x102)--NULL
+     *      |            |
+     *      |            --F3 (1x103)--NULL
+     *      --F3 (2x103)
+     */
+
+    // Add main to root
+    rootNode.AddCall(rootPath.Root(),"main",100);
+
+    // Add F1 to main 
+    rootNode.AddCall(mainPath.Root(),"f1",101); 
+
+    // Add F2 and F3 to F1
+    rootNode.AddCall(f1path.Root(),"f2",102);
+    rootNode.AddCall(f1path.Root(),"f2",102);
+    rootNode.AddCall(f1path.Root(),"f3",103);
+
+    // Add F3 to main 
+    rootNode.AddCall(mainPath.Root(),"f3",103);
+    rootNode.AddCall(mainPath.Root(),"f3",103);
+
+    // Add F1 to main (again)
+    rootNode.AddCall(mainPath.Root(),"f1",101);
+
+    Path fakePath("main/f1/f2/notHere");
+
+    NodePtr f1 = rootNode.GetNode(f1path);
+
+    if ( f1.IsNull() ) {
+        log << "f1 is a null node!" << endl;
+        return 1;
+    }
+
+    int ok = CheckNode(log,f1, false,  // isRoot
+                               "f1", // name
+                               2,      // count
+                               202,    // time
+                               2);     // children
+    return ok;
 }

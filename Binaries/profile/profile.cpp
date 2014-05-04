@@ -19,5 +19,6 @@ int main(int argc, const char *argv[])
     profile.ProcessFile(argv[1]);
 
     cout << profile.PrintResults(tableSize) << endl;
+    cout << profile.PrintGraph() << endl;
     return 0;
 }

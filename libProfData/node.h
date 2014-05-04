@@ -50,16 +50,35 @@ public:
      */
     NodePtr AddCall(Path::PathNode node,const std::string& name, long usecs);
 
-    std::string PrintResults(unsigned indent=0);
+    /*
+     * Navigate to the leaf node at the end of the path, and return it
+     *
+     * If there is no such node, the nullptr is returned
+     */
+    NodePtr GetNode(const Path& path);
+
+    std::string PrintResults(unsigned int indent=0, unsigned int depth=10);
 
 private:
+    /*
+     * Advance to the end of the path...
+     */
+    NodePtr GetNode(Path::PathNode&& pathNode);
+
     using PAIR = std::pair<std::string,Node*>;
     // Populata sorted Node with the element in desceding order of time
     void SortByTime(std::vector<PAIR>& sortedNode);
 
-    void PrintResults(unsigned int indent, std::stringstream& s);
+    void PrintResults(unsigned int indent, 
+                      unsigned int depth, 
+                      const std::string& path,
+                      std::stringstream& s);
 
-    std::string PrintInfo(unsigned int indent);
+    /*
+     * Print information about this node...
+     */
+    std::string PrintInfo(unsigned int indent, 
+                          const std::string& path);
 
     // Element Modification
     NodePtr AddCall(const std::string& name, long usecs);
@@ -73,7 +92,6 @@ private:
     long                                 callCount;
     long                                 usecs;
     std::string                          name;
-    std::string                          myPath;
     Node*                                parent;
     std::unordered_map<std::string,
                        Node*>            children;

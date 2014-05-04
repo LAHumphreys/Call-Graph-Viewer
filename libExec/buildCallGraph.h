@@ -16,9 +16,11 @@ public:
         return counter.PrintResults(tableSize);
     }
 
-    std::string PrintGraph() {
-        return callGraph.PrintResults();
+    std::string PrintGraph(unsigned int depth=500) {
+        return callGraph.PrintResults(0,depth);
     }
+
+    NodePtr RootNode () { return callGraph.THIS();}
 private:
     CallCount counter;
     Node      callGraph;
