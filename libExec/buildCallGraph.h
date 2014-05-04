@@ -11,8 +11,8 @@ class CallProfile {
 public:
     void ProcessFile(const std::string& datafile);
 
-    std::string PrintResults() {
-        return counter.PrintResults();
+    std::string PrintResults(unsigned tableSize=0) {
+        return counter.PrintResults(tableSize);
     }
 private:
     CallCount counter;

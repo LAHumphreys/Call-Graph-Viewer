@@ -28,3 +28,6 @@ test.full_log
 
 # vim
 .*.swp
+
+# PROFILER
+profile
