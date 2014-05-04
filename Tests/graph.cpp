@@ -1,11 +1,13 @@
 #include "tester.h"
 #include "node.h"
+#include "nodeSearchCache.h"
 
 int RootNode(testLogger& log);
 int AddNodes(testLogger& log);
 int CheckResults(testLogger& log);
 int CheckShortResults(testLogger& log);
 int PathAccess(testLogger& log);
+int Search(testLogger& log);
 
 int main(int argc, const char *argv[])
 {
@@ -14,6 +16,7 @@ int main(int argc, const char *argv[])
     Test("Checking path retrieval...",PathAccess).RunTest();
     Test("Printing Results...",CheckResults).RunTest();
     Test("Printing Short Results...",CheckShortResults).RunTest();
+    Test("Seaching the graph",Search).RunTest();
     return 0;
 }
 
@@ -330,4 +333,149 @@ int PathAccess(testLogger& log) {
                                202,    // time
                                2);     // children
     return ok;
+}
+
+int Search(testLogger& log) {
+    Node rootNode;
+    Path rootPath("");
+
+    Path mainPath("main");
+    Path f1path("main/f1");
+
+    /*
+     * ROOT
+     * |
+     * main---F1 (2x101)---F2 (2x102)--NULL
+     *      |            |
+     *      |            --F3 (1x103)--NULL
+     *      --F3 (2x103)
+     */
+
+    // Add main to root
+    rootNode.AddCall(rootPath.Root(),"main",100);
+
+    // Add F1 to main 
+    rootNode.AddCall(mainPath.Root(),"f1",101); 
+
+    // Add F2 and F3 to F1
+    rootNode.AddCall(f1path.Root(),"f2",102);
+    rootNode.AddCall(f1path.Root(),"f2",102);
+    rootNode.AddCall(f1path.Root(),"f3",103);
+
+    // Add F3 to main 
+    rootNode.AddCall(mainPath.Root(),"f3",103);
+    rootNode.AddCall(mainPath.Root(),"f3",103);
+
+    // Add F1 to main (again)
+    rootNode.AddCall(mainPath.Root(),"f1",101);
+
+    SearchCache cache;
+    NodePtr rootPtr = rootNode.THIS();
+
+    cache.AddTree(rootPtr);
+
+    SearchResult result = cache.Search("XXX");
+
+    if ( result.Ok() ) {
+        log << "Search returned ok from a stupid search! " << endl;
+        return 1;
+    }
+
+    if ( result.Remaining() != 0 ) {
+        log << "Search returned non-zero from a stupid search! " << endl;
+        log << result.Remaining();
+        return 1;
+    }
+
+    if ( !result.Node().IsNull() ) {
+        log << "Result is not null from a stupid search!" << endl;
+        return 1;
+    }
+
+    SearchResult f3_result = cache.Search("f3");
+
+    if ( f3_result.Remaining() != 1 ) {
+        log << "Expected only one more result!" << endl;
+        log << f3_result.Remaining();
+        return 1;
+    }
+
+    if ( f3_result.Node()->Parent()->Name() != "main" ) {
+        log << "I thought the frist result would be main :(" << endl;
+        log << f3_result.Node()->Parent()->Name() << endl;
+        return 1;
+    }
+
+    if ( f3_result.Next().Node()->Parent()->Name() != "f1" ) {
+        log << "I thought the second result would be f1 :(" << endl;
+        log << f3_result.Node()->Parent()->Name() << endl;
+        return 1;
+    }
+
+    if ( f3_result.Next().Previous().Node()->Parent()->Name() != "main" ) {
+        log << "It doesn't semm to live back!" << endl;
+        log << f3_result.Next().Previous().Node()->Parent()->Name() << endl;
+        return 1;
+    }
+
+    ++f3_result;
+
+    if ( f3_result.Node()->Parent()->Name() != "f1" ) {
+        log << "I thought the second result would be f1 :(" << endl;
+        log << f3_result.Node()->Parent()->Name() << endl;
+        return 1;
+    }
+
+    if ( f3_result.Remaining() != 0 ) {
+        log << "Search returned non-zero when at the end of the search!" << endl;
+        log << f3_result.Remaining();
+        return 1;
+    }
+
+    if ( !f3_result.Ok() ) {
+        log << "Search not ok on the last element!" << endl;
+        return 1;
+    }
+
+    --f3_result;
+
+    if ( f3_result.Remaining() != 1 ) {
+        log << "--Expected only one more result!" << endl;
+        log << f3_result.Remaining();
+        return 1;
+    }
+
+    if ( f3_result.Node()->Parent()->Name() != "main" ) {
+        log << "--I thought the frist result would be main :(" << endl;
+        log << f3_result.Node()->Parent()->Name() << endl;
+        return 1;
+    }
+
+    if ( f3_result.Next().Node()->Parent()->Name() != "f1" ) {
+        log << "--I thought the second result would be f1 :(" << endl;
+        log << f3_result.Node()->Parent()->Name() << endl;
+        return 1;
+    }
+
+    ++f3_result;
+    ++f3_result;
+
+    if ( f3_result.Remaining() != 0 ) {
+        log << "Search returned non-zero when past the end of a search" << endl;
+        log << f3_result.Remaining();
+        return 1;
+    }
+
+    if ( f3_result.Ok() ) {
+        log << "Search returned ok when past the end of a search" << endl;
+        return 1;
+    }
+
+
+    if ( !f3_result.Node().IsNull() ) {
+        log << "Result is not null when past the end of the search!" << endl;
+        return 1;
+    }
+
+    return 0;
 }

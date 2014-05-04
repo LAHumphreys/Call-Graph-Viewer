@@ -97,22 +97,24 @@ NodePtr Node::GetChild(const string& name ) {
 }
 
 std::string Node::PrintResults(unsigned int indent,
-                               unsigned int depth) 
+                               unsigned int depth,
+                               bool printPath) 
 {
     std::stringstream results("");
-    PrintResults(indent,depth,"",results);
+    PrintResults(indent,depth,"",printPath,results);
     return results.str();
 }
 
 void Node::PrintResults(unsigned int indent, 
                         unsigned int depth, 
                         const string& path,
+                        bool printPath,
                         stringstream& s) {
     string myPath = ( path == "" ? 
                          name : 
                          path + "/" + name);
     // First add our info line
-    s << PrintInfo(indent,myPath);
+    s << PrintInfo(indent,myPath,printPath);
 
     // Now add child nodes...
     indent+=INDENT_TAB_SIZE;
@@ -123,15 +125,21 @@ void Node::PrintResults(unsigned int indent,
     if ( depth != 0 ) {
         --depth;
         for (auto& pair: sortedNodes ) {
-            pair.second->PrintResults(indent,depth,myPath,s);
+            pair.second->PrintResults(indent,depth,myPath,printPath,s);
         }
     }
 }
 
 std::string Node::PrintInfo(unsigned int indent,
-                            const std::string& path) {
+                            const std::string& path,
+                            bool printPath) {
     stringstream s("");
-    s << setw(indent) << "" << name << " (" << path << ")" << endl;
+    s << setw(indent) << "" << name;
+    if ( printPath ) { 
+        s << " (" << path << ")" << endl;
+    } else {
+        s << endl;
+    }
     indent+=INDENT_TAB_SIZE;
     s << setw(indent) << "" << "Calls: " << callCount;
     s << ", Time: " << usecs << ", Av. Time: " << (callCount == 0 ? 0: usecs/callCount) << endl;

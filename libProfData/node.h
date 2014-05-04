@@ -57,13 +57,24 @@ public:
      */
     NodePtr GetNode(const Path& path);
 
-    std::string PrintResults(unsigned int indent=0, unsigned int depth=10);
-
-private:
     /*
      * Advance to the end of the path...
      */
     NodePtr GetNode(Path::PathNode&& pathNode);
+
+    std::string PrintResults(unsigned int indent=0, 
+                             unsigned int depth=10,
+                             bool printPath = true);
+
+    /*
+     * Call a function of the form f(NodePtr p) for each descedent element.
+     *
+     * The order of calls is undefined.
+     */
+    template <class F>
+    void ForEach(F f);
+
+private:
 
     using PAIR = std::pair<std::string,Node*>;
     // Populata sorted Node with the element in desceding order of time
@@ -72,13 +83,15 @@ private:
     void PrintResults(unsigned int indent, 
                       unsigned int depth, 
                       const std::string& path,
+                      bool  printPath,
                       std::stringstream& s);
 
     /*
      * Print information about this node...
      */
     std::string PrintInfo(unsigned int indent, 
-                          const std::string& path);
+                          const std::string& path,
+                          bool printPath);
 
     // Element Modification
     NodePtr AddCall(const std::string& name, long usecs);
@@ -97,5 +110,6 @@ private:
                        Node*>            children;
 };
 
+#include "node.hpp"
 
 #endif
