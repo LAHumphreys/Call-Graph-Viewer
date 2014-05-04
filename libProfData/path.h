@@ -23,6 +23,9 @@ public:
      * Initialise the object as a copy of another path
      */
     Path(const Path& rhs);
+    Path(Path&& rhs);
+
+    Path& operator=(Path&& rhs);
 
     /*
      * Initialise the object as a copy of another path,

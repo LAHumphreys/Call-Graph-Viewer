@@ -9,6 +9,7 @@ void CallProfile::ProcessFile(const std::string& datafile)
     // ProfDataFile has parsed the input, now replay the program...
     CallStack stack;
     for ( int i=0; i<data.NumEvents(); ++i ) {
+        Path p("");
         auto e = data.GetEvent(i);
 
         switch ( e.event_type ) {
@@ -21,7 +22,7 @@ void CallProfile::ProcessFile(const std::string& datafile)
         case ProfDataFile::Event::EVENT_TYPE_LEAVE:
              long usecs;
 
-             if ( !stack.LeaveFrame(e.event_name,e.event_time,usecs) ) {
+             if ( !stack.LeaveFrame(e.event_name,e.event_time,usecs,p) ) {
                  SLOG_FROM(LOG_ERROR, "CallProfile::CallProfile",
                     "Failed to leave function " << e.event_name << " at " << e.event_time.Timestamp();)
              } else {

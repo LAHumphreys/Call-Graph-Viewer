@@ -5,11 +5,13 @@ using namespace std;
 
 CallStack::CallStack() {
     stack.reserve(200);
+    path.reserve(200);
 }
 
 bool CallStack::LeaveFrame(const std::string& name, 
                            const Time& leaveTime,
-                           long& usecs) {
+                           long& usecs,
+                           Path& pathToParent) {
     bool success = false;
 
     if ( stack.size() > 0 ) {
@@ -20,6 +22,8 @@ bool CallStack::LeaveFrame(const std::string& name,
         if ( frame.name == name ) {
             usecs = leaveTime.DiffUSecs(frame.startTime);
             stack.pop_back();
+            path.pop_back();
+            pathToParent = Path(path.begin(), path.end());
             success = true;
         } else {
         // Otherwise there's isn't anything we can do

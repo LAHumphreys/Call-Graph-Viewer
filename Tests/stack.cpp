@@ -20,9 +20,12 @@ int Basic(testLogger& log) {
     stack.AddFrame("main",Time("20140703 10:11:02.194930"));
     stack.AddFrame("Basic",Time("20140703 10:11:02.194931"));
 
+    Path path("");
+
     if ( !stack.LeaveFrame("Basic",
                            Time("20140703 10:11:02.194932"),
-                           basicTime) )
+                           basicTime,
+                           path) )
     {
         log << "Failed to leave frame Basic!" << endl;
         return 1;
@@ -32,9 +35,15 @@ int Basic(testLogger& log) {
         return 1;
     }
 
+    if ( path.Root().Name() != "main" ) {
+        log << "Basic not in main frame!" << endl;
+        return 1;
+    }
+
     if ( !stack.LeaveFrame("main",
                            Time("20140703 10:11:03.194931"),
-                           mainTime) )
+                           mainTime,
+                           path) )
     {
         log << "Failed to leave frame main!" << endl;
         return 1;
@@ -45,6 +54,12 @@ int Basic(testLogger& log) {
         return 1;
     }
 
+    if ( !path.Root().IsEnd()) {
+        log << "Main not in the root node!" << endl;
+        return 1;
+    }
+
+
     return 0;
 }
 
@@ -52,11 +67,13 @@ int InvalidFrame(testLogger& log) {
     long mainTime, basicTime, rogueTime;
     CallStack stack;
     stack.AddFrame("main",Time("20140703 10:11:02.194930"));
+    Path p("");
     stack.AddFrame("Basic",Time("20140703 10:11:02.194931"));
 
     if ( stack.LeaveFrame("Rogue",
                            Time("20140703 10:11:02.194932"),
-                           rogueTime) )
+                           rogueTime,
+                           p) )
     {
         log << "Left a rogue stack frame!" << endl;
         return 1;
@@ -69,7 +86,8 @@ int InvalidFrame(testLogger& log) {
 
     if ( !stack.LeaveFrame("Basic",
                            Time("20140703 10:11:02.194932"),
-                           basicTime) )
+                           basicTime,
+                           p) )
     {
         log << "Failed to leave frame Basic!" << endl;
         return 1;
@@ -81,7 +99,8 @@ int InvalidFrame(testLogger& log) {
 
     if ( !stack.LeaveFrame("main",
                            Time("20140703 10:11:03.194931"),
-                           mainTime) )
+                           mainTime,
+                           p) )
     {
         log << "Failed to leave frame main!" << endl;
         return 1;

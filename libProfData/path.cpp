@@ -27,6 +27,15 @@ Path::Path(const Path& rhs)
 {
 }
 
+Path::Path(Path&& rhs) 
+    :path(std::move(rhs.path))
+{
+}
+
+Path& Path::operator=(Path&& rhs) {
+    path = std::move(rhs.path);
+    return *this;
+}
 Path::Path(const Path& rhs, const std::string& next) 
     :path(rhs.path)
 {
