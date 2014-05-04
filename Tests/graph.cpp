@@ -201,17 +201,17 @@ int CheckResults(testLogger& log) {
 
     string actual = rootNode.PrintResults();
     string expected = 
-       "ROOT\n"
+       "ROOT (ROOT)\n"
        "    Calls: 0, Time: 0, Av. Time: 0\n"
-       "    main\n"
+       "    main (ROOT/main)\n"
        "        Calls: 1, Time: 100, Av. Time: 100\n"
-       "        f3\n"
+       "        f3 (ROOT/main/f3)\n"
        "            Calls: 2, Time: 206, Av. Time: 103\n"
-       "        f1\n"
+       "        f1 (ROOT/main/f1)\n"
        "            Calls: 2, Time: 202, Av. Time: 101\n"
-       "            f2\n"
+       "            f2 (ROOT/main/f1/f2)\n"
        "                Calls: 2, Time: 204, Av. Time: 102\n"
-       "            f3\n"
+       "            f3 (ROOT/main/f1/f3)\n"
        "                Calls: 1, Time: 103, Av. Time: 103\n";
 
     if ( expected != actual ) {

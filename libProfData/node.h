@@ -73,6 +73,7 @@ private:
     long                                 callCount;
     long                                 usecs;
     std::string                          name;
+    std::string                          myPath;
     Node*                                parent;
     std::unordered_map<std::string,
                        Node*>            children;

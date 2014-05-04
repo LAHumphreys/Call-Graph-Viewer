@@ -12,6 +12,7 @@ Node::Node()
     : callCount(0), 
       usecs(0), 
       name("ROOT"), 
+      myPath("ROOT"),
       parent(nullptr)
 {
 }
@@ -20,6 +21,7 @@ Node::Node(const std::string& _name, Node* _parent, long _usecs)
     : callCount(0), 
       usecs(_usecs), 
       name(_name), 
+      myPath(_parent->myPath + "/" + _name),
       parent(_parent)
 {
 }
@@ -119,7 +121,7 @@ void Node::PrintResults(unsigned int indent, stringstream& s) {
 
 std::string Node::PrintInfo(unsigned int indent) {
     stringstream s("");
-    s << setw(indent) << "" << name << endl;
+    s << setw(indent) << "" << name << " (" << myPath << ")" << endl;
     indent+=INDENT_TAB_SIZE;
     s << setw(indent) << "" << "Calls: " << callCount;
     s << ", Time: " << usecs << ", Av. Time: " << (callCount == 0 ? 0: usecs/callCount) << endl;

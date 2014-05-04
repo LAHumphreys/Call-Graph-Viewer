@@ -62,17 +62,17 @@ int Graph(testLogger& log) {
      */
 
     string expected = 
-       "ROOT\n"
+       "ROOT (ROOT)\n"
        "    Calls: 0, Time: 0, Av. Time: 0\n"
-       "    main\n"
+       "    main (ROOT/main)\n"
        "        Calls: 1, Time: 800, Av. Time: 800\n"
-       "        f1\n"
+       "        f1 (ROOT/main/f1)\n"
        "            Calls: 2, Time: 400, Av. Time: 200\n"
-       "            f3\n"
+       "            f3 (ROOT/main/f1/f3)\n"
        "                Calls: 1, Time: 60, Av. Time: 60\n"
-       "            f2\n"
+       "            f2 (ROOT/main/f1/f2)\n"
        "                Calls: 2, Time: 60, Av. Time: 30\n"
-       "        f3\n"
+       "        f3 (ROOT/main/f3)\n"
        "            Calls: 2, Time: 200, Av. Time: 100\n";
     if ( actual != expected ) {
         log << "Unexpected output!" << endl;
