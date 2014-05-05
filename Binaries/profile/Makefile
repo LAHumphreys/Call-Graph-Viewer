@@ -4,6 +4,9 @@ LINKED_LIBS= libExec libProfData\
              libUtils  \
 			 libIOInterface 
 EXECUTABLE=profile
+MODE=CPP
 CPP_TAGS_FILE=profiler-profile-c++.tags
+
+
 
 include ../../makefile.include

@@ -21,6 +21,10 @@ public:
         return *this;
     }
 
+    SearchResult  First() { 
+        return SearchResult(v.begin(),v); 
+    }
+
     SearchResult  Next() { 
         return SearchResult(it+1,v); 
     }

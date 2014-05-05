@@ -1,5 +1,6 @@
 #include "nodeSearchCache.h"
 #include <iterator>
+
 NodePtr SearchResult::Node() {
     if ( it < v.end() && it >= v.begin() ) {
         return *it;
