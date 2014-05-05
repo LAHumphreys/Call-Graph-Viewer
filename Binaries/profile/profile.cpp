@@ -198,7 +198,11 @@ void ListSearch() {
                 cout << "     ";
             }
             cout << node->Parent()->Name() << "/" << node->Name();
-            cout << " : " << node->RunTime() << " / " << node->CallCount() << endl;
+            cout << " : " << node->RunTime() << " / " << node->CallCount();
+            cout << " (" << ( node->CallCount() == 0 ? 
+                                   0 : 
+                                   node->RunTime() / node->CallCount() 
+                            ) << ")" << endl;
         }
     }
 }
