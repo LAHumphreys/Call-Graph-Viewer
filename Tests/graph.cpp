@@ -8,6 +8,7 @@ int CheckResults(testLogger& log);
 int CheckShortResults(testLogger& log);
 int PathAccess(testLogger& log);
 int Search(testLogger& log);
+int MakeNode(testLogger& log);
 
 int main(int argc, const char *argv[])
 {
@@ -17,6 +18,7 @@ int main(int argc, const char *argv[])
     Test("Printing Results...",CheckResults).RunTest();
     Test("Printing Short Results...",CheckShortResults).RunTest();
     Test("Seaching the graph",Search).RunTest();
+    Test("Testing child creation",MakeNode).RunTest();
     return 0;
 }
 
@@ -476,6 +478,40 @@ int Search(testLogger& log) {
         log << "Result is not null when past the end of the search!" << endl;
         return 1;
     }
+
+    return 0;
+}
+
+int MakeNode (testLogger& log ) {
+    Node rootNode;
+    NodePtr apple = rootNode.MakeChild("apple");
+    NodePtr apple2 = rootNode.MakeChild("apple");
+
+    if ( apple.IsNull() || apple2.IsNull() )  {
+        log << "MakeChild returned null!" << endl;
+        return 1;
+    }
+
+    if ( apple->Name() != "apple" || apple2->Name() != "apple" ) {
+        log << "MakeChild did not add the correct ndoe!" << endl;
+        return 1;
+    }
+
+    if ( rootNode.NumChildren() != 1 ) {
+        log << "MakeCHild did not create exactly one child" << endl;
+    }
+
+    NodePtr pair = apple->Parent()->MakeChild("pair");
+
+    if ( pair.IsNull() || pair->Name() != "pair" ) {
+        log << "Make child did not add pair! " << endl;
+        return 1;
+    }
+
+    if ( rootNode.NumChildren() != 2 ) {
+        log << "MakeChild did not create a new child!" << endl;
+    }
+
 
     return 0;
 }

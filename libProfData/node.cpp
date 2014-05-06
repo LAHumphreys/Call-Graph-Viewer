@@ -30,6 +30,11 @@ Node::~Node() {
     }
 }
 
+void Node::AddCall(long _usecs) {
+    ++callCount;
+    usecs += _usecs;
+}
+
 // Update the node <name> with a call for <usecs>
 NodePtr Node::AddCall(const std::string& name, 
                       long usecs)
@@ -81,6 +86,16 @@ NodePtr Node::AddCall(Path::PathNode node,const string& name, long usecs) {
     return child;
 }
 
+// Make sure the child exists
+NodePtr Node::MakeChild(const std::string& name) {
+    NodePtr child = GetChild(name);
+    if ( child.IsNull() ) {
+        Node *node = new Node(name, this, 0);
+        children.emplace(name, node);
+        child = node;
+    }
+    return child;
+}
 // Find the node with name <name>
 NodePtr Node::GetChild(const string& name ) {
 
@@ -179,3 +194,4 @@ NodePtr Node::GetNode(Path::PathNode&& pathNode) {
     } 
     return node;
 }
+

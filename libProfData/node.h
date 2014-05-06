@@ -44,12 +44,25 @@ public:
     NodePtr THIS() { return this;}
 
     /*
+     * Add call 
+     */
+    void AddCall(long usecs);
+
+    /*
      * Navigate to the leaf node at the end of the path, and then add a function
      * call to <name> for duration <usecs>
      *
      * Return a pointer to the updated (or created) node.
      */
     NodePtr AddCall(Path::PathNode node,const std::string& name, long usecs);
+
+    /*
+     * Return a pointer to the child name name. 
+     *
+     * If the node does not exist it is created, otherwise a pointer to the
+     * existing node is returned
+     */
+    NodePtr MakeChild(const std::string& name);
 
     /*
      * Navigate to the leaf node at the end of the path, and return it

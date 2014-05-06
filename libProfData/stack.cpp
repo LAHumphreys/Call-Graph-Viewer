@@ -3,33 +3,45 @@
 
 using namespace std;
 
-CallStack::CallStack() {
+CallStack::CallStack(NodePtr _rootNode) 
+    : activeNode(_rootNode)
+{
     stack.reserve(200);
-    path.reserve(200);
+}
+
+void CallStack::AddFrame(const std::string& name, const Time& start) 
+{
+    activeNode = activeNode->MakeChild(name);
+
+    stack.emplace_back(Frame{start, name});
 }
 
 bool CallStack::LeaveFrame(const std::string& name, 
                            const Time& leaveTime,
-                           long& usecs,
-                           Path& pathToParent) {
+                           long& usecs) 
+{
     bool success = false;
 
     if ( stack.size() > 0 ) {
-        // Get the current frame
-        Frame frame(stack.back());
-
+        Frame& frame = stack.back();
         // If its the correct frame pop it...
         if ( frame.name == name ) {
+            // Update the node in the call graph
             usecs = leaveTime.DiffUSecs(frame.startTime);
+            activeNode->AddCall(usecs);
+
+            // Remove the frame from the stack
             stack.pop_back();
-            path.pop_back();
-            pathToParent = Path(path.begin(), path.end());
+            if ( !activeNode->IsRoot() ) {
+                activeNode = activeNode->Parent();
+            }
+
             success = true;
         } else {
         // Otherwise there's isn't anything we can do
             usecs = -1;
             SLOG_FROM(LOG_ERROR, "CallStack::LeaveFrame",
-               "Failed to leave frame " << name << " does not match statck " << frame.name;)
+               "Failed to leave frame " << name << " does not match statck " << stack.back().name;)
         }
     } else {
             SLOG_FROM(LOG_ERROR, "CallStack::LeaveFrame",

@@ -167,7 +167,7 @@ void AdvanceSearch(NodePtr& activeNode, short direction) {
             --(*result);
         }
 
-        if ( result ) {
+        if ( !result->Node().IsNull() ) {
             activeNode = result->Node();
             ListSearch();
             cout << "There are " << result->Remaining() << " more results" << endl;
