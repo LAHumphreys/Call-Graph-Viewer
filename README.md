@@ -155,26 +155,47 @@ Navigating the tree
 -------------------
 The primary navigation tool is the search function (see above), but you can also navigate the tree with shell style commands:
 ```
-|div> n
-     odds/div : 45 / 3 (15)
- --> evens/div : 42 / 2 (21)
-There are 0 more results
+|ROOT> search Time::Time(std::string const&)
+Building one time search cache.. 
+done
+Search cache built in 0 seconds
+ --> void std::vector<Time, std::allocator<Time> >::_M_emplace_back_aux<std::string const&>(std::string const&)/Time::Time(std::string const&) : 178177 / 5 (35635)
+     CSV<Time, std::string, std::string>::NewRow(boost::tokenizer<boost::escaped_list_separator<char, std::char_traits<char> >, __gnu_cxx::__normal_iterator<char const*, std::string>, std::string> const&)/Time::Time(std::string const&) : 352266 / 11 (32024)
+There are 1 more results
 
-|div> pwd
-ROOT/main/evens/div
-
-|div> cd ..
-
-|evens> ls
-  evens
-      Calls: 1, Time: 65, Av. Time: 65
-      div
-          Calls: 2, Time: 42, Av. Time: 21
+|Time::Time> ls
+  Time::Time(std::string const&)
+      Calls: 5, Time: 178177, Av. Time: 35635
+      Time::operator=(std::string const&)
+          Calls: 5, Time: 178172, Av. Time: 35634
 
 
-|evens> cd div/pos_div2
+|Time::Time> cd Time::operator=(std::string const&)/mktime
 
-|pos_div2> pwd
-ROOT/main/evens/div/pos_div2
+|mktime> pwd
+ROOT/
+  main/
+  CallProfile::ProcessFile(std::string const&)/
+  ProfDataFile::ProfDataFile(std::string const&)/
+  CSV<Time, std::string, std::string>::LoadCSV(BinaryReader)/
+  CSV<Time, std::string, std::string>::NewRow(boost::tokenizer<boost::escaped_list_separator<char, std::char_traits<char> >, __gnu_cxx::__normal_iterator<char const*, std::string>, std::string> const&)/
+  void std::vector<Time, std::allocator<Time> >::_M_emplace_back_aux<std::string const&>(std::string const&)/
+  Time::Time(std::string const&)/
+  Time::operator=(std::string const&)/
+  mktime
+  
+|mktime> cd ..
+
+|Time::operator=> pwd
+ROOT/
+  main/
+  CallProfile::ProcessFile(std::string const&)/
+  ProfDataFile::ProfDataFile(std::string const&)/
+  CSV<Time, std::string, std::string>::LoadCSV(BinaryReader)/
+  CSV<Time, std::string, std::string>::NewRow(boost::tokenizer<boost::escaped_list_separator<char, std::char_traits<char> >, __gnu_cxx::__normal_iterator<char const*, std::string>, std::string> const&)/
+  void std::vector<Time, std::allocator<Time> >::_M_emplace_back_aux<std::string const&>(std::string const&)/
+  Time::Time(std::string const&)/
+  Time::operator=(std::string const&)
+
 
 ```
