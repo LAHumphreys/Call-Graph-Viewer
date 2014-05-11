@@ -1,6 +1,6 @@
 SOURCES=$(shell echo *.cpp)
 
-LINKED_LIBS= libExec libProfData\
+LINKED_LIBS= libExec libCallgrindData libProfData\
              libUtils  \
 			 libIOInterface 
 EXECUTABLE=profile

@@ -64,13 +64,10 @@ function DefineFunction(id,name) {
     _name = "";
     _path = "";
     _found_main = 0;
-    split(name,_tokens,"'");
-    for ( t in _tokens ) {
+    _num_toks = split(name,_tokens,"'");
+    for ( t =1; t<=_num_toks; t++) {
 
-        if ( _tokens[t] == "main" ) {
-            _found_main = 1;
-        }
-        if ( _tokens[t] == "(below" ) {
+        if ( _tokens[t] == "(below main)" ) {
            # We don't handle the "(below main)" section...
             break;
         }
@@ -81,6 +78,10 @@ function DefineFunction(id,name) {
             _path = _tokens[t];
         } else {
             _path = _tokens[t]  "/" _path;
+        }
+
+        if ( _tokens[t] == "main" ) {
+            _found_main = 1;
         }
     }
     if (  _found_main == 1 ) {
@@ -200,8 +201,11 @@ BEGIN {
 #   e.g fn=(1) main
 /^fn=\([0-9]*\) .+/ {
     id = $2;
-    name = $3;
+    name = "";
 
+    pat = "fn=(" id ")  "
+    start = match($0,pat) + length(pat);
+    name = substr($0,start);
     DefineFunction(id,name);
     SetCurrentFunction(id);
 }
@@ -252,8 +256,11 @@ BEGIN {
 #   e.g cfn=(2)
 /^cfn=\([0-9]*\) .+/ {
     id = $2;
-    name = $3;
+    name = "";
 
+    pat = "cfn=(" id ")  "
+    start = match($0,pat) + length(pat);
+    name = substr($0,start);
     DefineFunction(id,name);
     SetNextCalledFn(id);
 }

@@ -30,8 +30,8 @@ Node::~Node() {
     }
 }
 
-void Node::AddCall(long _usecs) {
-    ++callCount;
+void Node::AddCall(long _usecs, int count) {
+    callCount += count;
     usecs += _usecs;
 }
 
@@ -195,3 +195,10 @@ NodePtr Node::GetNode(Path::PathNode&& pathNode) {
     return node;
 }
 
+NodePtr Node::CreateNode( const Path& path,
+                          const string& name)
+{
+    NodePtr node = AddCall(path.Root(), name, 0);
+    node->callCount = 0;
+    return node;
+}

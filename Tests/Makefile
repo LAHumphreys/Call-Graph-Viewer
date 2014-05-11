@@ -1,4 +1,4 @@
-LINKED_LIBS= libExec libProfData\
+LINKED_LIBS= libExec libCallgrindData libProfData\
              libUtils  \
 			 libIOInterface \
 			 libTest

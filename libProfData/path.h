@@ -26,6 +26,7 @@ public:
     Path(Path&& rhs);
 
     Path& operator=(Path&& rhs);
+    Path& operator=(const Path& rhs);
 
     /*
      * Initialise the object as a copy of another path,

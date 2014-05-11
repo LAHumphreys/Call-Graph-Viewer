@@ -46,7 +46,7 @@ public:
     /*
      * Add call 
      */
-    void AddCall(long usecs);
+    void AddCall(long usecs, int count = 1);
 
     /*
      * Navigate to the leaf node at the end of the path, and then add a function
@@ -55,6 +55,8 @@ public:
      * Return a pointer to the updated (or created) node.
      */
     NodePtr AddCall(Path::PathNode node,const std::string& name, long usecs);
+
+    NodePtr CreateNode(const Path& path, const std::string& name);
 
     /*
      * Return a pointer to the child name name. 

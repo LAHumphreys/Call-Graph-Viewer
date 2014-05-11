@@ -5,12 +5,17 @@
 #include <string>
 #include "util_time.h"
 #include "nodeSearchCache.h"
+#include "callgrindTree.h"
 
 using namespace std;
 
+CallgrindCallTree* data;
 CallProfile profile;
+CallCount* counter = nullptr;
 SearchCache* cache = nullptr;
 SearchResult* result = nullptr;
+
+NodePtr rootNode = nullptr;
 
 // Utils
 string GetCommand(NodePtr& activeNode);
@@ -31,25 +36,52 @@ void PrintTree(NodePtr& activeNode, stringstream& command);
 
 int main(int argc, const char *argv[])
 {
-    if ( argc != 2 ) {
+    NodePtr activeNode = nullptr;
+
+    if ( argc != 2 && argc != 4) {
         cout << "Usage: profile <data file>" << endl;
-        cout << "Usage: profile <data file> count" << endl;
+        cout << "Usage: profile <flist file> <calls file> <cost file>" << endl;
         return 1;
     }
 
-    LOG_FROM(LOG_OVERVIEW, "main", "Building Profile...")
-    cout << "Building call graph...";
-    cout.flush();
-    Time start;
-    profile.ProcessFile(argv[1]);
-    Time end;
-    cout << "done" << endl;
-    cout << "Process started up in " << end.DiffSecs(start) << " seconds" << endl;
-    LOG_FROM(LOG_OVERVIEW, "main", "Profile built - program ready!")
+    if ( argc == 2 ) {
+        LOG_FROM(LOG_OVERVIEW, "main", "Building Profile...")
+        cout << "Building call graph...";
+        cout.flush();
+        Time start;
+        profile.ProcessFile(argv[1]);
+        Time end;
+        cout << "done" << endl;
+        cout << "Process started up in " << end.DiffSecs(start) << " seconds" << endl;
+        LOG_FROM(LOG_OVERVIEW, "main", "Profile built - program ready!")
 
+        // start at the top of the tree
+        rootNode = profile.RootNode();
+        counter = &profile.Count();
+    } else {
+        LOG_FROM(LOG_OVERVIEW, "main", "Building Profile...")
+        cout << "Building call graph...";
+        cout.flush();
+        Time start;
+
+        data = new CallgrindCallTree(argv[1]);
+        data->LoadCalls(argv[2]);
+        data->LoadCosts(argv[3]);
+
+        Time end;
+        cout << "done" << endl;
+        cout << "Process started up in " << end.DiffSecs(start) << " seconds" << endl;
+        LOG_FROM(LOG_OVERVIEW, "main", "Profile built - program ready!")
+
+        // start at the top of the tree
+        rootNode = data->RootNode();
+        counter = &data->Counter();
+    }
 
     // start at the top of the tree
-    NodePtr activeNode = profile.RootNode();
+    activeNode = rootNode;
+
+
 
     /*
      * Main Loop
@@ -101,7 +133,9 @@ int main(int argc, const char *argv[])
  */
 string GetCommand(NodePtr& activeNode) {
     char buf[10240];
-    cout << endl << "|" << activeNode->Name() << "> ";
+    string name = activeNode->Name();
+    string shortName = name.substr(0,name.find("("));
+    cout << endl << "|" << shortName << "> ";
     cin.getline(buf,10240);
     return string(buf);
 }
@@ -130,7 +164,7 @@ void GetHelp(NodePtr& activeNode, stringstream& command) {
  */
 void Search(NodePtr& activeNode, stringstream& command) {
     string name = "";
-    command >> name;
+    getline(command,name);
 
     if ( name == "" ) {
         cout << "usage: search <function name>" << endl;
@@ -139,14 +173,14 @@ void Search(NodePtr& activeNode, stringstream& command) {
             cache = new SearchCache();
             cout << "Building one time search cache.. " << endl;
             Time start;
-            NodePtr ptr = profile.RootNode();
+            NodePtr ptr = rootNode;
             cache->AddTree(ptr);
             Time end;
             cout << "done" << endl;
             cout << "Search cache built in " << end.DiffSecs(start) << " seconds" << endl;
         }
         delete result;
-        result = new SearchResult(cache->Search(name));
+        result = new SearchResult(cache->Search(name.substr(1)));
         AdvanceSearch(activeNode,0);
     }
 }
@@ -213,7 +247,7 @@ void ListSearch() {
 void PrintTable(NodePtr& activeNode, stringstream& command) {
     int rows = 0;
     command >> rows;
-    cout << profile.PrintResults(rows) << endl;
+    cout << counter->PrintResults(rows) << endl;
 }
 
 /*
@@ -222,14 +256,14 @@ void PrintTable(NodePtr& activeNode, stringstream& command) {
 void PrintTree(NodePtr& activeNode, stringstream& command) {
     int depth = 5;
     command >> depth;
-    cout << activeNode->PrintResults(2,depth) << endl;
+    cout << activeNode->PrintResults(2,depth,false) << endl;
 }
 
 /*
  * Show the direct descendents of the current node
  */
 void LS(NodePtr& activeNode, stringstream& command) {
-    cout << activeNode->PrintResults(2,1) << endl;
+    cout << activeNode->PrintResults(2,1,false) << endl;
 }
 
 
@@ -269,17 +303,18 @@ void PWD (NodePtr& activeNode) {
 void GoTo(NodePtr& activeNode, stringstream& command) {
     // Read the path
     std::string path_string;
-    command >> path_string;
+    getline(command,path_string);
+    path_string = path_string.substr(1);
     Path path (path_string);
-    Path::PathNode rootNode = path.Root();
+    Path::PathNode rootPathNode = path.Root();
 
     if ( path_string == ".." ) {
         GoToParent(activeNode,command); } else { // Find the node...
         NodePtr node = nullptr;
-        if ( rootNode.Name() == "ROOT" ) {
-            node = profile.RootNode()->GetNode(rootNode.Next());
+        if ( rootPathNode.Name() == "ROOT" ) {
+            node = rootNode->GetNode(rootPathNode.Next());
         } else {
-            node = activeNode->GetNode(std::move(rootNode));
+            node = activeNode->GetNode(std::move(rootPathNode));
         }
 
         if ( !node.IsNull() ) {

@@ -19,7 +19,9 @@ public:
     /*
      * Register a new call with the class
      */
-    void AddCall(const std::string& name, const long& usecs);
+    void AddCall( const std::string& name, 
+                  const long& usecs,
+                  int   count = 1);
 
     const Calls& GetCount(std::string name) {
         // This will zero-construct if the f doesn't exist...

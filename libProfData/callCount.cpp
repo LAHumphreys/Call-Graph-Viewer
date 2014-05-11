@@ -8,14 +8,17 @@ using namespace std;
 
 using call_pair = pair<string,CallCount::Calls>;
 
-void CallCount::AddCall(const string& name, const long& usecs) {
+void CallCount::AddCall(const string& name, 
+                        const long& usecs,
+                        int   callCount) 
+{
     auto it = fcalls.find(name);
     if ( it != fcalls.end() ) {
-        ++(it->second.calls);
+        it->second.calls += callCount;
         it->second.usecs += usecs;
     } else {
         Calls& count = fcalls[name];
-        count.calls = 1;
+        count.calls = callCount;
         count.usecs = usecs;
     }
 }
@@ -50,8 +53,8 @@ std::string CallCount::PrintResults(unsigned tableSize) const {
     partial_sort_copy(fcalls.begin(),fcalls.end(),
                       mostTimePerCall.begin(),mostTimePerCall.end(),
                       [] (const call_pair& lhs, const call_pair& rhs) -> bool {
-                          return lhs.second.usecs/lhs.second.calls >
-                                 rhs.second.usecs/rhs.second.calls;
+                          return ( lhs.second.calls == 0 ? 0 : lhs.second.usecs/lhs.second.calls ) >
+                                 ( rhs.second.calls == 0 ? 0 : rhs.second.usecs/rhs.second.calls);
                       });
 
     // Now print each one...
@@ -69,7 +72,9 @@ std::string CallCount::PrintResults(unsigned tableSize) const {
         result << "| ";
         result << setw(11) << it.second.usecs;
         result << "| ";
-        result << setw(10) << it.second.usecs / it.second.calls;
+        result << setw(10) << (it.second.calls == 0 ? 
+                                  0 : 
+                                  it.second.usecs / it.second.calls);
         result << "|\n";
     }
 
@@ -98,7 +103,9 @@ std::string CallCount::PrintResults(unsigned tableSize) const {
         result << "| ";
         result << setw(11) << it.second.usecs;
         result << "| ";
-        result << setw(10) << it.second.usecs / it.second.calls;
+        result << setw(10) << (it.second.calls == 0 ?  
+                                  0 : 
+                                  it.second.usecs / it.second.calls);
         result << "|\n";
     }
 

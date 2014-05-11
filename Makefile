@@ -1,4 +1,4 @@
-MAKE_DIRS= DEV_TOOLS TCL-CPP-Plugin-API libProfData libExec Tests Binaries
+MAKE_DIRS= DEV_TOOLS libProfData libCallgrindData libExec Tests Binaries
 
 # makefile tools library  for bulding multi-directory projects
 #

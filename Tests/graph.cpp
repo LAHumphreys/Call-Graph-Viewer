@@ -1,6 +1,7 @@
 #include "tester.h"
 #include "node.h"
 #include "nodeSearchCache.h"
+#include "callgrindTree.h"
 
 int RootNode(testLogger& log);
 int AddNodes(testLogger& log);
@@ -9,6 +10,9 @@ int CheckShortResults(testLogger& log);
 int PathAccess(testLogger& log);
 int Search(testLogger& log);
 int MakeNode(testLogger& log);
+int EmptyCallgrindData(testLogger& log);
+int CallgrindTree(testLogger& log);
+int CallgrindTable(testLogger& log);
 
 int main(int argc, const char *argv[])
 {
@@ -19,6 +23,9 @@ int main(int argc, const char *argv[])
     Test("Printing Short Results...",CheckShortResults).RunTest();
     Test("Seaching the graph",Search).RunTest();
     Test("Testing child creation",MakeNode).RunTest();
+    Test("Loading an empty callggrind tree",EmptyCallgrindData).RunTest();
+    Test("Loading a full callgrind tree",CallgrindTree).RunTest();
+    Test("Loading a full callgrind tree and table",CallgrindTable).RunTest();
     return 0;
 }
 
@@ -513,5 +520,114 @@ int MakeNode (testLogger& log ) {
     }
 
 
+    return 0;
+}
+
+int EmptyCallgrindData ( testLogger& log ) {
+    CallgrindCallTree data("data/flist.csv");
+    string expected = 
+        "ROOT (ROOT)\n"
+        "    Calls: 0, Time: 0, Av. Time: 0\n"
+        "    main (ROOT/main)\n"
+        "        Calls: 0, Time: 0, Av. Time: 0\n"
+        "        odds (ROOT/main/odds)\n"
+        "            Calls: 0, Time: 0, Av. Time: 0\n"
+        "            div (ROOT/main/odds/div)\n"
+        "                Calls: 0, Time: 0, Av. Time: 0\n"
+        "        evens (ROOT/main/evens)\n"
+        "            Calls: 0, Time: 0, Av. Time: 0\n"
+        "            div (ROOT/main/evens/div)\n"
+        "                Calls: 0, Time: 0, Av. Time: 0\n"
+        "                pos_div2 (ROOT/main/evens/div/pos_div2)\n"
+        "                    Calls: 0, Time: 0, Av. Time: 0\n"
+        "                pos_div4 (ROOT/main/evens/div/pos_div4)\n"
+        "                    Calls: 0, Time: 0, Av. Time: 0\n";
+
+    string actual = data.RootNode()->PrintResults();
+
+    if ( expected != actual ) {
+        log << " Failed to read callgrind tree!";
+        log << " Expected: " << endl;
+        log << ">" << expected << "<" << endl;
+        log << " Actual: " << endl;
+        log << ">" << actual << "<" ;
+        return 1;
+    }
+    return 0;
+}
+
+int CallgrindTree ( testLogger& log ) {
+    CallgrindCallTree data("data/flist.csv");
+    data.LoadCalls("data/calls.csv");
+    string expected = 
+        "ROOT (ROOT)\n" 
+        "    Calls: 0, Time: 0, Av. Time: 0\n" 
+        "    main (ROOT/main)\n" 
+        "        Calls: 0, Time: 0, Av. Time: 0\n" 
+        "        odds (ROOT/main/odds)\n" 
+        "            Calls: 1, Time: 75, Av. Time: 75\n" 
+        "            div (ROOT/main/odds/div)\n" 
+        "                Calls: 3, Time: 45, Av. Time: 15\n" 
+        "        evens (ROOT/main/evens)\n" 
+        "            Calls: 1, Time: 65, Av. Time: 65\n" 
+        "            div (ROOT/main/evens/div)\n" 
+        "                Calls: 2, Time: 42, Av. Time: 21\n" 
+        "                pos_div2 (ROOT/main/evens/div/pos_div2)\n" 
+        "                    Calls: 1, Time: 7, Av. Time: 7\n" 
+        "                pos_div4 (ROOT/main/evens/div/pos_div4)\n" 
+        "                    Calls: 1, Time: 7, Av. Time: 7\n";
+    string actual = data.RootNode()->PrintResults();
+
+    if ( expected != actual ) {
+        log << " Failed to read callgrind tree!";
+        log << " Expected: " << endl;
+        log << ">" << expected << "<" << endl;
+        log << " Actual: " << endl;
+        log << ">" << actual << "<" ;
+        return 1;
+    }
+    return 0;
+}
+
+int CallgrindTable ( testLogger& log ) {
+    CallgrindCallTree data("data/flist.csv");
+    data.LoadCalls("data/calls.csv");
+    data.LoadCosts("data/cost.csv");
+    string expected = 
+        "------------------------------------------------------------------------\n"
+        "|-               Most Time Spent in Function                          -|\n"
+        "------------------------------------------------------------------------\n"
+        "|    Function Name                   | Calls  | Time(us)   | us/call   |\n"
+        "------------------------------------------------------------------------\n"
+        "| main                               | 0      | 152        | 0         |\n"
+        "| div                                | 5      | 87         | 17        |\n"
+        "| odds                               | 1      | 75         | 75        |\n"
+        "| evens                              | 1      | 65         | 65        |\n"
+        "| pos_div2                           | 1      | 7          | 7         |\n"
+        "| pos_div4                           | 1      | 7          | 7         |\n"
+        "------------------------------------------------------------------------\n"
+        "\n"
+        "------------------------------------------------------------------------\n"
+        "|-               Most Expensive Function Calls                        -|\n"
+        "------------------------------------------------------------------------\n"
+        "|    Function Name                   | Calls  | Time(us)   | us/call   |\n"
+        "------------------------------------------------------------------------\n"
+        "| odds                               | 1      | 75         | 75        |\n"
+        "| evens                              | 1      | 65         | 65        |\n"
+        "| div                                | 5      | 87         | 17        |\n"
+        "| pos_div2                           | 1      | 7          | 7         |\n"
+        "| pos_div4                           | 1      | 7          | 7         |\n"
+        "| main                               | 0      | 152        | 0         |\n"
+        "------------------------------------------------------------------------\n";
+    string actual = data.Counter().PrintResults();
+
+    if ( expected != actual ) {
+        log << " Failed to read callgrind tree!";
+        log << " Expected: " << endl;
+        log << ">" << expected << "<" << endl;
+        log << " Actual: " << endl;
+        log << ">" << actual << "<" ;
+        return 1;
+    }
     return 0;
 }

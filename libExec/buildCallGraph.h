@@ -21,6 +21,9 @@ public:
     }
 
     NodePtr RootNode () { return callGraph.THIS();}
+
+    CallCount& Count() { return counter;}
+
 private:
     CallCount counter;
     Node      callGraph;
