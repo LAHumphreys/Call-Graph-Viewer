@@ -25,11 +25,12 @@ void CallCount::AddCall(const string& name,
 
 std::string CallCount::PrintResults(unsigned tableSize) const {
     stringstream result("");
-    result << "------------------------------------------------------------------------\n";
-    result << "|-               Most Time Spent in Function                          -|\n";
-    result << "------------------------------------------------------------------------\n";
-    result << "|    Function Name                   | Calls  | Time(us)   | us/call   |\n";
-    result << "------------------------------------------------------------------------\n";
+    static const int name_width = 70;
+    result << "-----------------------------------------------------------------------------------------------------------\n";
+    result << "|-               Most Time Spent in Function                                                             -|\n";
+    result << "-----------------------------------------------------------------------------------------------------------\n";
+    result << "|    Function Name                                                      | Calls  | Time(us)   | us/call   |\n";
+    result << "-----------------------------------------------------------------------------------------------------------\n";
     //           <-          35                   ->  <- 7 ->  <- 11    ->  <- 10   ->
     // Sort into order of most expensive...
     vector<call_pair> mostTotalTime;
@@ -61,12 +62,12 @@ std::string CallCount::PrintResults(unsigned tableSize) const {
     for ( const call_pair& it: mostTotalTime ) {
         // Make sure the name doesn't overflow
         string name = it.first;
-        if ( name.length() > 35 ) {
-            name = name.substr(0,32) + "...";
+        if ( name.length() > name_width ) {
+            name = name.substr(0,name_width -3) + "...";
         }
 
         result << "| ";
-        result << left << setw(35) << name;
+        result << left << setw(name_width) << name;
         result << "| ";
         result << setw(7) << it.second.calls;
         result << "| ";
@@ -79,25 +80,25 @@ std::string CallCount::PrintResults(unsigned tableSize) const {
     }
 
     // And complete the table;
-    result << "------------------------------------------------------------------------\n";
+    result << "-----------------------------------------------------------------------------------------------------------\n";
 
     result << "\n";
-    result << "------------------------------------------------------------------------\n";
-    result << "|-               Most Expensive Function Calls                        -|\n";
-    result << "------------------------------------------------------------------------\n";
-    result << "|    Function Name                   | Calls  | Time(us)   | us/call   |\n";
-    result << "------------------------------------------------------------------------\n";
+    result << "-----------------------------------------------------------------------------------------------------------\n";
+    result << "|-               Most Expensive Function Calls                                                           -|\n";
+    result << "-----------------------------------------------------------------------------------------------------------\n";
+    result << "|    Function Name                                                      | Calls  | Time(us)   | us/call   |\n";
+    result << "-----------------------------------------------------------------------------------------------------------\n";
 
     // Now print each one...
     for ( const call_pair& it: mostTimePerCall ) {
         // Make sure the name doesn't overflow
         string name = it.first;
-        if ( name.length() > 35 ) {
-            name = name.substr(0,32) + "...";
+        if ( name.length() > name_width ) {
+            name = name.substr(0,name_width -3) + "...";
         }
 
         result << "| ";
-        result << left << setw(35) << name;
+        result << left << setw(name_width) << name;
         result << "| ";
         result << setw(7) << it.second.calls;
         result << "| ";
@@ -110,6 +111,6 @@ std::string CallCount::PrintResults(unsigned tableSize) const {
     }
 
     // And complete the table;
-    result << "------------------------------------------------------------------------\n";
+    result << "-----------------------------------------------------------------------------------------------------------\n";
     return result.str();
 };

@@ -287,7 +287,7 @@ void PWD (NodePtr& activeNode) {
     for ( NodePtr i = activeNode->Parent();
           !i.IsNull();
           i = i->Parent() ) {
-        path = i->Name() + "/" + path;
+        path = i->Name() + "/\n  " + path;
     }
     cout << path << endl;
 }
