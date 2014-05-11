@@ -33,6 +33,3 @@ test.full_log
 profile
 dumptree
 callgrind.out.*
-flist.csv
-calls.csv
-cost.csv
