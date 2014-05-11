@@ -8,7 +8,7 @@ It already provides:
 * Ability to navigate and view the callgraph
 * Callgrind integration:
   * Easily profile C / C++ and similary languages 
-  * Unlike kcachegrind, the viewer supports a full call tree (using --separate-callers)
+  * (Unlike some viewers), The full call tree (using --separate-callers with callgrind)
 * Simple CSV based input allows manual profile data to be used (e.g see the TCL pluging provided)
 
 Comming Soon:
