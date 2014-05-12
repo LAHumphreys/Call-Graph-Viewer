@@ -58,7 +58,7 @@ The flat view allows you to quickly identify bottle necks in your code by rankin
 -----------------------------------------------------------------------------------------------------------
 
 ```
-You can also search the flat view. In this example we final all constant member functions of the BinaryReady object:
+You can also search the flat view. In this example we find all constant member functions of the BinaryReady object:
 ```
     |ROOT> searchtable ^BinaryReader::.* const$
     Searching flat table for: '^BinaryReader::.* const$'
