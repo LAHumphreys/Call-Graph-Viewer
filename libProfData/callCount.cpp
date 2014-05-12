@@ -1,12 +1,10 @@
 #include "callCount.h"
 #include <sstream>
-#include <vector>
 #include <algorithm>
 #include <utility>
 #include <iomanip>
 using namespace std;
 
-using call_pair = pair<string,CallCount::Calls>;
 
 void CallCount::AddCall(const string& name, 
                         const long& usecs,
@@ -40,23 +38,8 @@ std::string CallCount::PrintResults(unsigned tableSize) const {
         tableSize = fcalls.size();
     }
 
-    mostTotalTime.resize(tableSize);
-    mostTimePerCall.resize(tableSize);
+    PopulateTables(tableSize, mostTotalTime,mostTimePerCall);
 
-    // Select the tableSize most expensive function in terms of total time
-    partial_sort_copy(fcalls.begin(),fcalls.end(),
-                      mostTotalTime.begin(),mostTotalTime.end(),
-                      [] (const call_pair& lhs, const call_pair& rhs) -> bool {
-                          return lhs.second.usecs>rhs.second.usecs;
-                      });
-
-    // Select the tableSize most expensive function in terms time per call
-    partial_sort_copy(fcalls.begin(),fcalls.end(),
-                      mostTimePerCall.begin(),mostTimePerCall.end(),
-                      [] (const call_pair& lhs, const call_pair& rhs) -> bool {
-                          return ( lhs.second.calls == 0 ? 0 : lhs.second.usecs/lhs.second.calls ) >
-                                 ( rhs.second.calls == 0 ? 0 : rhs.second.usecs/rhs.second.calls);
-                      });
 
     // Now print each one...
     for ( const call_pair& it: mostTotalTime ) {
@@ -114,3 +97,70 @@ std::string CallCount::PrintResults(unsigned tableSize) const {
     result << "-----------------------------------------------------------------------------------------------------------\n";
     return result.str();
 };
+
+void CallCount::PopulateTables( unsigned tableSize, 
+                                vector<call_pair>& mostTotalTime, 
+                                vector<call_pair>& mostTimePerCall) const
+{
+    mostTotalTime.resize(tableSize);
+    mostTimePerCall.resize(tableSize);
+
+    // Select the tableSize most expensive function in terms of total time
+    partial_sort_copy(fcalls.begin(),fcalls.end(),
+                      mostTotalTime.begin(),mostTotalTime.end(),
+                      [] (const call_pair& lhs, const call_pair& rhs) -> bool {
+                          return lhs.second.usecs>rhs.second.usecs;
+                      });
+
+    // Select the tableSize most expensive function in terms time per call
+    partial_sort_copy(fcalls.begin(),fcalls.end(),
+                      mostTimePerCall.begin(),mostTimePerCall.end(),
+                      [] (const call_pair& lhs, const call_pair& rhs) -> bool {
+                          return ( lhs.second.calls == 0 ? 0 : lhs.second.usecs/lhs.second.calls ) >
+                                 ( rhs.second.calls == 0 ? 0 : rhs.second.usecs/rhs.second.calls);
+                      });
+}
+
+std::string CallCount::WidePrint(unsigned tableSize) const {
+    vector<call_pair> mostTotalTime;
+    vector<call_pair> mostTimePerCall;
+
+    if ( tableSize == 0 ) {
+        tableSize = fcalls.size();
+    }
+
+    PopulateTables(tableSize, mostTotalTime,mostTimePerCall);
+
+    stringstream output;
+    output << "                 Most Time Spent in Function\n";
+    output << "               ===============================\n";
+    output << "  Calls      Time(us)      us/call        Name\n";
+    output << "---------  -----------   -------------  --------\n";
+    //         1234567890123456789012345678901234567890123456789
+    //         0000000001111111111222222222233333333334444444444
+    // Now print each one...
+    for ( const call_pair& it: mostTotalTime ) {
+        output << " " << left << setw(10) << it.second.calls;
+        output << " " << setw(11) << it.second.usecs;
+        output << "   " << setw(13) << (it.second.calls == 0 ?  
+                                          0 : 
+                                          it.second.usecs / it.second.calls);
+        output << "  " << it.first << endl;
+    }
+    output << endl << endl;
+
+    output << "                 Most Expensive Function Calls\n";
+    output << "               =================================\n";
+    output << "  Calls      Time(us)      us/call        Name\n";
+    output << "---------  -----------   -------------  --------\n";
+
+    for ( const call_pair& it: mostTimePerCall ) {
+        output << " " << setw(10) << it.second.calls;
+        output << " " << setw(11) << it.second.usecs;
+        output << "   " << setw(13) << (it.second.calls == 0 ?  
+                                          0 : 
+                                          it.second.usecs / it.second.calls);
+        output << "  " << it.first << endl;
+    }
+    return output.str();
+}

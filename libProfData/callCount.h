@@ -1,8 +1,10 @@
 #ifndef __PROFILER_LIBPROFDATA_CALL_COUNT_H__
 #define __PROFILER_LIBPROFDATA_CALL_COUNT_H__
 
+#include "callCount.h"
 #include <unordered_map>
 #include <string>
+#include <vector>
 
 
 class CallCount {
@@ -15,6 +17,8 @@ public:
         int calls;
         long usecs;
     };
+
+    using call_pair = std::pair<std::string,Calls>;
 
     /*
      * Register a new call with the class
@@ -29,7 +33,13 @@ public:
     }
 
     std::string PrintResults(unsigned tableSize=0) const;
+
+    std::string WidePrint(unsigned tableSize=0) const;
 private:
+    void PopulateTables(unsigned tableSize, 
+                        std::vector<call_pair>& mostTotalTime, 
+                        std::vector<call_pair>& mostTimePerCall) const;
+
     std::unordered_map<std::string,Calls> fcalls;
   
 };

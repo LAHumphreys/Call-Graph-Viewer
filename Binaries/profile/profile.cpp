@@ -33,6 +33,7 @@ void LS(NodePtr& activeNode, stringstream& command);
 void PWD (NodePtr& activeNode);
 void PrintTable(NodePtr& activeNode, stringstream& command);
 void PrintTree(NodePtr& activeNode, stringstream& command);
+void PrintWideTable(NodePtr& activeNode, stringstream& command);
 
 int main(int argc, const char *argv[])
 {
@@ -98,6 +99,8 @@ int main(int argc, const char *argv[])
             break;
         } else if ( action == "table" ) {
             PrintTable(activeNode, command);
+        } else if ( action == "widetable" ) {
+            PrintWideTable(activeNode, command);
         } else if ( action == "tree" ) {
             PrintTree(activeNode, command);
         } else if ( action == "cd" ) {
@@ -147,6 +150,7 @@ void GetHelp(NodePtr& activeNode, stringstream& command) {
     cout << "help              Display this help message" << endl;
     cout << "exit              Quit the application" << endl;
     cout << "table [max]       Print the flat table for the full program" << endl;
+    cout << "widetable [max]   Print the flat table for the full program (don't shorten names)" << endl;
     cout << "tree  [depth=5]   Print the tree for the current node" << endl;
     cout << "ls                List the child nodes" << endl;
     cout << "cd                Jump to this node" << endl;
@@ -248,6 +252,11 @@ void PrintTable(NodePtr& activeNode, stringstream& command) {
     int rows = 0;
     command >> rows;
     cout << counter->PrintResults(rows) << endl;
+}
+void PrintWideTable(NodePtr& activeNode, stringstream& command) {
+    int rows = 0;
+    command >> rows;
+    cout << counter->WidePrint(rows) << endl;
 }
 
 /*
