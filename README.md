@@ -5,9 +5,10 @@ A simple tool for profiling processes based on callgraph data.
 
 It already provides:
 * A flat view of your most expensive functions
-* Ability to navigate and view the callgraph
+* A complete calltree, including costs / callcount at each node
+* regex powered searching of both the call tree and the flat view 
 * Callgrind integration:
-  * Easily profile C / C++ and similary languages 
+  * Easily profile C / C++ and similar languages 
   * (Unlike some viewers), The full call tree (using --separate-callers with callgrind)
 * Simple CSV based input allows manual profile data to be used (e.g see the TCL pluging provided)
 
@@ -64,7 +65,7 @@ You can also search the flat view. In this example we find all constant member f
     Searching flat table for: '^BinaryReader::.* const$'
                      Most Time Spent in Function
                    ===============================
-      Calls      Time(us)      us/call        Name
+      Calls      Reads Ir      Ir/call        Name
     ---------  -----------   -------------  --------
      278        8340          30             BinaryReader::End() const
      274        3014          11             BinaryReader::Get() const
@@ -85,7 +86,7 @@ You can also search the flat view. In this example we find all constant member f
 
                      Most Expensive Function Calls
                    =================================
-      Calls      Time(us)      us/call        Name
+      Calls      Reads Ir      Ir/call        Name
     ---------  -----------   -------------  --------
      1          1879          1879           BinaryReader::AppendString(std::string&) const
      1          1669          1669           BinaryReader::ReadString() const
