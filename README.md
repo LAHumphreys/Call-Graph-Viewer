@@ -106,7 +106,12 @@ You can also search the flat view. In this example we find all constant member f
 ```
 Searching for Calls
 --------------------
-If you have identified a troublesome function from the flat view, you can search for points in the code where it is called:
+If you have identified a troublesome function from the flat view, you can search for points in the code where it is called.
+
+There are two search commands supported:
+ * search (s): A fast, cached search of the entire tree. The full name must be provided
+ * searchchildren (sc): Searches children of the active node. Regex pattern may be provided.
+  
 
 Below we investigate why "Put" is taking so long, and discover we are resizing every time!
 ```
@@ -125,6 +130,16 @@ There are 2 more results
           Calls: 160, Time: 3680, Av. Time: 23
       std::vector<unsigned char, std::allocator<unsigned char> >::size() const
           Calls: 160, Time: 1920, Av. Time: 12
+
+```
+Here we use searchchildren to find all calls to LoadCSV, regardless of template parameters:
+
+```
+|ROOT> sc CSV<.*>::LoadCSV.*
+ --> CallgrindCallTree::CallgrindCallTree(std::string const&)/CSV<int, std::string, Path>::LoadCSV(BinaryReader) : 115264814 / 1 (115264814)
+     CallgrindCallTree::LoadCosts(std::string const&)/CSV<int, long>::LoadCSV(BinaryReader) : 10241080 / 1 (10241080)
+     CallgrindCallTree::LoadCalls(std::string const&)/CSV<int, int, int, long>::LoadCSV(BinaryReader) : 21348087 / 1 (21348087)
+There are 2 more results
 
 ```
 n(ext) and p(revious) navigate the results:
@@ -159,7 +174,6 @@ ROOT/
   BinaryWriter::Write(BinaryReader const&, long)/
   DataVector::Put(long, unsigned char)
 ```
-
 
 Viewing the call tree
 --------------------
