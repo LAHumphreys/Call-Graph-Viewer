@@ -18,7 +18,9 @@ Comming Soon:
 
 Flat View
 ---------
-The flat view allows you to quickly identify bottle necks in your code by ranking functions by the cost
+The flat view allows you to quickly identify bottle necks in your code by ranking functions by the cost.
+
+(If you're function names have been truncated, try the "widetable" command.)
 ```
 |ROOT> table 10
 -----------------------------------------------------------------------------------------------------------
@@ -56,7 +58,52 @@ The flat view allows you to quickly identify bottle necks in your code by rankin
 -----------------------------------------------------------------------------------------------------------
 
 ```
+You can also search the flat view. In this example we find all constant member functions of the BinaryReady object:
+```
+    |ROOT> searchtable ^BinaryReader::.* const$
+    Searching flat table for: '^BinaryReader::.* const$'
+                     Most Time Spent in Function
+                   ===============================
+      Calls      Time(us)      us/call        Name
+    ---------  -----------   -------------  --------
+     278        8340          30             BinaryReader::End() const
+     274        3014          11             BinaryReader::Get() const
+     2          2506          1253           BinaryReader::Dup(long) const
+     136        2448          18             BinaryReader::Pos(long) const
+     2          2273          1136           BinaryReader::ReadLine(BinaryWriter&, long, char) const
+     1          1879          1879           BinaryReader::AppendString(std::string&) const
+     1          1669          1669           BinaryReader::ReadString() const
+     2          1490          745            BinaryReader::Read(BinaryWriter&, long) const
+     2          1396          698            BinaryReader::ReadLine(void*, long, char) const
+     23         861           37             BinaryReader::Read(void*, long) const
+     2          817           408            BinaryReader::Find(unsigned char) const
+     2          653           326            BinaryReader::ReadString(std::string&) const
+     281        562           2              BinaryReader::Offset() const
+     276        552           2              BinaryReader::operator long() const
+     11         231           21             BinaryReader::Begin() const
+     2          195           97             BinaryReader::RFind(unsigned char) const
 
+                     Most Expensive Function Calls
+                   =================================
+      Calls      Time(us)      us/call        Name
+    ---------  -----------   -------------  --------
+     1          1879          1879           BinaryReader::AppendString(std::string&) const
+     1          1669          1669           BinaryReader::ReadString() const
+     2          2506          1253           BinaryReader::Dup(long) const
+     2          2273          1136           BinaryReader::ReadLine(BinaryWriter&, long, char) const
+     2          1490          745            BinaryReader::Read(BinaryWriter&, long) const
+     2          1396          698            BinaryReader::ReadLine(void*, long, char) const
+     2          817           408            BinaryReader::Find(unsigned char) const
+     2          653           326            BinaryReader::ReadString(std::string&) const
+     2          195           97             BinaryReader::RFind(unsigned char) const
+     23         861           37             BinaryReader::Read(void*, long) const
+     278        8340          30             BinaryReader::End() const
+     11         231           21             BinaryReader::Begin() const
+     136        2448          18             BinaryReader::Pos(long) const
+     274        3014          11             BinaryReader::Get() const
+     276        552           2              BinaryReader::operator long() const
+     281        562           2              BinaryReader::Offset() const
+```
 Searching for Calls
 --------------------
 If you have identified a troublesome function from the flat view, you can search for points in the code where it is called:
