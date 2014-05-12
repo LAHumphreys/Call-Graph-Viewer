@@ -1,5 +1,9 @@
 #include "nodeSearchCache.h"
 #include <iterator>
+#include "logger.h"
+#include <functional>
+
+using namespace std;
 
 NodePtr SearchResult::Node() {
     if ( it < v.end() && it >= v.begin() ) {
@@ -27,9 +31,9 @@ SearchCache::SearchCache() {
 void SearchCache::AddTree(NodePtr& node ) {
     AddNode(node);
     node->ForEach([=] ( NodePtr&& node ) -> void {
-        this->AddTree(node);
-    });
+        this->AddTree(node); });
 }
+
 
 SearchResult SearchCache::Search ( const std::string& name) {
     auto it = theCache.find(name);
@@ -39,3 +43,35 @@ SearchResult SearchCache::Search ( const std::string& name) {
     return SearchResult(it->second.begin(),it->second);
 }
 
+RegSearch::RegSearch() : regPattern(nullptr) {
+}
+
+void RegSearch::AddTree(NodePtr& node ) {
+    if ( regPattern && boost::regex_match(node->Name(),*regPattern) ) {
+        this->AddNode(node);
+    } else {
+        SLOG_FROM(LOG_VERBOSE,"RegSearch::Search",
+           "Rejected Node: " << node->Name() )
+    }
+    node->ForEach([=] ( NodePtr&& node ) -> void {
+        this->AddTree(node); });
+}
+
+size_t RegSearch::Search(NodePtr root, const string& pattern) {
+    nodes.clear();
+    size_t results = 0;
+    try {
+        boost::regex thePattern(pattern);
+        regPattern = &thePattern;
+
+        root->ForEach([=] ( NodePtr&& node ) -> void {
+            this->AddTree(node); });
+    } catch ( boost::regex_error& e ) {
+        SLOG_FROM(LOG_ERROR, "RegSearch::Search",
+            "Invalid Regex: " << e.what()) 
+        results = 0;
+    } 
+
+    regPattern = nullptr;
+    return results;
+}

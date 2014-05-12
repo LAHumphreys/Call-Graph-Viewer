@@ -2,6 +2,8 @@
 #define __PROFILER_LIBPROFDATA_NODE_SEARCH_CACHE_H__
 #include <vector>
 #include "node.h"
+#include <string>
+#include <boost/regex.hpp>
 
 class SearchResult {
 public:
@@ -42,6 +44,30 @@ public:
 private:
     NodeList::const_iterator it;
     const  NodeList& v;
+};
+
+class RegSearch {
+public:
+    using NodeList = std::vector<NodePtr>; 
+
+    RegSearch();
+
+    void AddTree(NodePtr& node);
+
+    size_t Search(NodePtr root, const std::string& pattern);
+
+    SearchResult Results() const {
+        return SearchResult(nodes.begin(), nodes);
+    }
+
+    // Add a single node to the cache
+    void AddNode(NodePtr& node) {
+        nodes.emplace_back(node);
+    }
+
+private:
+    boost::regex* regPattern;
+    NodeList nodes;
 };
 
 class SearchCache {

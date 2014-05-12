@@ -14,6 +14,7 @@ CallProfile profile;
 CallCount* counter = nullptr;
 SearchCache* cache = nullptr;
 SearchResult* result = nullptr;
+RegSearch  finder;
 
 NodePtr rootNode = nullptr;
 
@@ -25,6 +26,7 @@ void GetHelp(NodePtr& activeNode, stringstream& command);
 void AdvanceSearch(NodePtr& activeNode, short direction);
 void ListSearch();
 void Search(NodePtr& activeNode, stringstream& command);
+void SearchChildren(NodePtr& activeNode, stringstream& command);
 
 // Navigation
 void GoTo(NodePtr& activeNode, stringstream& command);
@@ -98,11 +100,11 @@ int main(int argc, const char *argv[])
             GetHelp(activeNode, command);
         } else if ( action == "exit" ) {
             break;
-        } else if ( action == "table" ) {
+        } else if ( action == "table" || action == "t" ) {
             PrintTable(activeNode, command);
-        } else if ( action == "widetable" ) {
+        } else if ( action == "widetable" || action == "wt" ) {
             PrintWideTable(activeNode, command);
-        } else if ( action == "searchtable" ) {
+        } else if ( action == "searchtable" || action == "st" ) {
             PrintFilteredTable(activeNode, command);
         } else if ( action == "tree" ) {
             PrintTree(activeNode, command);
@@ -114,8 +116,10 @@ int main(int argc, const char *argv[])
             PWD(activeNode);
         } else if ( action == "ls" ) {
             LS(activeNode, command);
-        } else if ( action == "search" ) {
+        } else if ( action == "search"  || action == "s") {
             Search(activeNode, command);
+        } else if ( action == "searchchildren" || action == "sc" ) {
+            SearchChildren(activeNode, command);
         } else if ( action == "this" ) {
             AdvanceSearch(activeNode, 0);
         } else if ( action == "previous" || action == "p" ) {
@@ -150,21 +154,31 @@ string GetCommand(NodePtr& activeNode) {
  * Display the usage text
  */
 void GetHelp(NodePtr& activeNode, stringstream& command) {
-    cout << "help                  Display this help message" << endl;
-    cout << "exit                  Quit the application" << endl;
-    cout << "table [max]           Print the flat table for the full program" << endl;
-    cout << "searchtable <regex>   Filter the flat table by a regular expression" << endl;
-    cout << "widetable [max]       Print the flat table for the full program with full names" << endl;
-    cout << "tree  [depth=5]       Print the tree for the current node" << endl;
-    cout << "ls                    List the child nodes" << endl;
-    cout << "cd                    Jump to this node" << endl;
-    cout << "..                    Go to the parent node" << endl;
-    cout << "pwd                   Get the address of the current node" << endl;
-    cout << "search <name>         All calls to function <name>" << endl;
-    cout << "  next                Go to the next search result" << endl;
-    cout << "  previous            Go to the previous search result" << endl;
-    cout << "  this                Go back to the current search result" << endl;
-    cout << "  list                List the current search results" << endl;
+    cout << "help                   Display this help message" << endl;
+    cout << "exit                   Quit the application" << endl;
+    cout << endl;
+    cout << "  Flat View" << endl;
+    cout << "-------------" << endl;
+    cout << "table [max]            (t) Print the flat table for the full program" << endl;
+    cout << "searchtable <regex>    (st) Filter the flat table by a regular expression" << endl;
+    cout << "widetable [max]        (wt) Print the flat table for the full program with full names" << endl;
+    cout << endl;
+    cout << "  Searching" << endl;
+    cout << "-------------" << endl;
+    cout << "search <name>          (s) All calls to function <name>" << endl;
+    cout << "searchchildren <regex> (sc) Search child nodes for children matching <regex>" << endl;
+    cout << "  next                 Go to the next search result" << endl;
+    cout << "  previous             Go to the previous search result" << endl;
+    cout << "  this                 Go back to the current search result" << endl;
+    cout << "  list                 List the current search results" << endl;
+    cout << endl;
+    cout << "  Tree Navigation" << endl;
+    cout << "------------------" << endl;
+    cout << "tree  [depth=5]        Print the tree for the current node" << endl;
+    cout << "ls                     List the child nodes" << endl;
+    cout << "cd                     Jump to this node" << endl;
+    cout << "..                     Go to the parent node" << endl;
+    cout << "pwd                    Get the address of the current node" << endl;
 }
 
 /*
@@ -189,6 +203,21 @@ void Search(NodePtr& activeNode, stringstream& command) {
         }
         delete result;
         result = new SearchResult(cache->Search(name.substr(1)));
+        AdvanceSearch(activeNode,0);
+    }
+}
+void SearchChildren(NodePtr& activeNode, stringstream& command) {
+    string pattern = "";
+    getline(command,pattern);
+
+    if ( pattern == "" ) {
+        cout << "usage: searchchildren <pattern to search>" << endl;
+        cout << "usage: sc <pattern to search>" << endl;
+    } else {
+
+        delete result;
+        finder.Search(activeNode,pattern.substr(1));
+        result = new SearchResult(finder.Results());
         AdvanceSearch(activeNode,0);
     }
 }
