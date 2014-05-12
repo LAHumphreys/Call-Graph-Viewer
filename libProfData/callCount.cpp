@@ -1,10 +1,8 @@
 #include "callCount.h"
-#include <sstream>
 #include <algorithm>
 #include <utility>
 #include <iomanip>
 using namespace std;
-
 
 void CallCount::AddCall(const string& name, 
                         const long& usecs,
@@ -121,6 +119,126 @@ void CallCount::PopulateTables( unsigned tableSize,
                       });
 }
 
+void CallCount::PopulateTables( unsigned tableSize, 
+                                vector<call_pair>& mostTotalTime, 
+                                vector<call_pair>& mostTimePerCall,
+                                const boost::regex& patternRegex) const
+{
+
+    mostTotalTime.resize(tableSize);
+    mostTimePerCall.resize(tableSize);
+
+    // Select the tableSize most expensive function in terms of total time
+    partial_sort_copy(fcalls.begin(),fcalls.end(),
+                      mostTotalTime.begin(),mostTotalTime.end(),
+                      [=] (const call_pair& lhs, const call_pair& rhs) -> bool {
+                          if ( boost::regex_search(lhs.first,patternRegex )) 
+                          {
+                              if (boost::regex_search(rhs.first,patternRegex)) {
+                                  // Both match, check them
+                                  return lhs.second.usecs>rhs.second.usecs;
+                              } else {
+                                  // LHS matches => it is bigger
+                                  return 1;
+                              }
+                          } else if (boost::regex_search(rhs.first,patternRegex)) {
+                              // RHS matchnes => it is bigger
+                              return 0;
+                          } else {
+                              return lhs.second.usecs>rhs.second.usecs;
+                          }
+                      });
+
+    // Select the tableSize most expensive function in terms time per call
+    auto cost_gt = [] (const call_pair& lhs, const call_pair& rhs) -> bool {
+        return ( lhs.second.calls == 0 ? 0 : lhs.second.usecs/lhs.second.calls ) >
+               ( rhs.second.calls == 0 ? 0 : rhs.second.usecs/rhs.second.calls);
+    };
+
+    partial_sort_copy(fcalls.begin(),fcalls.end(),
+                      mostTimePerCall.begin(),mostTimePerCall.end(),
+                      [=] (const call_pair& lhs, const call_pair& rhs) -> bool {
+                          if ( boost::regex_search(lhs.first,patternRegex )) 
+                          {
+                              if (boost::regex_search(rhs.first,patternRegex)) {
+                                  // Both match, check them
+                                  return cost_gt(lhs,rhs);
+                              } else {
+                                  // LHS matches => it is bigger
+                                  return 1;
+                              }
+                          } else if (boost::regex_search(rhs.first,patternRegex)) {
+                              // RHS matchnes => it is bigger
+                              return 0;
+                          } else {
+                              return cost_gt(lhs,rhs);
+                          }
+                      });
+}
+
+void CallCount::PrintWideRow(stringstream& output,
+                             const std::string& name, 
+                             const int& calls, 
+                             const long& usecs) const
+{
+        output << " " << left << setw(10) << calls;
+        output << " " << setw(11) << usecs;
+        output << "   " << setw(13) << (calls == 0 ?  
+                                          0 : 
+                                          usecs / calls);
+        output << "  " << name << endl;
+}
+
+string CallCount::FilteredPrint(const string& pattern, unsigned tableSize) const {
+
+    stringstream output;
+    vector<call_pair> mostTotalTime;
+    vector<call_pair> mostTimePerCall;
+
+    if ( tableSize == 0 ) {
+        tableSize = fcalls.size();
+    }
+
+    try {
+        boost::regex patternRegex(pattern);
+
+        PopulateTables(tableSize, mostTotalTime,mostTimePerCall, patternRegex);
+
+        output << "                 Most Time Spent in Function\n";
+        output << "               ===============================\n";
+        output << "  Calls      Time(us)      us/call        Name\n";
+        output << "---------  -----------   -------------  --------\n";
+        //         1234567890123456789012345678901234567890123456789
+        //         0000000001111111111222222222233333333334444444444
+        // Now print each one...
+        for ( const call_pair& it: mostTotalTime ) {
+            if ( !boost::regex_search(it.first,patternRegex) ) {
+                break;
+            }
+            PrintWideRow(output,it.first,it.second.calls, it.second.usecs);
+        }
+        output << endl << endl;
+
+        output << "                 Most Expensive Function Calls\n";
+        output << "               =================================\n";
+        output << "  Calls      Time(us)      us/call        Name\n";
+        output << "---------  -----------   -------------  --------\n";
+
+        for ( const call_pair& it: mostTimePerCall ) {
+            if ( !boost::regex_search(it.first,patternRegex) ) {
+                break;
+            }
+            PrintWideRow(output,it.first,it.second.calls, it.second.usecs);
+        }
+    } catch ( boost::regex_error& e ) {
+        output << "Invalid regular expression: \n";
+        output << e.what();
+    }
+
+
+    return output.str();
+}
+
 std::string CallCount::WidePrint(unsigned tableSize) const {
     vector<call_pair> mostTotalTime;
     vector<call_pair> mostTimePerCall;
@@ -140,12 +258,7 @@ std::string CallCount::WidePrint(unsigned tableSize) const {
     //         0000000001111111111222222222233333333334444444444
     // Now print each one...
     for ( const call_pair& it: mostTotalTime ) {
-        output << " " << left << setw(10) << it.second.calls;
-        output << " " << setw(11) << it.second.usecs;
-        output << "   " << setw(13) << (it.second.calls == 0 ?  
-                                          0 : 
-                                          it.second.usecs / it.second.calls);
-        output << "  " << it.first << endl;
+        PrintWideRow(output,it.first,it.second.calls, it.second.usecs);
     }
     output << endl << endl;
 
@@ -155,12 +268,7 @@ std::string CallCount::WidePrint(unsigned tableSize) const {
     output << "---------  -----------   -------------  --------\n";
 
     for ( const call_pair& it: mostTimePerCall ) {
-        output << " " << setw(10) << it.second.calls;
-        output << " " << setw(11) << it.second.usecs;
-        output << "   " << setw(13) << (it.second.calls == 0 ?  
-                                          0 : 
-                                          it.second.usecs / it.second.calls);
-        output << "  " << it.first << endl;
+        PrintWideRow(output,it.first,it.second.calls, it.second.usecs);
     }
     return output.str();
 }

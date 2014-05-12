@@ -31,6 +31,7 @@ void GoTo(NodePtr& activeNode, stringstream& command);
 void GoToParent(NodePtr& activeNode, stringstream& command);
 void LS(NodePtr& activeNode, stringstream& command);
 void PWD (NodePtr& activeNode);
+void PrintFilteredTable(NodePtr& activeNode, stringstream& command);
 void PrintTable(NodePtr& activeNode, stringstream& command);
 void PrintTree(NodePtr& activeNode, stringstream& command);
 void PrintWideTable(NodePtr& activeNode, stringstream& command);
@@ -101,6 +102,8 @@ int main(int argc, const char *argv[])
             PrintTable(activeNode, command);
         } else if ( action == "widetable" ) {
             PrintWideTable(activeNode, command);
+        } else if ( action == "searchtable" ) {
+            PrintFilteredTable(activeNode, command);
         } else if ( action == "tree" ) {
             PrintTree(activeNode, command);
         } else if ( action == "cd" ) {
@@ -147,20 +150,21 @@ string GetCommand(NodePtr& activeNode) {
  * Display the usage text
  */
 void GetHelp(NodePtr& activeNode, stringstream& command) {
-    cout << "help              Display this help message" << endl;
-    cout << "exit              Quit the application" << endl;
-    cout << "table [max]       Print the flat table for the full program" << endl;
-    cout << "widetable [max]   Print the flat table for the full program (don't shorten names)" << endl;
-    cout << "tree  [depth=5]   Print the tree for the current node" << endl;
-    cout << "ls                List the child nodes" << endl;
-    cout << "cd                Jump to this node" << endl;
-    cout << "..                Go to the parent node" << endl;
-    cout << "pwd               Get the address of the current node" << endl;
-    cout << "search <name>     All calls to function <name>" << endl;
-    cout << "  next            Go to the next search result" << endl;
-    cout << "  previous        Go to the previous search result" << endl;
-    cout << "  this            Go back to the current search result" << endl;
-    cout << "  list            List the current search results" << endl;
+    cout << "help                  Display this help message" << endl;
+    cout << "exit                  Quit the application" << endl;
+    cout << "table [max]           Print the flat table for the full program" << endl;
+    cout << "searchtable <regex>   Filter the flat table by a regular expression" << endl;
+    cout << "widetable [max]       Print the flat table for the full program with full names" << endl;
+    cout << "tree  [depth=5]       Print the tree for the current node" << endl;
+    cout << "ls                    List the child nodes" << endl;
+    cout << "cd                    Jump to this node" << endl;
+    cout << "..                    Go to the parent node" << endl;
+    cout << "pwd                   Get the address of the current node" << endl;
+    cout << "search <name>         All calls to function <name>" << endl;
+    cout << "  next                Go to the next search result" << endl;
+    cout << "  previous            Go to the previous search result" << endl;
+    cout << "  this                Go back to the current search result" << endl;
+    cout << "  list                List the current search results" << endl;
 }
 
 /*
@@ -257,6 +261,13 @@ void PrintWideTable(NodePtr& activeNode, stringstream& command) {
     int rows = 0;
     command >> rows;
     cout << counter->WidePrint(rows) << endl;
+}
+void PrintFilteredTable(NodePtr& activeNode, stringstream& command) {
+    string pattern = "";
+    getline(command,pattern);
+    pattern = pattern.substr(1);
+    cout << "Searching flat table for: '" << pattern << "'" << endl;
+    cout << counter->FilteredPrint(pattern) << endl;
 }
 
 /*

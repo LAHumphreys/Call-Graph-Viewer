@@ -1,10 +1,12 @@
 #ifndef __PROFILER_LIBPROFDATA_CALL_COUNT_H__
 #define __PROFILER_LIBPROFDATA_CALL_COUNT_H__
 
+#include <sstream>
 #include "callCount.h"
 #include <unordered_map>
 #include <string>
 #include <vector>
+#include <boost/regex.hpp>
 
 
 class CallCount {
@@ -35,10 +37,22 @@ public:
     std::string PrintResults(unsigned tableSize=0) const;
 
     std::string WidePrint(unsigned tableSize=0) const;
+
+    std::string FilteredPrint(const std::string& pattern, unsigned tableSize = 0) const;
 private:
     void PopulateTables(unsigned tableSize, 
                         std::vector<call_pair>& mostTotalTime, 
                         std::vector<call_pair>& mostTimePerCall) const;
+
+    void PopulateTables(unsigned tableSize, 
+                        std::vector<call_pair>& mostTotalTime, 
+                        std::vector<call_pair>& mostTimePerCall,
+                        const boost::regex& patternRegex) const;
+
+    void PrintWideRow(std::stringstream& output,
+                      const std::string& name, 
+                      const int& calls, 
+                      const long& usecs) const;
 
     std::unordered_map<std::string,Calls> fcalls;
   

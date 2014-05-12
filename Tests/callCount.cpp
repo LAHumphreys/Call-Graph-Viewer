@@ -6,12 +6,16 @@ using namespace std;
 int Manual(testLogger& log);
 int Print(testLogger& log);
 int PrintWide(testLogger& log);
+int RegPrint(testLogger& log);
+int InvalidRegex(testLogger& log);
 
 int main(int argc, const char *argv[])
 {
     Test("Manuallying adding calls...",Manual).RunTest();
     Test("Printing Results...",Print).RunTest();
     Test("Printing Wide Results...",PrintWide).RunTest();
+    Test("Printing Search Results...",RegPrint).RunTest();
+    Test("Checking Invalid Regex",InvalidRegex).RunTest();
     return 0;
 }
 
@@ -183,4 +187,87 @@ int PrintWide(testLogger& log) {
         return 1;
     }
    return 0;
+}
+
+int RegPrint(testLogger& log) {
+    CallCount counter;
+    counter.AddCall("Other1",100);
+    counter.AddCall("Other1",100);
+    counter.AddCall("Other3",100);
+    counter.AddCall("Other2",100);
+    counter.AddCall("Func1",100);
+    counter.AddCall("Func2",200);
+    counter.AddCall("Func1",102);
+    counter.AddCall("Really Long Name that is far too long to fit in the box, no really it is really long",500);
+
+    string expected = 
+"                 Most Time Spent in Function\n"
+"               ===============================\n"
+"  Calls      Time(us)      us/call        Name\n"
+"---------  -----------   -------------  --------\n"
+" 1          500           500            Really Long Name that is far too long to fit in the box, no really it is really long\n"
+" 2          202           101            Func1\n"
+" 1          200           200            Func2\n"
+"\n"
+"\n"
+"                 Most Expensive Function Calls\n"
+"               =================================\n"
+"  Calls      Time(us)      us/call        Name\n"
+"---------  -----------   -------------  --------\n"
+" 1          500           500            Really Long Name that is far too long to fit in the box, no really it is really long\n"
+" 1          200           200            Func2\n"
+" 2          202           101            Func1\n";
+    string expected_shorter = 
+"                 Most Time Spent in Function\n"
+"               ===============================\n"
+"  Calls      Time(us)      us/call        Name\n"
+"---------  -----------   -------------  --------\n"
+" 1          500           500            Really Long Name that is far too long to fit in the box, no really it is really long\n"
+" 2          202           101            Func1\n"
+"\n"
+"\n"
+"                 Most Expensive Function Calls\n"
+"               =================================\n"
+"  Calls      Time(us)      us/call        Name\n"
+"---------  -----------   -------------  --------\n"
+" 1          500           500            Really Long Name that is far too long to fit in the box, no really it is really long\n"
+" 1          200           200            Func2\n";
+    string actual = counter.FilteredPrint("(unc|eally)");
+    string shorter = counter.FilteredPrint("(Func|Really).*",2); 
+
+    if ( expected != actual ) {
+        log << "Expected: " << endl << ">" << expected << "<";
+        log << "Got: " << endl <<  ">" << actual << "<";
+        return 1;
+    }
+
+    if ( shorter != expected_shorter ) {
+        log << "Expected: " << endl << ">" << expected_shorter << "<";
+        log << "Got: " << endl <<  ">" << shorter << "<";
+        return 1;
+    }
+   return 0;
+}
+
+int InvalidRegex(testLogger& log) {
+    CallCount counter;
+    counter.AddCall("Other1",100);
+    counter.AddCall("Other1",100);
+    counter.AddCall("Other3",100);
+    counter.AddCall("Other2",100);
+    counter.AddCall("Func1",100);
+    counter.AddCall("Func2",200);
+    counter.AddCall("Func1",102);
+    counter.AddCall("Really Long Name that is far too long to fit in the box, no really it is really long",500);
+
+    string expected = "Invalid regular expression: \n"
+                      "Unmatched marking parenthesis ( or \\(.  The error occurred while parsing the regular expression fragment: 'c|Really.*>>>HERE>>>'.";
+    string actual = counter.FilteredPrint("(Func|Really.*");
+    if ( expected != actual ) {
+        log << "Failed to handle invalid regex!" << endl;
+        log << "Expected: " << expected << endl;
+        log << "Actual: " << actual << endl;
+        return 1;
+    }
+    return 0;
 }
