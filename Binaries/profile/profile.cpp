@@ -120,6 +120,9 @@ int main(int argc, const char *argv[])
             Search(activeNode, command);
         } else if ( action == "searchchildren" || action == "sc" ) {
             SearchChildren(activeNode, command);
+        } else if ( action == "searchroot" || action == "sr" ) {
+            activeNode = rootNode;
+            SearchChildren(activeNode, command);
         } else if ( action == "this" ) {
             AdvanceSearch(activeNode, 0);
         } else if ( action == "previous" || action == "p" ) {
@@ -162,10 +165,12 @@ void GetHelp(NodePtr& activeNode, stringstream& command) {
     cout << "table [max]            (t) Print the flat table for the full program" << endl;
     cout << "searchtable <regex>    (st) Filter the flat table by a regular expression" << endl;
     cout << "widetable [max]        (wt) Print the flat table for the full program with full names" << endl;
+    cout << "ls  [depth=1]          Create a local flat view" << endl; 
     cout << endl;
     cout << "  Searching" << endl;
     cout << "-------------" << endl;
     cout << "search <name>          (s) All calls to function <name>" << endl;
+    cout << "searchroot <regex>     (sr) Search child nodes of root for children matching <regex>" << endl;
     cout << "searchchildren <regex> (sc) Search child nodes for children matching <regex>" << endl;
     cout << "  next                 Go to the next search result" << endl;
     cout << "  previous             Go to the previous search result" << endl;
@@ -175,7 +180,6 @@ void GetHelp(NodePtr& activeNode, stringstream& command) {
     cout << "  Tree Navigation" << endl;
     cout << "------------------" << endl;
     cout << "tree  [depth=5]        Print the tree for the current node" << endl;
-    cout << "ls                     List the child nodes" << endl;
     cout << "cd                     Jump to this node" << endl;
     cout << "..                     Go to the parent node" << endl;
     cout << "pwd                    Get the address of the current node" << endl;

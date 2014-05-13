@@ -112,25 +112,37 @@ If you have identified a troublesome function from the flat view, you can search
 There are two search commands supported:
  * search (s): A fast, cached search of the entire tree. The full name must be provided
  * searchchildren (sc): Searches children of the active node. Regex pattern may be provided.
+    * searchroot (sr): Invoke searchchildren on the root node.
   
 
-Below we investigate why "Put" is taking so long, and discover we are resizing every time!
+Below we investigate why "Put" is taking so long, and discover we are resizing nearly every time!
 ```
-|BinaryReader::Read> search DataVector::Put(long, unsigned char)
- --> BinaryWriter::Write(BinaryReader const&, long)/DataVector::Put(long, unsigned char) : 43840 / 160 (274)
-     BinaryWriter::Write(BinaryReader const&, long)/DataVector::Put(long, unsigned char) : 20824 / 76 (274)
-     BinaryWriter::Write(BinaryReader const&, long)/DataVector::Put(long, unsigned char) : 13152 / 48 (274)
-There are 2 more results
+|main> searchroot DataVector::Put.*
+ --> validatePutAndGrow(DefaultTestLogger&)/DataVector::Put(long, unsigned char) : 1837 / 4 (459)
+     validatePut(DefaultTestLogger&)/DataVector::Put(long, unsigned char) : 59 / 1 (59)
+There are 1 more results
 
 |DataVector::Put> ls
-  DataVector::Put(long, unsigned char)
-      Calls: 160, Time: 43840, Av. Time: 274
-      std::vector<unsigned char, std::allocator<unsigned char> >::resize(unsigned long)
-          Calls: 160, Time: 33280, Av. Time: 208
-      DataVector::operator[](long)
-          Calls: 160, Time: 3680, Av. Time: 23
-      std::vector<unsigned char, std::allocator<unsigned char> >::size() const
-          Calls: 160, Time: 1920, Av. Time: 12
+DataVector::Put(long, unsigned char)
+    Calls: 4, Time: 1837, Av. Time: 459
+
+                 Most Time Spent in Function
+               ===============================
+  Calls      Reads Ir      Ir/call        Name
+---------  -----------   -------------  --------
+ 3          1580          526            std::vector<unsigned char, std::allocator<unsigned char> >::resize(unsigned long)
+ 4          92            23             DataVector::operator[](long)
+ 4          48            12             std::vector<unsigned char, std::allocator<unsigned char> >::size() const
+
+
+                 Most Expensive Function Calls
+               =================================
+  Calls      Reads Ir      Ir/call        Name
+---------  -----------   -------------  --------
+ 3          1580          526            std::vector<unsigned char, std::allocator<unsigned char> >::resize(unsigned long)
+ 4          92            23             DataVector::operator[](long)
+ 4          48            12             std::vector<unsigned char, std::allocator<unsigned char> >::size() const
+
 
 ```
 Here we use searchchildren to find all calls to LoadCSV, regardless of template parameters:
