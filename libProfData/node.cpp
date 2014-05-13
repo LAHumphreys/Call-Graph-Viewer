@@ -202,3 +202,31 @@ NodePtr Node::CreateNode( const Path& path,
     node->callCount = 0;
     return node;
 }
+
+void Node::AddChildren(CallCount& counter, int depth) {
+    counter.AddCall(name,usecs,callCount);
+    --depth;
+    if ( depth > 0 ) {
+        ForEach([=, &counter] (NodePtr node) -> void {
+            node->AddChildren(counter,depth);
+        });
+    }
+}
+
+string Node::Tabulate(int depth) {
+    CallCount counter;
+
+    ForEach([=, &counter] (NodePtr node) -> void {
+        node->AddChildren(counter,depth);
+    });
+
+    stringstream output;
+
+    output << PrintInfo(0,"",false);
+    output << endl;
+    output << endl;
+
+    output << counter.WidePrint();
+
+    return output.str();
+}

@@ -14,6 +14,7 @@ int MakeNode(testLogger& log);
 int EmptyCallgrindData(testLogger& log);
 int CallgrindTree(testLogger& log);
 int CallgrindTable(testLogger& log);
+int LS(testLogger& log);
 
 int main(int argc, const char *argv[])
 {
@@ -28,6 +29,7 @@ int main(int argc, const char *argv[])
     Test("Loading an empty callggrind tree",EmptyCallgrindData).RunTest();
     Test("Loading a full callgrind tree",CallgrindTree).RunTest();
     Test("Loading a full callgrind tree and table",CallgrindTable).RunTest();
+    Test("Tabulating Children (LS)...",LS).RunTest();
     return 0;
 }
 
@@ -52,10 +54,10 @@ int CheckNode(testLogger& log,
         return 1;
     }
 
-    if ( node->CallCount() != count ) {
+    if ( node->Calls() != count ) {
         log << "Unexpected Call Count!" << endl;
         log << "Expected: " << count << endl;
-        log << "Actual : " << node->CallCount() << endl;
+        log << "Actual : " << node->Calls() << endl;
         return 1;
     }
 
@@ -774,6 +776,105 @@ int CheckRegSearch(testLogger& log) {
     if ( !f3_result.Node().IsNull() ) {
         log << "Result is not null when past the end of the search!" << endl;
         return 1;
+    }
+
+
+    return 0;
+}
+
+int LS(testLogger& log) {
+    Node rootNode;
+    Path rootPath("");
+
+    Path mainPath("main");
+    Path f1path("main/f1");
+
+    /*
+     * ROOT
+     * |
+     * main---F1 (3x101)---F2 (2x102)--NULL
+     *      |            |
+     *      |            --F3 (1x103)--NULL
+     *      --F3 (2x103)
+     */
+
+    // Add main to root
+    NodePtr mainNode = rootNode.AddCall(rootPath.Root(),"main",100);
+
+    // Add F1 to main 
+    rootNode.AddCall(mainPath.Root(),"f1",101); 
+
+    // Add F2 and F3 to F1
+    rootNode.AddCall(f1path.Root(),"f2",102);
+    rootNode.AddCall(f1path.Root(),"f2",102);
+    rootNode.AddCall(f1path.Root(),"f3",103);
+
+    // Add F3 to main 
+    rootNode.AddCall(mainPath.Root(),"f3",103);
+    rootNode.AddCall(mainPath.Root(),"f3",103);
+
+    // Add F1 to main (again)
+    rootNode.AddCall(mainPath.Root(),"f1",101);
+    rootNode.AddCall(mainPath.Root(),"f1",101);
+
+    string actual = mainNode->Tabulate();
+    string actual2 = mainNode->Tabulate(2);
+    string expected2 = 
+        "main\n"
+        "    Calls: 1, Time: 100, Av. Time: 100\n"
+        "\n"
+        "\n"
+        "                 Most Time Spent in Function\n"
+        "               ===============================\n"
+        "  Calls      Time(us)      us/call        Name\n"
+        "---------  -----------   -------------  --------\n"
+        " 3          309           103            f3\n"
+        " 3          303           101            f1\n"
+        " 2          204           102            f2\n"
+        "\n"
+        "\n"
+        "                 Most Expensive Function Calls\n"
+        "               =================================\n"
+        "  Calls      Time(us)      us/call        Name\n"
+        "---------  -----------   -------------  --------\n"
+        " 3          309           103            f3\n"
+        " 2          204           102            f2\n"
+        " 3          303           101            f1\n";
+
+    string expected = 
+        "main\n"
+        "    Calls: 1, Time: 100, Av. Time: 100\n"
+        "\n"
+        "\n"
+        "                 Most Time Spent in Function\n"
+        "               ===============================\n"
+        "  Calls      Time(us)      us/call        Name\n"
+        "---------  -----------   -------------  --------\n"
+        " 3          303           101            f1\n"
+        " 2          206           103            f3\n"
+        "\n"
+        "\n"
+        "                 Most Expensive Function Calls\n"
+        "               =================================\n"
+        "  Calls      Time(us)      us/call        Name\n"
+        "---------  -----------   -------------  --------\n"
+        " 2          206           103            f3\n"
+        " 3          303           101            f1\n";
+    if ( expected != actual ) {
+       log << "ls 1 failfed! " << endl;
+       log << expected <<endl;
+       log << "------------------------" << endl;
+       log << actual <<endl;
+       return 1;
+    }
+
+    if ( expected2 != actual2 ) {
+       log << mainNode->PrintResults() << endl;
+       log << "ls 2 failfed! " << endl;
+       log << expected2 <<endl;
+       log << "------------------------" << endl;
+       log << actual2 <<endl;
+       return 1;
     }
 
 

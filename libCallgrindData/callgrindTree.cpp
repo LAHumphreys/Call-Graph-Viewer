@@ -89,7 +89,7 @@ void CallgrindCallTree::LoadCosts(const string& fname) {
 void CallgrindCallTree::AddCalls(NodePtr node) {
     counter.AddCall(node->Name(),
                     0,
-                    node->CallCount());
+                    node->Calls());
     node->ForEach([=] ( NodePtr&& node ) -> void {
         this->AddCalls(node);
     });

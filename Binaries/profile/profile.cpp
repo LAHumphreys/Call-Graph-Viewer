@@ -269,10 +269,10 @@ void ListSearch() {
                 cout << "     ";
             }
             cout << node->Parent()->Name() << "/" << node->Name();
-            cout << " : " << node->RunTime() << " / " << node->CallCount();
-            cout << " (" << ( node->CallCount() == 0 ? 
+            cout << " : " << node->RunTime() << " / " << node->Calls();
+            cout << " (" << ( node->Calls() == 0 ? 
                                    0 : 
-                                   node->RunTime() / node->CallCount() 
+                                   node->RunTime() / node->Calls() 
                             ) << ")" << endl;
         }
     }
@@ -312,7 +312,9 @@ void PrintTree(NodePtr& activeNode, stringstream& command) {
  * Show the direct descendents of the current node
  */
 void LS(NodePtr& activeNode, stringstream& command) {
-    cout << activeNode->PrintResults(2,1,false) << endl;
+    int depth = 1;
+    command >> depth;
+    cout << activeNode->Tabulate(depth) << endl;
 }
 
 

@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include "path.h"
 #include <sstream>
+#include "callCount.h"
 
 class Node;
 
@@ -35,7 +36,7 @@ public:
 
     // data access
     const std::string& Name() const { return name; }
-    const long& CallCount() const { return callCount; }
+    const long& Calls() const { return callCount; }
     const long& RunTime() const { return usecs; }
     size_t NumChildren() const { return children.size(); }
 
@@ -81,6 +82,14 @@ public:
     std::string PrintResults(unsigned int indent=0, 
                              unsigned int depth=10,
                              bool printPath = true);
+
+    // Add all of our children to the counter;
+    void AddChildren(CallCount& counter, int depth);
+
+    /*
+     * Return a string detailing the children of this node...
+     */
+    std::string Tabulate(int depth = 1);
 
     /*
      * Call a function of the form f(NodePtr p) for each descedent element.
