@@ -1,0 +1,21 @@
+before_install:
+  - git submodule update --init --recursive
+  - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+  - sudo apt-get update -qq
+  - sudo apt-get install -qq g++-4.8;
+  - sudo apt-get install -qq gfortran-4.8
+  - sudo apt-get install exuberant-ctags
+  - sudo apt-get install libboost-dev
+  - sudo apt-get install -qq libboost-dev
+  - sudo apt-get install -qq libboost-regex-dev
+  - sudo apt-get install libplplot-dev
+  - sudo apt-get install libboost-filesystem-dev
+  - sudo pip install cpp-coveralls --use-mirrors
+
+script: 
+  - TOOL_CHAIN=TRAVIS make 
+  - TOOL_CHAIN=TRAVIS make clean
+  - TOOL_CHAIN=TRAVIS make cover
+after_success:
+  - cd exports/objs/
+  - coveralls --gcov gcov-4.8 --verbose 
