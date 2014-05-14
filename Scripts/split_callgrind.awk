@@ -165,7 +165,7 @@ BEGIN {
 ## LEAVE CURRENT BLOCK ##
 #########################
 #  (a blank line)
-/^$/ {
+$0 == "" {
     LeaveF();
     next;
 }
@@ -183,17 +183,17 @@ BEGIN {
 # NEW or Existing FUNCTION ##
 #############################
 #   e.g cfn=(2)
-/^cfn=/ {
+substr($0,0,4) == "cfn=" {
     id = $2;
     name = $3;
     if ( name == "" ) {
        # Existing Function
        SetNextCalledFn(id);
     } else {
-       # New File
-        pat = "cfn=(" id ")  "
-        start = match($0,pat) + length(pat);
-        name = substr($0,start);
+       # New Function
+        #01234567890
+        #^cfn=(id)  "
+        name = substr($0,8 + length(id));
         DefineFunction(id,name);
         SetNextCalledFn(id);
     }
@@ -204,7 +204,7 @@ BEGIN {
 # SET CALLS    ##
 #################
 #   e.g calls=1 50
-/^calls=/ {
+substr($0,0,6) == "calls=" {
     calls=$2
     SetNumCalls(calls);
     next;
@@ -225,16 +225,17 @@ BEGIN {
 # NEW FUNCTION ##
 #################
 #   e.g fn=(1) main
-/^fn=/ {
+substr($0,0,3) == "fn=" {
     id = $2;
     name = $3;
 
     if ( name == "" ) {
         SetCurrentFunction(id);
     } else {
-        pat = "fn=(" id ")  "
-        start = match($0,pat) + length(pat);
-        name = substr($0,start);
+       # New Function
+        #01234567890
+        #^fn=(id)  "
+        name = substr($0,7 + length(id));
         DefineFunction(id,name);
         SetCurrentFunction(id);
     }

@@ -8,7 +8,7 @@ if [[ ! -f $input ]]; then
 fi
 
 echo -n "Parsing callgrind file..."
-cat $input | mawk -f Scripts/split_callgrind.awk
+cat $input | gawk -f Scripts/split_callgrind.awk
 echo "done"
 
 ./profile flist.csv calls.csv cost.csv
