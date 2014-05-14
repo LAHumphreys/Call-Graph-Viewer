@@ -32,21 +32,6 @@
 #      defined this meta data, and if it did record the call
 
 ################################################
-##        HELPER FUNCTIONS - FILES            ##
-################################################
-
-# Map a file to an ID
-function DefineFile(id,name) {
-    files[id] = name;
-}
-
-# Change the current file, to an already mapped file
-function SetCurrentFile(id) {
-    file = id;
-    child_file = id;
-}
-
-################################################
 ##        HELPER FUNCTIONS - FUNC. BLOCKS     ##
 ################################################
 
@@ -120,11 +105,6 @@ function SetNextCalledFn(id) {
     child_fn = id;
 }
 
-# Set the ID of file where the next called function can be found...
-function SetNextCalledFile(id) {
-    child_file = id;
-}
-
 # Set the number of call made to the next child function in this block
 function SetNumCalls(count) {
     child_calls = count;
@@ -153,7 +133,7 @@ function ResetChildInfo() {
 
 BEGIN {
     # Setup to split fields on ' ', '=' or parentheses
-    FS=" |=|=\(|\) |\)";
+    FS=" |=|=\\(|\\) |\\)";
 
     # ID Maps
     files[-1] = "NO SUCH FILE!"
@@ -166,57 +146,28 @@ BEGIN {
 }
 
 ################################################
-##        BLOCK HEADERS                       ##
+##        STANDARD ROWS                       ##
 ################################################
-#
-# Read at the start of a function definition
-#     fl: The file this function is found in
-#     fn: The name of this function
 
+################
+## COST LINES ##
+################
+#    e.g 16 400
+/^(\*|\+|-|[0-9])/ {
+    cost=$2
 
-##############
-## NEW FILE ## 
-##############
-#    e.g fl=(1) file1.c
-/^fl=\([0-9]*\) .+/ {
-    id = $2;
-    name = $3;
-
-    DefineFile(id,name);
-    SetCurrentFile(id);
+    MakeCall(cost)
+    AddCost(cost)
+    next;
 }
 
-###################
-## EXISTING FILE ## 
-###################
-#    e.g fl=(1) file1.c
-/^fl=\([0-9]*\)$/ {
-    id = $2;
-    SetCurrentFile(id);
-}
-
-#################
-# NEW FUNCTION ##
-#################
-#   e.g fn=(1) main
-/^fn=\([0-9]*\) .+/ {
-    id = $2;
-    name = "";
-
-    pat = "fn=(" id ")  "
-    start = match($0,pat) + length(pat);
-    name = substr($0,start);
-    DefineFunction(id,name);
-    SetCurrentFunction(id);
-}
-
-######################
-# EXISTING FUNCTION ##
-######################
-#   e.g fn=(1) main
-/^fn=\([0-9]*\)$/ {
-    id = $2;
-    SetCurrentFunction(id);
+#########################
+## LEAVE CURRENT BLOCK ##
+#########################
+#  (a blank line)
+/^$/ {
+    LeaveF();
+    next;
 }
 
 ################################################
@@ -228,80 +179,64 @@ BEGIN {
 #     cfi: The file this function is found in
 #     calls=<num> <rel pos> The number of calls
 
-##############
-## NEW FILE ## 
-##############
-#    e.g fl=(1) file1.c
-/^cfi=\([0-9]*\) .+/ {
+#############################
+# NEW or Existing FUNCTION ##
+#############################
+#   e.g cfn=(2)
+/^cfn=/ {
     id = $2;
     name = $3;
-
-    DefineFile(id,name);
-    SetNextCalledFile(id);
-}
-
-###################
-## EXISTING FILE ## 
-###################
-#    e.g fl=(1) file1.c
-/^cfi=\([0-9]*\)$/ {
-    id = $2;
-
-    SetNextCalledFile(id);
-}
-
-#################
-# NEW FUNCTION ##
-#################
-#   e.g cfn=(2)
-/^cfn=\([0-9]*\) .+/ {
-    id = $2;
-    name = "";
-
-    pat = "cfn=(" id ")  "
-    start = match($0,pat) + length(pat);
-    name = substr($0,start);
-    DefineFunction(id,name);
-    SetNextCalledFn(id);
-}
-
-######################
-# EXISTING FUNCTION ##
-######################
-#   e.g cfn=(2)
-/^cfn=\([0-9]*\)$/ {
-    id = $2;
-    SetNextCalledFn(id);
+    if ( name == "" ) {
+       # Existing Function
+       SetNextCalledFn(id);
+    } else {
+       # New File
+        pat = "cfn=(" id ")  "
+        start = match($0,pat) + length(pat);
+        name = substr($0,start);
+        DefineFunction(id,name);
+        SetNextCalledFn(id);
+    }
+    next;
 }
 
 #################
 # SET CALLS    ##
 #################
 #   e.g calls=1 50
-/calls=.*/ {
+/^calls=/ {
     calls=$2
     SetNumCalls(calls);
+    next;
 }
 
+
+
 ################################################
-##        STANDARD ROWS                       ##
+##        BLOCK HEADERS                       ##
 ################################################
+#
+# Read at the start of a function definition
+#     fl: The file this function is found in
+#     fn: The name of this function
 
-################
-## COST LINES ##
-################
-#    e.g 16 400
-/^(\*|\+|-|[0-9])+ [0-9]+$/ {
-    cost=$2
 
-    MakeCall(cost)
-    AddCost(cost)
-}
+#################
+# NEW FUNCTION ##
+#################
+#   e.g fn=(1) main
+/^fn=/ {
+    id = $2;
+    name = $3;
 
-#########################
-## LEAVE CURRENT BLOCK ##
-#########################
-#  (a blank line)
-/^$/ {
-    LeaveF();
+    if ( name == "" ) {
+        SetCurrentFunction(id);
+    } else {
+        pat = "fn=(" id ")  "
+        start = match($0,pat) + length(pat);
+        name = substr($0,start);
+        DefineFunction(id,name);
+        SetCurrentFunction(id);
+    }
+    next;
 }
