@@ -133,7 +133,7 @@ function ResetChildInfo() {
 
 BEGIN {
     # Setup to split fields on ' ', '=' or parentheses
-    FS=" |=|=\\(|\\) |\\)";
+    FS=" ";
 
     # ID Maps
     files[-1] = "NO SUCH FILE!"
@@ -184,8 +184,11 @@ $0 == "" {
 #############################
 #   e.g cfn=(2)
 substr($0,0,4) == "cfn=" {
-    id = $2;
-    name = $3;
+    start = 6
+    stop = index($1,")");
+    id = substr($1,start,stop-start);
+    name = $2;
+
     if ( name == "" ) {
        # Existing Function
        SetNextCalledFn(id);
@@ -205,8 +208,7 @@ substr($0,0,4) == "cfn=" {
 #################
 #   e.g calls=1 50
 substr($0,0,6) == "calls=" {
-    calls=$2
-    SetNumCalls(calls);
+    SetNumCalls(substr($1,7));
     next;
 }
 
@@ -226,8 +228,10 @@ substr($0,0,6) == "calls=" {
 #################
 #   e.g fn=(1) main
 substr($0,0,3) == "fn=" {
-    id = $2;
-    name = $3;
+    start = 5
+    stop = index($1,")");
+    id = substr($1,start,stop-start);
+    name = $2;
 
     if ( name == "" ) {
         SetCurrentFunction(id);
