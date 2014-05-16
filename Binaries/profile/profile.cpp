@@ -165,7 +165,7 @@ void GetHelp(NodePtr& activeNode, stringstream& command) {
     cout << "table [max]                (t) Print the flat table for the full program" << endl;
     cout << "searchtable <regex>        (st) Filter the flat table by a regular expression" << endl;
     cout << "widetable [max] [regex]    (wt) Print the flat table for the full program with full names" << endl;
-    cout << "ls [depth=1] [max] [regex] Create a local flat view" << endl; 
+    cout << "ls [max] [depth=1] [regex] Create a local flat view" << endl; 
     cout << endl;
     cout << "  Searching" << endl;
     cout << "-------------" << endl;
@@ -324,10 +324,10 @@ void PrintTree(NodePtr& activeNode, stringstream& command) {
  * Show the direct descendents of the current node
  */
 void LS(NodePtr& activeNode, stringstream& command) {
-    int depth = 1;
     int max = 0;
-    command >> depth;
+    int depth = 1;
     command >> max;
+    command >> depth;
 
     string pattern = "";
     getline(command,pattern);
@@ -335,8 +335,6 @@ void LS(NodePtr& activeNode, stringstream& command) {
     if ( pattern != "" ) {
         pattern = pattern.substr(1);
     }
-    cout << "Depth: " << depth << endl;
-    cout << "Max : " << max << endl;
     cout << activeNode->Tabulate(depth,max,pattern) << endl;
 }
 
