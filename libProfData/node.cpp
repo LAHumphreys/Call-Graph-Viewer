@@ -213,7 +213,9 @@ void Node::AddChildren(CallCount& counter, int depth) {
     }
 }
 
-string Node::Tabulate(int depth) {
+string Node::Tabulate( int depth, 
+                       unsigned tableSize,
+                       const string& filter ) {
     CallCount counter;
 
     ForEach([=, &counter] (NodePtr node) -> void {
@@ -226,7 +228,11 @@ string Node::Tabulate(int depth) {
     output << endl;
     output << endl;
 
-    output << counter.WidePrint();
+    if ( filter == "" ) {
+        output << counter.WidePrint(tableSize);
+    } else {
+        output << counter.FilteredPrint(filter,tableSize);
+    }
 
     return output.str();
 }

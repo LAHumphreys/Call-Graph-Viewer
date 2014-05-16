@@ -21,7 +21,7 @@ void CallCount::AddCall(const string& name,
 
 std::string CallCount::PrintResults(unsigned tableSize) const {
     stringstream result("");
-    static const int name_width = 70;
+    static const unsigned name_width = 70;
     result << "-----------------------------------------------------------------------------------------------------------\n";
     result << "|-               Most Time Spent in Function                                                             -|\n";
     result << "-----------------------------------------------------------------------------------------------------------\n";

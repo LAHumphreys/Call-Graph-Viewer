@@ -162,27 +162,27 @@ void GetHelp(NodePtr& activeNode, stringstream& command) {
     cout << endl;
     cout << "  Flat View" << endl;
     cout << "-------------" << endl;
-    cout << "table [max]            (t) Print the flat table for the full program" << endl;
-    cout << "searchtable <regex>    (st) Filter the flat table by a regular expression" << endl;
-    cout << "widetable [max]        (wt) Print the flat table for the full program with full names" << endl;
-    cout << "ls  [depth=1]          Create a local flat view" << endl; 
+    cout << "table [max]                (t) Print the flat table for the full program" << endl;
+    cout << "searchtable <regex>        (st) Filter the flat table by a regular expression" << endl;
+    cout << "widetable [max] [regex]    (wt) Print the flat table for the full program with full names" << endl;
+    cout << "ls [depth=1] [max] [regex] Create a local flat view" << endl; 
     cout << endl;
     cout << "  Searching" << endl;
     cout << "-------------" << endl;
-    cout << "search <name>          (s) All calls to function <name>" << endl;
-    cout << "searchroot <regex>     (sr) Search child nodes of root for children matching <regex>" << endl;
-    cout << "searchchildren <regex> (sc) Search child nodes for children matching <regex>" << endl;
-    cout << "  next                 Go to the next search result" << endl;
-    cout << "  previous             Go to the previous search result" << endl;
-    cout << "  this                 Go back to the current search result" << endl;
-    cout << "  list                 List the current search results" << endl;
+    cout << "search <name>              (s) All calls to function <name>" << endl;
+    cout << "searchroot <regex>         (sr) Search child nodes of root for children matching <regex>" << endl;
+    cout << "searchchildren <regex>     (sc) Search child nodes for children matching <regex>" << endl;
+    cout << "  next                     Go to the next search result" << endl;
+    cout << "  previous                 Go to the previous search result" << endl;
+    cout << "  this                     Go back to the current search result" << endl;
+    cout << "  list                     List the current search results" << endl;
     cout << endl;
     cout << "  Tree Navigation" << endl;
     cout << "------------------" << endl;
-    cout << "tree  [depth=5]        Print the tree for the current node" << endl;
-    cout << "cd                     Jump to this node" << endl;
-    cout << "..                     Go to the parent node" << endl;
-    cout << "pwd                    Get the address of the current node" << endl;
+    cout << "tree  [depth=5]            Print the tree for the current node" << endl;
+    cout << "cd                         Jump to this node" << endl;
+    cout << "..                         Go to the parent node" << endl;
+    cout << "pwd                        Get the address of the current node" << endl;
 }
 
 /*
@@ -293,7 +293,15 @@ void PrintTable(NodePtr& activeNode, stringstream& command) {
 void PrintWideTable(NodePtr& activeNode, stringstream& command) {
     int rows = 0;
     command >> rows;
-    cout << counter->WidePrint(rows) << endl;
+    string pattern;
+    getline(command,pattern);
+    if ( pattern == "" ) {
+        cout << counter->WidePrint(rows) << endl;
+    } else {
+        pattern = pattern.substr(1);
+        cout << "Searching flat table for: '" << pattern << "'" << endl;
+        cout << counter->FilteredPrint(pattern,rows) << endl;
+    }
 }
 void PrintFilteredTable(NodePtr& activeNode, stringstream& command) {
     string pattern = "";
@@ -317,8 +325,19 @@ void PrintTree(NodePtr& activeNode, stringstream& command) {
  */
 void LS(NodePtr& activeNode, stringstream& command) {
     int depth = 1;
+    int max = 0;
     command >> depth;
-    cout << activeNode->Tabulate(depth) << endl;
+    command >> max;
+
+    string pattern = "";
+    getline(command,pattern);
+
+    if ( pattern != "" ) {
+        pattern = pattern.substr(1);
+    }
+    cout << "Depth: " << depth << endl;
+    cout << "Max : " << max << endl;
+    cout << activeNode->Tabulate(depth,max,pattern) << endl;
 }
 
 

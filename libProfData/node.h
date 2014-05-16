@@ -89,7 +89,9 @@ public:
     /*
      * Return a string detailing the children of this node...
      */
-    std::string Tabulate(int depth = 1);
+    std::string Tabulate(int depth = 1, 
+                         unsigned tableSize =0,
+                         const std::string& filter ="");
 
     /*
      * Call a function of the form f(NodePtr p) for each descedent element.
