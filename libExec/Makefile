@@ -5,6 +5,6 @@ MODE=CPP
 TARGET_LIB=libExec
 TAGS_FILE=profiler-libexec-c++.tags
 
-LINKED_LIBS=libProfData libIOInterface libUtils
+LINKED_LIBS=libSource libProfData libIOInterface libUtils
 
 include ../makefile.include

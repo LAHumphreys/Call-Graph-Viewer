@@ -5,6 +5,7 @@
 #include "path.h"
 #include <sstream>
 #include "callCount.h"
+#include "Annotation.h"
 
 class Node;
 
@@ -16,8 +17,7 @@ public:
     bool operator==(const NodePtr&rhs) { return p == rhs.p; }
     inline bool IsNull() { return p == nullptr;} 
 
-private: 
-    Node*    p;
+private: Node*    p;
 };
 
 /*
@@ -101,6 +101,12 @@ public:
     template <class F>
     void ForEach(F f);
 
+    // File Info
+    int& SourceId()    { return sourceId;}
+    int& SourceStart() { return sourceStart;}
+    int& SourceEnd()   { return sourceEnd;}
+    Annotation& Annotations() { return annotations;}
+
 private:
 
     using PAIR = std::pair<std::string,Node*>;
@@ -129,6 +135,10 @@ private:
     // Used to initialise as a child node
     Node(const std::string& name, Node* parent, long _usecs);
 
+    int                                  sourceId;
+    int                                  sourceStart;
+    int                                  sourceEnd;
+    Annotation                           annotations;
     long                                 callCount;
     long                                 usecs;
     std::string                          name;

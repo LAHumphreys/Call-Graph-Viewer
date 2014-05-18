@@ -1,0 +1,53 @@
+fn (234) _loader
+fl=(195) data/graph.cpp
+27 45
+cfl=(194) data/graph2.cpp
+cfn=(746) main
+calls=1 324
+* 54
+
+fl=(194)
+fn=(746)
+27 45
+cfi=(345) 
+cfn=(21) dsfsd'sdfsdf
+calls=1 345
+* 345
+cfn=(750) evens'main
+calls=1 345
+* 65
++1 100
+cfl=(194)
+cfn=(766) odds'main
+calls=1 245
++1 75
+
+fn=(750)
+25 42
+cfl=(194)
+cfn=(754) div'evens'main
+calls=2 245
+* 21
+fi=(104) /usr/lib/gcc/x86_64-pc-linux-gnu/4.8.2/include/g++-v4/ext/new_allocator.h
+100 8976
+fe=(194)
+-74 7
++14 7
+
+fl=(194)
+fn=(766)
+cfl=(194)
+cfn=(768) div'odds'main
+calls=3 245
+102 45
+
+fl=(194)
+fn=(754)
+cfl=(194)
+cfn=(762) pos_div4'div'odds'main
+calls=1 245
+107 7
+cfl=(194)
+cfn=(758) pos_div2'div'odds'main
+calls=1 245
++2 7

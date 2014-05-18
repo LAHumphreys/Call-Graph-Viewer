@@ -1,3 +1,6 @@
+#ifndef __PROFILER_LIBSOURCE_ANNOTATION
+#define __PROFILER_LIBSOURCE_ANNOTATION
+
 #include <unordered_map>
 
 
@@ -23,3 +26,5 @@ private:
     Lines    annotations;
    
 };
+
+#endif

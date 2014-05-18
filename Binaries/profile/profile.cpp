@@ -9,7 +9,7 @@
 
 using namespace std;
 
-CallgrindNative* data;
+CallgrindNative* data = nullptr;
 CallProfile profile;
 CallCount* counter = nullptr;
 SearchCache* cache = nullptr;
@@ -33,10 +33,13 @@ void GoTo(NodePtr& activeNode, stringstream& command);
 void GoToParent(NodePtr& activeNode, stringstream& command);
 void LS(NodePtr& activeNode, stringstream& command);
 void PWD (NodePtr& activeNode);
+
+// Information
 void PrintFilteredTable(NodePtr& activeNode, stringstream& command);
 void PrintTable(NodePtr& activeNode, stringstream& command);
 void PrintTree(NodePtr& activeNode, stringstream& command);
 void PrintWideTable(NodePtr& activeNode, stringstream& command);
+void PrintAnnotation(NodePtr& activeNode);
 
 int main(int argc, const char *argv[])
 {
@@ -113,6 +116,8 @@ int main(int argc, const char *argv[])
             AdvanceSearch(activeNode, 1);
         } else if ( action == "list" ) {
             ListSearch();
+        } else if ( action == "annotate" || action == "a" ) {
+            PrintAnnotation(activeNode);
         } else {
             cout << "Unknown command!" << endl;
             GetHelp(activeNode,command);
@@ -378,4 +383,18 @@ void GoTo(NodePtr& activeNode, stringstream& command) {
         }
     }
 }
+
+void PrintAnnotation(NodePtr& activeNode) {
+    if ( data == nullptr ) {
+            cout << "Error: annotations are unavailable" << endl;
+    } else {
+        string results = data->Annotate(activeNode);
+        if ( results == "" ) {
+            results = "Error: annotations are unavailable for this node";
+        }
+
+        cout << results << endl;
+    }
+}
+
 

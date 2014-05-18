@@ -98,9 +98,17 @@ void CallgrindCallTree::AddCalls(NodePtr node) {
     });
 }
 
+void CallgrindNative::AddFile(const int& id, const std::string& path ) {
+    sources.emplace(id,SourceFile(path));
+}
+
 CallgrindNative::CallgrindNative(const std::string& fname) 
-    : child(nullptr), current(&root), numCalls(0)
+    : child(nullptr), current(&root), numCalls(0), currentFile(-1), childFile(-1), currentLine(0)
 {
+
+    // Default to not caring about this file...
+    AddFile(-1,"/dev/null");
+
     DataFile funcs;
     CallsFile calls;
     CostsFile costs;
@@ -135,14 +143,18 @@ CallgrindNative::CallgrindNative(const std::string& fname)
      *
      *     Files:
      *         fl=(199) [/var/tmp/portage/sys-libs/glibc-2.17/work/glibc-2.17/dlfcn/dlerror.c]
+     *         fi=(199) [/var/tmp/portage/sys-libs/glibc-2.17/work/glibc-2.17/dlfcn/dlerror.c]
+     *         fe=(199) [/var/tmp/portage/sys-libs/glibc-2.17/work/glibc-2.17/dlfcn/dlerror.c]
+     *     File next child func is stored in:
      *         cfi=(92) [/var/tmp/portage/sys-libs/glibc-2.17/work/glibc-2.17/dlfcn/dlerror.c]
+     *         cfl=(92) [/var/tmp/portage/sys-libs/glibc-2.17/work/glibc-2.17/dlfcn/dlerror.c]
      *
      *
      */
 
     while ( file.good() ) {
         char c = file.peek();
-        if ( c == '*' || c == '+' || ( c >= '0' && c <= '9') ) {
+        if ( c == '*' || c == '+' || c== '-' || ( c >= '0' && c <= '9') ) {
             string line;
             std::getline(file,line);
             AddCost(line);
@@ -161,10 +173,19 @@ CallgrindNative::CallgrindNative(const std::string& fname)
                     CallChild(line);
                 } else if ( token == "call" ) {
                     SetCalls(line);
+                } else if ( token == "cfl=" || token == "cfi=" ) {
+                    SetChildFile(line);
+                } else if ( token == "fl=(" || token == "fi=(" || token == "fe=(" ) {
+                    ChangeFile(line);
+                } else {
+                    SLOG_FROM(LOG_VERY_VERBOSE, "CallgrindNative::CallgrindNative",
+                       "Skipped line (no token match) : " << line)
                 }
             }
         } else {
             file.ignore(numeric_limits<streamsize>::max(),'\n');
+            SLOG_FROM(LOG_VERY_VERBOSE, "CallgrindNative::CallgrindNative",
+               "Skipped line (wrong c) : " << c)
         }
 
     }
@@ -197,28 +218,34 @@ void CallgrindNative::SetCurrentFunction ( const std::string& line) {
 
             // Finally pick up the actual function name
             string name(line.substr(id_end + 2,(last_index+1)-(id_end +2)));
-
-            if ( foundMain || name == "main" ) {
+if ( foundMain || name == "main" ) {
+                // Place the node in the graph
                 current = root.CreateNode(path,name);
+
+                // Link the ID to the node
                 idMap.emplace(id,current);
+
+                // Link the node to the source file...
+                current->SourceId() = currentFile;
                  
-                SLOG_FROM(LOG_VERY_VERBOSE,"CallgrindNative::SetCurrentFunction",
+                SLOG_FROM(LOG_VERBOSE,"CallgrindNative::SetCurrentFunction",
                            "Found new func: " << current->Name() << " ( " << id << " ) " 
                            << endl  << "from: " << line << endl
+                           << "File: " << currentFile << endl
                            << "Parent: " << current->Parent()->Name())
             } else {
-                SLOG_FROM(LOG_VERY_VERBOSE,"CallgrindNative::SetCurrentFunction",
+                SLOG_FROM(LOG_VERBOSE,"CallgrindNative::SetCurrentFunction",
                            "Discarded: " << line << " because there it is not under main")
             }
         }
-
-
-
     } else {
         // Alreay know about this function - nothing else to do...
         current = it->second;
 
-        SLOG_FROM(LOG_VERY_VERBOSE, "CallgrindNative::SetCurrentFunction",
+        currentFile = current->SourceId();
+        childFile = currentFile;
+
+        SLOG_FROM(LOG_VERBOSE, "CallgrindNative::SetCurrentFunction",
            "Current is now : " << current->Name() << endl
            << "From: " << line )
     }
@@ -246,15 +273,22 @@ void CallgrindNative::CallChild ( const std::string& line) {
             // Finally pick up the actual function name
             string name(line.substr(id_end +2,(name_end)-(id_end +2)));
 
+            // Create the child in the call graph
             child = current->MakeChild(name);
+
+            // Link the function to the id
             idMap.emplace(id,child);
 
-            SLOG_FROM(LOG_VERY_VERBOSE,"CallgrindNative::CallChild",
+            // Link the function to a source file
+            child->SourceId() = childFile;
+
+            SLOG_FROM(LOG_VERBOSE,"CallgrindNative::CallChild",
                        "Added new child func: " << child->Name() << " ( " << id <<" ) " 
-                       << "Parent: " << child->Parent()->Name()
+                       << "Parent: " << child->Parent()->Name() << endl
+                       << "File: " << childFile
                        << endl  << "from: " << line << endl )
         } else {
-            SLOG_FROM(LOG_VERY_VERBOSE, "CallgrindNative::CallChild",
+            SLOG_FROM(LOG_VERBOSE, "CallgrindNative::CallChild",
                        "Discarded: " << line << " because it has no name and we don't know the id")
         }
 
@@ -262,30 +296,82 @@ void CallgrindNative::CallChild ( const std::string& line) {
         // Alreay know about this function - nothing else to do...
         child = it->second;
 
-        SLOG_FROM(LOG_VERY_VERBOSE, "CallgrindNative::CallChild",
+        SLOG_FROM(LOG_VERBOSE, "CallgrindNative::CallChild",
            "Child is now : " << child->Name() << endl
            << "From: " << line )
     }
+
+    // Reset the file pointer...
+    childFile = currentFile;
+
 }
 
-// format: <location> <cost>
+// format: <location> <cost unit1> <cost unit2>
+// Location : 
+//    * : Unchanged
+//    -N: N lines before the last line no
+//    +N: N lines after the last line no
+//    N : At line N
 void CallgrindNative::AddCost(const std::string& line) {
-    if ( !child.IsNull() ) {
-        auto nstart = line.find_first_of(' ');
+
+    // Extract the line No...
+    auto nstart = line.find_first_of(' ');
+
+    // Due to relative offsets, we always need to know the current line no...
+    if ( line[0] == '*' ) {
+        // currentLine is unchanged
+    } else if ( line[0] == '+' ) {
+        // Relative offset
+        currentLine += atoi(line.substr(1,nstart-1).c_str());
+    } else if ( line[0] == '-' ) {
+        // Relative offset
+        currentLine -= atoi(line.substr(1,nstart-1).c_str());
+    } else {
+        // absolute position
+        currentLine = atoi(line.substr(0,nstart).c_str());
+    }
+
+    SLOG_FROM(LOG_VERBOSE, "CallgrindNative::AddCall",
+         "Current line is now " << currentLine << " after line " << line)
+
+    // But only calculate the cost if we need it
+    if ( current->SourceId() == currentFile  || child.IsNull() ) {
+        // Extract the cost
         auto nend = line.find_first_of(' ',nstart+1);
         if( nend == string::npos) {
             nend = line.length();
         }
-
         long cost = atol(line.substr(nstart+1,(nend-nstart-1)).c_str());
 
-        child->AddCall(cost,numCalls);
-        counter.AddCall(child->Name(),cost,numCalls);
+        // Annotate the node...
+        if ( current->SourceId() == currentFile ) {
+            current->Annotations().AddAnnotation(currentLine,cost);
+            current->SourceEnd() = currentLine;
 
-        child = nullptr;
-        numCalls = 0;
+            if ( current->SourceStart() > currentLine ) {
+                current->SourceStart() = currentLine;
+
+                SLOG_FROM(LOG_VERBOSE, "CallgrindNative::AddCall",
+                     current->Name() << " start is now " << currentLine)
+            }
+            if ( current->SourceEnd() < currentLine ) {
+                current->SourceEnd() = currentLine;
+
+                SLOG_FROM(LOG_VERBOSE, "CallgrindNative::AddCall",
+                     current->Name() << " stop is now " << currentLine)
+            }
+        }
+
+        // If we're making a call, we need to add the cost to 
+        // the relevant node...
+        if ( !child.IsNull() ) {
+            child->AddCall(cost,numCalls);
+            counter.AddCall(child->Name(),cost,numCalls);
+
+            child = nullptr;
+            numCalls = 0;
+        }
     }
-
 }
 
 // calls=<N> <offset>
@@ -297,3 +383,71 @@ void CallgrindNative::SetCalls(const string& line) {
     }
 }
 
+// fl=(id) [path]
+// fe=(id) [path]
+// fi=(id) [path]
+void CallgrindNative::ChangeFile(const std::string& line) {
+    // Extract the ID...
+    size_t id_end = line.find_first_of(')');
+    currentFile = atoi(line.substr(4,(id_end - 4)).c_str());
+
+    // If we don't know about it, add it to the map...
+    auto it = sources.find(currentFile);
+    if ( it == sources.end() ) {
+        AddFile(currentFile, line.substr(id_end+2));
+
+        SLOG_FROM(LOG_VERBOSE, "CallgrindNative::ChangeFile",
+              "Current file is now (new): " << currentFile << "(" << line.substr(id_end+2) << ")" << endl
+              << "Changed from line: " << line )
+    } else {
+        SLOG_FROM(LOG_VERBOSE, "CallgrindNative::ChangeFile",
+              "Current file is now: " << currentFile << "(" << it->second.Name() << ")" << endl
+              << "Changed from line: " << line )
+    }
+
+}
+
+// cfl=(id) [path]
+// cfi=(id) [path]
+void CallgrindNative::SetChildFile(const std::string& line) {
+    size_t id_end = line.find_first_of(')');
+    childFile = atoi(line.substr(5,(id_end - 5)).c_str());
+    auto it = sources.find(childFile);
+
+    if ( it == sources.end() ) {
+        AddFile(childFile, line.substr(id_end+2));
+
+        SLOG_FROM(LOG_VERBOSE, "CallgrindNative::SetChildFile",
+              "Child file is now (new): " << childFile << "(" << line.substr(id_end+2) << ")" << endl
+              << "Changed from line: " << line )
+    } else {
+        SLOG_FROM(LOG_VERBOSE, "CallgrindNative::SetChildFile",
+              "Child file is now: " << childFile << "(" << it->second.Name() << ")" << endl
+              << "Changed from line: " << line )
+    }
+
+}
+
+SourceFile& CallgrindNative::GetFile(const int& id ) {
+    auto it = sources.find(id);
+
+    // Fall back to /dev/null
+    if ( it == sources.end() ) {
+        it = sources.find(-1);
+    }
+    return it->second;
+}
+
+string CallgrindNative::Annotate(NodePtr node) {
+    SourceFile& f = GetFile(node->SourceId());
+    int start = node->SourceStart();
+    if ( start <= 3 ) {
+        start = 1;
+    } else {
+        start -= 3;
+    }
+
+    int stop = node->SourceEnd() +3;
+
+    return f.Annotate(node->Annotations(),start,stop);
+}

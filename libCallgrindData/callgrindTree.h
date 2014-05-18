@@ -2,6 +2,7 @@
 #include "node.h"
 #include <unordered_map>
 #include "callCount.h"
+#include "SourceFile.h"
 
 /*
  * Load a pre-processed callgrind file from 3 csv files... 
@@ -54,11 +55,24 @@ public:
 
     void AddCost (const std::string& line);
 
+    void ChangeFile (const std::string& line);
+    void SetChildFile (const std::string& line);
+
+    void AddFile (const int& id, const std::string& path);
+
+    SourceFile& GetFile(const int& id);
+
+    std::string Annotate(NodePtr node);
+
 private:
-    Node       root;
-    NodePtr    child;
-    NodePtr    current;
-    CallCount  counter;
-    int        numCalls;
+    Node           root;
+    NodePtr        child;
+    NodePtr        current;
+    CallCount      counter;
+    int            numCalls;
+    int            currentFile;
+    int            childFile;
+    int            currentLine;
+    std::unordered_map<int,SourceFile> sources;
     std::unordered_map<int,NodePtr> idMap;
 };

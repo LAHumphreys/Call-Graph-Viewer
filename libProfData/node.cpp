@@ -2,6 +2,7 @@
 #include "logger.h"
 #include <algorithm>
 #include <iomanip>
+#include <climits>
 
 using namespace std;
 
@@ -9,7 +10,10 @@ const int INDENT_TAB_SIZE = 4;
 
 // Root node
 Node::Node()
-    : callCount(0), 
+    : sourceId(-1),
+      sourceStart(INT_MAX),
+      sourceEnd(-1),
+      callCount(0), 
       usecs(0), 
       name("ROOT"), 
       parent(nullptr)
@@ -17,7 +21,10 @@ Node::Node()
 }
 
 Node::Node(const std::string& _name, Node* _parent, long _usecs)
-    : callCount(0), 
+    : sourceId(-1),
+      sourceStart(INT_MAX),
+      sourceEnd(-1),
+      callCount(0), 
       usecs(_usecs), 
       name(_name), 
       parent(_parent)

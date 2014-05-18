@@ -30,14 +30,17 @@ string SourceFile::Print(size_t start, size_t end) {
     return output.str();
 }
 
-string SourceFile::Annotate(int start, int stop) {
+string SourceFile::Annotate(const Annotation& annotations,
+                            int start, 
+                            int stop) 
+{
     stringstream output;
 
     if ( !initialised ) {
         Initialise();
     }
     
-    if ( start <= stop && stop < static_cast<int>(lines.size()) ) {
+    if ( start > 0 && start <= stop && stop < static_cast<int>(lines.size()) ) {
         for ( int i = start; i <= stop; ++i ) {
             output << setw(5) << i << ": ";
             const auto& l = annotations.CheckLine(i);

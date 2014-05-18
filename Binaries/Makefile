@@ -1,4 +1,4 @@
-MAKE_DIRS= profile dumpTree
+MAKE_DIRS= profile 
 
 # makefile tools library  for bulding multi-directory projects
 #
