@@ -1,9 +1,9 @@
-LINKED_LIBS= libExec libCallgrindData libProfData\
+LINKED_LIBS= libExec libCallgrindData libProfData libSource\
              libUtils  \
 			 libIOInterface \
 			 libTest
 
-BUILD_TIME_TESTS=load path callCount stack profile graph
+BUILD_TIME_TESTS=source load path callCount stack profile graph
 CPP_TAGS_FILE=profiler-tests-c++.tags
 MODE=CPP
 
