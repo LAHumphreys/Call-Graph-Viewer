@@ -49,10 +49,16 @@ public:
     void SetCurrentFunction ( const std::string& line);
 
     void CallChild ( const std::string& line);
+
+    void SetCalls (const std::string& line);
+
+    void AddCost (const std::string& line);
+
 private:
     Node       root;
     NodePtr    child;
     NodePtr    current;
     CallCount  counter;
+    int        numCalls;
     std::unordered_map<int,NodePtr> idMap;
 };

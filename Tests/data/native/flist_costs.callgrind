@@ -1,0 +1,34 @@
+fn (234) _loader
+27 45
+cfn=(746) main
+calls=1 324
+* 54
+
+fn=(746)
+27 45
+cfn=(750) evens'main
+calls=1 345
+* 65
++1 100
+cfn=(766) odds'main
+calls=1 245
++1 75
+
+fn=(750)
+7897 42
+cfn=(754) div'evens'main
+calls=2 245
+* 42
+
+fn=(766)
+cfn=(768) div'odds'main
+calls=3 245
+102 45
+
+fn=(754)
+cfn=(762) pos_div4'div'odds'main
+calls=1 245
+107 7
+cfn=(758) pos_div2'div'odds'main
+calls=1 245
++2 7

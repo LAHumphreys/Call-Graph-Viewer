@@ -9,7 +9,7 @@
 
 using namespace std;
 
-CallgrindCallTree* data;
+CallgrindNative* data;
 CallProfile profile;
 CallCount* counter = nullptr;
 SearchCache* cache = nullptr;
@@ -48,39 +48,21 @@ int main(int argc, const char *argv[])
         return 1;
     }
 
-    if ( argc == 2 ) {
-        LOG_FROM(LOG_OVERVIEW, "main", "Building Profile...")
-        cout << "Building call graph...";
-        cout.flush();
-        Time start;
-        profile.ProcessFile(argv[1]);
-        Time end;
-        cout << "done" << endl;
-        cout << "Process started up in " << end.DiffSecs(start) << " seconds" << endl;
-        LOG_FROM(LOG_OVERVIEW, "main", "Profile built - program ready!")
+    LOG_FROM(LOG_OVERVIEW, "main", "Building Profile...")
+    cout << "Building call graph...";
+    cout.flush();
+    Time start;
 
-        // start at the top of the tree
-        rootNode = profile.RootNode();
-        counter = &profile.Count();
-    } else {
-        LOG_FROM(LOG_OVERVIEW, "main", "Building Profile...")
-        cout << "Building call graph...";
-        cout.flush();
-        Time start;
+    data = new CallgrindNative(argv[1]);
 
-        data = new CallgrindCallTree(argv[1]);
-        data->LoadCalls(argv[2]);
-        data->LoadCosts(argv[3]);
+    Time end;
+    cout << "done" << endl;
+    cout << "Process started up in " << end.DiffUSecs(start)/1000 << " mili-seconds" << endl;
+    LOG_FROM(LOG_OVERVIEW, "main", "Profile built - program ready!")
 
-        Time end;
-        cout << "done" << endl;
-        cout << "Process started up in " << end.DiffSecs(start) << " seconds" << endl;
-        LOG_FROM(LOG_OVERVIEW, "main", "Profile built - program ready!")
-
-        // start at the top of the tree
-        rootNode = data->RootNode();
-        counter = &data->Counter();
-    }
+    // start at the top of the tree
+    rootNode = data->RootNode();
+    counter = &data->Counter();
 
     // start at the top of the tree
     activeNode = rootNode;

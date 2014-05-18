@@ -99,7 +99,7 @@ void CallgrindCallTree::AddCalls(NodePtr node) {
 }
 
 CallgrindNative::CallgrindNative(const std::string& fname) 
-    : child(nullptr), current(nullptr)
+    : child(nullptr), current(&root), numCalls(0)
 {
     DataFile funcs;
     CallsFile calls;
@@ -143,9 +143,11 @@ CallgrindNative::CallgrindNative(const std::string& fname)
     while ( file.good() ) {
         char c = file.peek();
         if ( c == '*' || c == '+' || ( c >= '0' && c <= '9') ) {
-            file.ignore(numeric_limits<streamsize>::max(),'\n');
+            string line;
+            std::getline(file,line);
+            AddCost(line);
             // a cost line
-        } else if ( c == 'f' ) {
+        } else if ( c == 'f' || c == 'c' ) {
             // Could be a defn, a file or a func
             string line;
             std::getline(file,line);
@@ -153,8 +155,12 @@ CallgrindNative::CallgrindNative(const std::string& fname)
                 string&& token = line.substr(0,4);
                 if ( token == "fn=(" ) {
                     // Changes the current function
+                    SetCurrentFunction(line);
                 } else if ( token == "cfn=" ) {
                     // Call to a child function
+                    CallChild(line);
+                } else if ( token == "call" ) {
+                    SetCalls(line);
                 }
             }
         } else {
@@ -172,26 +178,40 @@ void CallgrindNative::SetCurrentFunction ( const std::string& line) {
     auto it = idMap.find(id);
     Path path("");
     if ( it == idMap.end() ) {
-        // Haven't seen this before, need the path...
-        size_t index = id_end;
-        size_t last_index = line.length()-1;
-        for ( index = line.find_last_of('\'');
-              index != string::npos;
-              index = line.find_last_of('\'',index-1))
-        {
-            path.Extend(line.substr(index+1,last_index-1));
-            last_index = index;
+        if ( line.find_first_of(' ') != string::npos ) {
+            // Haven't seen this before, need the path...
+            size_t index = id_end;
+            size_t last_index = line.length()-1;
+            bool foundMain = false;
+            for ( index = line.find_last_of('\'');
+                  index != string::npos;
+                  index = line.find_last_of('\'',index-1))
+            {
+                string&& token = line.substr(index+1,last_index-1);
+                last_index = index;
+                if ( !foundMain && token == "main" ) {
+                    foundMain = true;
+                }
+                path.Extend(token);
+            }
+
+            // Finally pick up the actual function name
+            string name(line.substr(id_end + 2,(last_index+1)-(id_end +2)));
+
+            if ( foundMain || name == "main" ) {
+                current = root.CreateNode(path,name);
+                idMap.emplace(id,current);
+                 
+                SLOG_FROM(LOG_VERY_VERBOSE,"CallgrindNative::SetCurrentFunction",
+                           "Found new func: " << current->Name() << " ( " << id << " ) " 
+                           << endl  << "from: " << line << endl
+                           << "Parent: " << current->Parent()->Name())
+            } else {
+                SLOG_FROM(LOG_VERY_VERBOSE,"CallgrindNative::SetCurrentFunction",
+                           "Discarded: " << line << " because there it is not under main")
+            }
         }
-        // Finally pick up the actual function name
-        string name(line.substr(id_end + 2,(last_index+1)-(id_end +2)));
 
-        current = root.CreateNode(path,name);
-        idMap.emplace(id,current);
-
-        SLOG_FROM(LOG_VERY_VERBOSE,"CallgrindNative::SetCurrentFunction",
-                   "Found new func: " << current->Name() << " ( " << id << " ) " 
-                   << endl  << "from: " << line << endl
-                   << "Parent: " << current->Parent()->Name())
 
 
     } else {
@@ -217,20 +237,27 @@ void CallgrindNative::CallChild ( const std::string& line) {
 
         size_t name_end = line.find_first_of('\'');
         if ( name_end == string::npos ) {
-            name_end = line.length();
+            if ( line.find_first_of(' ') != string::npos ) {
+                name_end = line.length();
+            }
         }
-        
-        // Finally pick up the actual function name
-        string name(line.substr(id_end +2,(name_end)-(id_end +2)));
 
+        if ( name_end != string::npos ) {
+            // Finally pick up the actual function name
+            string name(line.substr(id_end +2,(name_end)-(id_end +2)));
 
-        child = current->MakeChild(name);
-        idMap.emplace(id,child);
+            child = current->MakeChild(name);
+            idMap.emplace(id,child);
 
-        SLOG_FROM(LOG_VERY_VERBOSE,"CallgrindNative::CallChild",
-                   "Added new child func: " << child->Name() << " ( " << id <<" ) " 
-                   << "Parent: " << child->Parent()->Name()
-                   << endl  << "from: " << line << endl )
+            SLOG_FROM(LOG_VERY_VERBOSE,"CallgrindNative::CallChild",
+                       "Added new child func: " << child->Name() << " ( " << id <<" ) " 
+                       << "Parent: " << child->Parent()->Name()
+                       << endl  << "from: " << line << endl )
+        } else {
+            SLOG_FROM(LOG_VERY_VERBOSE, "CallgrindNative::CallChild",
+                       "Discarded: " << line << " because it has no name and we don't know the id")
+        }
+
     } else {
         // Alreay know about this function - nothing else to do...
         child = it->second;
@@ -240,3 +267,33 @@ void CallgrindNative::CallChild ( const std::string& line) {
            << "From: " << line )
     }
 }
+
+// format: <location> <cost>
+void CallgrindNative::AddCost(const std::string& line) {
+    if ( !child.IsNull() ) {
+        auto nstart = line.find_first_of(' ');
+        auto nend = line.find_first_of(' ',nstart+1);
+        if( nend == string::npos) {
+            nend = line.length();
+        }
+
+        long cost = atol(line.substr(nstart+1,(nend-nstart-1)).c_str());
+
+        child->AddCall(cost,numCalls);
+        counter.AddCall(child->Name(),cost,numCalls);
+
+        child = nullptr;
+        numCalls = 0;
+    }
+
+}
+
+// calls=<N> <offset>
+void CallgrindNative::SetCalls(const string& line) {
+    auto nstart = line.find_first_of('=');
+    auto nend = line.find_first_of(' ');
+    if ( nstart != string::npos && nend != string::npos ) {
+        numCalls = atoi(line.substr(nstart+1,(nend - nstart-1)).c_str());
+    }
+}
+
