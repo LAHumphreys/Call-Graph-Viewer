@@ -45,7 +45,7 @@ Path& Path::operator=(const Path& rhs) {
 Path::Path(const Path& rhs, const std::string& next) 
     :path(rhs.path)
 {
-    this->path.push_back(next);
+    Extend(next);
 }
 
 Path::PathNode Path::Root() const {

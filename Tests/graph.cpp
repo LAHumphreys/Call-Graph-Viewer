@@ -12,12 +12,14 @@ int Search(testLogger& log);
 int CheckRegSearch(testLogger& log);
 int MakeNode(testLogger& log);
 int EmptyCallgrindData(testLogger& log);
+int EmptyCallgrindData_Native(testLogger& log);
 int CallgrindTree(testLogger& log);
 int CallgrindTable(testLogger& log);
 int LS(testLogger& log);
 
 int main(int argc, const char *argv[])
 {
+
     Test("Checking root node...",RootNode).RunTest();
     Test("Adding some nodes...",AddNodes).RunTest();
     Test("Checking path retrieval...",PathAccess).RunTest();
@@ -27,6 +29,7 @@ int main(int argc, const char *argv[])
     Test("Seaching the graph with regex",CheckRegSearch).RunTest();
     Test("Testing child creation",MakeNode).RunTest();
     Test("Loading an empty callggrind tree",EmptyCallgrindData).RunTest();
+    Test("Loading an empty callggrind tree from native file",EmptyCallgrindData_Native).RunTest();
     Test("Loading a full callgrind tree",CallgrindTree).RunTest();
     Test("Loading a full callgrind tree and table",CallgrindTable).RunTest();
     Test("Tabulating Children (LS)...",LS).RunTest();
@@ -878,5 +881,52 @@ int LS(testLogger& log) {
     }
 
 
+    return 0;
+}
+
+int EmptyCallgrindData_Native(testLogger& log) {
+    CallgrindNative native("data/native/flist.callgrind");
+    native.SetCurrentFunction("fn=(746) main");
+    native.CallChild("cfn=(750) evens'main");
+    native.CallChild("cfn=(766) odds'main");
+
+    native.SetCurrentFunction("fn=(750)");
+    native.CallChild("cfn=(754) div'evens'main");
+
+    native.SetCurrentFunction("fn=(766)");
+    native.CallChild("cfn=(768) div'odds'main");
+
+    native.SetCurrentFunction("fn=(754)");
+    native.CallChild("cfn=(762) pos_div4'div'odds'main");
+    native.CallChild("cfn=(758) pos_div2'div'odds'main");
+
+    string expected = 
+        "ROOT (ROOT)\n"
+        "    Calls: 0, Time: 0, Av. Time: 0\n"
+        "    main (ROOT/main)\n"
+        "        Calls: 0, Time: 0, Av. Time: 0\n"
+        "        odds (ROOT/main/odds)\n"
+        "            Calls: 0, Time: 0, Av. Time: 0\n"
+        "            div (ROOT/main/odds/div)\n"
+        "                Calls: 0, Time: 0, Av. Time: 0\n"
+        "        evens (ROOT/main/evens)\n"
+        "            Calls: 0, Time: 0, Av. Time: 0\n"
+        "            div (ROOT/main/evens/div)\n"
+        "                Calls: 0, Time: 0, Av. Time: 0\n"
+        "                pos_div2 (ROOT/main/evens/div/pos_div2)\n"
+        "                    Calls: 0, Time: 0, Av. Time: 0\n"
+        "                pos_div4 (ROOT/main/evens/div/pos_div4)\n"
+        "                    Calls: 0, Time: 0, Av. Time: 0\n";
+
+    string actual = native.RootNode()->PrintResults();
+
+    if ( expected != actual ) {
+        log << " Failed to read callgrind tree!";
+        log << " Expected: " << endl;
+        log << ">" << expected << "<" << endl;
+        log << " Actual: " << endl;
+        log << ">" << actual << "<" ;
+        return 1;
+    }
     return 0;
 }

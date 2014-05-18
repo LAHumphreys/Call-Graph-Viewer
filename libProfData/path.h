@@ -35,6 +35,13 @@ public:
     Path(const Path& rhs, const std::string& next);
 
     /*
+     * Extend the path
+     */
+    void Extend(const std::string& next ) {
+        path.push_back(next);
+    }
+
+    /*
      * Used to take a splice of a path
      */
     Path(const std::vector<std::string>::const_iterator& beg, 

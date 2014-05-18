@@ -1,7 +1,10 @@
 #include "callgrindTree.h"
-#include "csv.h"
-#include "path.h"
 #include "stdReader.h"
+#include "path.h"
+#include "csv.h"
+#include <fstream>
+#include <string>
+#include <limits>
 
 using namespace std;
 
@@ -93,4 +96,147 @@ void CallgrindCallTree::AddCalls(NodePtr node) {
     node->ForEach([=] ( NodePtr&& node ) -> void {
         this->AddCalls(node);
     });
+}
+
+CallgrindNative::CallgrindNative(const std::string& fname) 
+    : child(nullptr), current(nullptr)
+{
+    DataFile funcs;
+    CallsFile calls;
+    CostsFile costs;
+    ifstream file(fname);
+    /* Please see the valgrind format definition:
+     *    http://valgrind.org/docs/manual/cl-manual.html
+     *
+     * Types of line we have to handle:
+     *
+     * Cost lines: 
+     *     <line No> <cost>
+     *     where Line No may be a number, '*' to indicate as above, or
+     *     '+N' to indicated a relavtive offset
+     *
+     *  Function Definitions: 
+     *     Functions not seen before:
+     *         fn=(<id>) <func name>'<parent>'....'<main>'....'<root>'
+     *         cfn=(<id>) <func name>'<parent>'....'<main>'....'<root>'
+     *     Functions seen before:
+     *         fn=(<id>)   // Start of a new cost block
+     *         cfn=(<id>)  // A call to a child function
+     *  Calls (to the previous cfn line): 
+     *         calls=<N> <offset>
+     *
+     * Types of line we are ignoring for the time being:
+     *     Definitions:
+     *        <property>: <value>
+     *
+     *     Object Files:
+     *         ob=(6) /lib64/libdl-2.17.so
+     *         cob=(3) /lib64/libc-2.17.so
+     *
+     *     Files:
+     *         fl=(199) [/var/tmp/portage/sys-libs/glibc-2.17/work/glibc-2.17/dlfcn/dlerror.c]
+     *         cfi=(92) [/var/tmp/portage/sys-libs/glibc-2.17/work/glibc-2.17/dlfcn/dlerror.c]
+     *
+     *
+     */
+
+    while ( file.good() ) {
+        char c = file.peek();
+        if ( c == '*' || c == '+' || ( c >= '0' && c <= '9') ) {
+            file.ignore(numeric_limits<streamsize>::max(),'\n');
+            // a cost line
+        } else if ( c == 'f' ) {
+            // Could be a defn, a file or a func
+            string line;
+            std::getline(file,line);
+            if ( line.length() > 4 ) {
+                string&& token = line.substr(0,4);
+                if ( token == "fn=(" ) {
+                    // Changes the current function
+                } else if ( token == "cfn=" ) {
+                    // Call to a child function
+                }
+            }
+        } else {
+            file.ignore(numeric_limits<streamsize>::max(),'\n');
+        }
+
+    }
+}
+
+//        01234
+// Format fn=(<ID>) [fname'parent'...'root]
+void CallgrindNative::SetCurrentFunction ( const std::string& line) {
+    size_t id_end = line.find_first_of(')');
+    int id = atoi(line.substr(4,(id_end - 4)).c_str());
+    auto it = idMap.find(id);
+    Path path("");
+    if ( it == idMap.end() ) {
+        // Haven't seen this before, need the path...
+        size_t index = id_end;
+        size_t last_index = line.length()-1;
+        for ( index = line.find_last_of('\'');
+              index != string::npos;
+              index = line.find_last_of('\'',index-1))
+        {
+            path.Extend(line.substr(index+1,last_index-1));
+            last_index = index;
+        }
+        // Finally pick up the actual function name
+        string name(line.substr(id_end + 2,(last_index+1)-(id_end +2)));
+
+        current = root.CreateNode(path,name);
+        idMap.emplace(id,current);
+
+        SLOG_FROM(LOG_VERY_VERBOSE,"CallgrindNative::SetCurrentFunction",
+                   "Found new func: " << current->Name() << " ( " << id << " ) " 
+                   << endl  << "from: " << line << endl
+                   << "Parent: " << current->Parent()->Name())
+
+
+    } else {
+        // Alreay know about this function - nothing else to do...
+        current = it->second;
+
+        SLOG_FROM(LOG_VERY_VERBOSE, "CallgrindNative::SetCurrentFunction",
+           "Current is now : " << current->Name() << endl
+           << "From: " << line )
+    }
+}
+
+//        01234
+// Format cfn=(<ID>) [fname'parent'...'root]
+void CallgrindNative::CallChild ( const std::string& line) {
+    size_t id_end = line.find_first_of(')');
+    int id = atoi(line.substr(5,(id_end - 5)).c_str());
+    auto it = idMap.find(id);
+
+    if ( it == idMap.end() ) {
+        // We need the name, but not the path since we know that current must
+        // be the parent...
+
+        size_t name_end = line.find_first_of('\'');
+        if ( name_end == string::npos ) {
+            name_end = line.length();
+        }
+        
+        // Finally pick up the actual function name
+        string name(line.substr(id_end +2,(name_end)-(id_end +2)));
+
+
+        child = current->MakeChild(name);
+        idMap.emplace(id,child);
+
+        SLOG_FROM(LOG_VERY_VERBOSE,"CallgrindNative::CallChild",
+                   "Added new child func: " << child->Name() << " ( " << id <<" ) " 
+                   << "Parent: " << child->Parent()->Name()
+                   << endl  << "from: " << line << endl )
+    } else {
+        // Alreay know about this function - nothing else to do...
+        child = it->second;
+
+        SLOG_FROM(LOG_VERY_VERBOSE, "CallgrindNative::CallChild",
+           "Child is now : " << child->Name() << endl
+           << "From: " << line )
+    }
 }
