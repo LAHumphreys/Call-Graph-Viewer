@@ -45,6 +45,11 @@ string SourceFile::Annotate(const Annotation& annotations,
         stop = lines.size()-1;
     }
 
+    if ( total != 0 ) {
+        // Calculate the real total...
+        total =  annotations.Sum();
+    }
+
     if ( start > 0 && start <= stop ) {
         for ( int i = start; i <= stop; ++i ) {
             output << setw(5) << i << ": ";
@@ -74,7 +79,11 @@ void SourceFile::Initialise() {
     while ( file.good() ) {
         string line;
         std::getline(file,line);
-        lines.emplace_back(std::move(line));
+        if ( line.length() > 80 ) {
+            lines.emplace_back(line.substr(0,77) + "...");
+        } else {
+            lines.emplace_back(std::move(line));
+        }
     }
 
     initialised = true;

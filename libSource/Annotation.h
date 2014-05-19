@@ -19,6 +19,8 @@ public:
     const int& Start() const { return start;}
     const int& Stop() const { return stop;}
 
+    long Sum() const;
+
 private:
     int   start;
     int   stop;

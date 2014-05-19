@@ -9,6 +9,8 @@ Annotation::Annotation()
 void Annotation::AddAnnotation(const int& lineno, const long& cost) {
     GetLine(lineno).cost += cost;
 
+
+
     if ( lineno < start ) {
         start = lineno;
     } else if ( lineno > stop ) {
@@ -33,4 +35,12 @@ Annotation::Line Annotation::CheckLine(const int& lineno) const {
     } else {
         return {0};
     }
+}
+
+long Annotation::Sum() const {
+    long total = 0;
+    for ( auto& p : annotations ) {
+        total += p.second.cost;
+    }
+    return total;
 }

@@ -73,6 +73,7 @@ private:
     int            currentFile;
     int            childFile;
     int            currentLine;
+    int            currentActiveLine;
     std::unordered_map<int,SourceFile> sources;
     std::unordered_map<int,NodePtr> idMap;
 };

@@ -107,7 +107,6 @@ int annotate_native(testLogger& log ) {
     CallgrindNative native("data/native/flist_files.callgrind");
     NodePtr div = native.RootNode()->GetNode(Path("main/evens"));
 
-
     if ( div->SourceStart() != 25 ) {
         log << " Invalid SourceStart: " << div->SourceStart() << endl;
         return 1;
@@ -118,8 +117,8 @@ int annotate_native(testLogger& log ) {
 "   22:            ( 0%): \n"
 "   23:            ( 0%): int main(int argc, const char *argv[])\n"
 "   24:            ( 0%): {\n"
-"   25:         63 (96%): \n"
-"   26:          7 (10%):     Test(\"Checking root node...\",RootNode).RunTest();\n"
+"   25:         64 (82%): \n"
+"   26:          7 ( 8%):     Test(\"Checking root node...\",RootNode).RunTest();\n"
 "   27:            ( 0%):     Test(\"Adding some nodes...\",AddNodes).RunTest();\n"
 "   28:            ( 0%):     Test(\"Checking path retrieval...\",PathAccess).RunTest();\n"
 "   29:            ( 0%):     Test(\"Printing Results...\",CheckResults).RunTest();\n"
@@ -128,12 +127,12 @@ int annotate_native(testLogger& log ) {
 "   32:            ( 0%):     Test(\"Seaching the graph with regex\",CheckRegSearch).RunTest();\n"
 "   33:            ( 0%):     Test(\"Testing child creation\",MakeNode).RunTest();\n"
 "   34:            ( 0%):     Test(\"Loading an empty callggrind tree\",EmptyCallgrindData).RunTest();\n"
-"   35:            ( 0%):     Test(\"Loading an empty callggrind tree from native file strings\",EmptyCallgrindData_Native).RunTest();\n"
+"   35:            ( 0%):     Test(\"Loading an empty callggrind tree from native file strings\",EmptyCal...\n"
 "   36:            ( 0%):     Test(\"Loading a full callgrind tree\",CallgrindTree).RunTest();\n"
-"   37:            ( 0%):     Test(\"Loading a full callgrind tree from native file strings\",CallgrindTree_Native).RunTest();\n"
+"   37:            ( 0%):     Test(\"Loading a full callgrind tree from native file strings\",CallgrindTr...\n"
 "   38:            ( 0%):     Test(\"Loading a full callgrind tree and table\",CallgrindTable).RunTest();\n"
-"   39:            ( 0%):     Test(\"Loading a full callgrind tree and table from native file strings\",CallgrindTable_Native).RunTest();\n"
-"   40:          7 (10%):     Test(\"Tabulating Children (LS)...\",LS).RunTest();\n"
+"   39:            ( 0%):     Test(\"Loading a full callgrind tree and table from native file strings\",C...\n"
+"   40:          7 ( 8%):     Test(\"Tabulating Children (LS)...\",LS).RunTest();\n"
 "   41:            ( 0%):     return 0;\n"
 "   42:            ( 0%): }\n"
 "   43:            ( 0%): \n"
@@ -143,8 +142,8 @@ int annotate_native(testLogger& log ) {
 "   47:            ( 0%):               string name,\n";
 
     if (actual != expected ) {
-        log << "Annotation: >" << native.Annotate(div) << "<";
-        log << "Expected : >" << expected  << "<";
+        log << "Annotation: >" << native.Annotate(div) << "<" << endl;
+        log << "Expected : >" << expected  << "<" << endl;
         return 1;
     }
 

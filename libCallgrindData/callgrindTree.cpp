@@ -103,7 +103,7 @@ void CallgrindNative::AddFile(const int& id, const std::string& path ) {
 }
 
 CallgrindNative::CallgrindNative(const std::string& fname) 
-    : child(nullptr), current(&root), numCalls(0), currentFile(-1), childFile(-1), currentLine(0)
+    : child(nullptr), current(&root), numCalls(0), currentFile(-1), childFile(-1), currentLine(0), currentActiveLine(0)
 {
 
     // Default to not caring about this file...
@@ -330,19 +330,20 @@ void CallgrindNative::AddCost(const std::string& line) {
 
     SLOG_FROM(LOG_VERBOSE, "CallgrindNative::AddCall", "Current line is now " << currentLine << " after line " << line)
 
+    // Extract the cost
+    auto nend = line.find_first_of(' ',nstart+1);
+    if( nend == string::npos) {
+        nend = line.length();
+    }
+    long cost = atol(line.substr(nstart+1,(nend-nstart-1)).c_str());
+
     // But only calculate the cost if we need it
-    if ( current->SourceId() == currentFile  || child.IsNull() ) {
-        // Extract the cost
-        auto nend = line.find_first_of(' ',nstart+1);
-        if( nend == string::npos) {
-            nend = line.length();
-        }
-        long cost = atol(line.substr(nstart+1,(nend-nstart-1)).c_str());
+    if ( current->SourceId() == currentFile  || !child.IsNull() ) {
 
         // Annotate the node...
         if ( current->SourceId() == currentFile ) {
             current->Annotations().AddAnnotation(currentLine,cost);
-            current->SourceEnd() = currentLine;
+            currentActiveLine = currentLine;
 
             if ( current->SourceStart() > currentLine ) {
                 current->SourceStart() = currentLine;
@@ -365,6 +366,9 @@ void CallgrindNative::AddCost(const std::string& line) {
             numCalls = 0;
         }
     } else {
+        if ( !current.IsNull() ) {
+            current->Annotations().AddAnnotation(currentActiveLine,cost);
+        }
         SLOG_FROM(LOG_VERBOSE, "CallgrindNative::AddCall", "Ignoring cost line!: " << line )
     }
 }
