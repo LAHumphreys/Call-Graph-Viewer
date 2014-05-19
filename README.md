@@ -7,13 +7,13 @@ It already provides:
 * A flat view of your most expensive functions
 * A complete calltree, including costs / callcount at each node
 * regex powered searching of both the call tree and the flat view 
+* Code annotation
 * Callgrind integration:
   * Easily profile C / C++ and similar languages 
   * (Unlike some viewers), The full call tree (using --separate-callers with callgrind)
 * Simple CSV based input allows manual profile data to be used (e.g see the TCL pluging provided)
 
 Comming Soon:
-* Shortened C++ names for simpler navigating
 * readline integration
 * Graphical front end for viewing the data
 
@@ -143,6 +143,14 @@ DataVector::Put(long, unsigned char)
  4          92            23             DataVector::operator[](long)
  4          48            12             std::vector<unsigned char, std::allocator<unsigned char> >::size() const
 
+|DataVector::Put> annotate
+   23:            ( 0%): 
+   24:         28 ( 1%): void DataVector::Put(long offset, unsigned char c) {
+   25:         80 ( 4%):     if (offset >= static_cast<long>(this->size()))
+   26:       1601 (87%):         this->resize(offset+1);
+   27:        120 ( 6%):     (*this)[offset] = c;
+   28:          8 ( 0%): }
+   29:            ( 0%): 
 
 ```
 Here we use searchchildren to find all calls to LoadCSV, regardless of template parameters:
@@ -186,6 +194,86 @@ ROOT/
   BinaryReader::Read(BinaryWriter&, long) const/
   BinaryWriter::Write(BinaryReader const&, long)/
   DataVector::Put(long, unsigned char)
+```
+Annotating the source code
+--------------------
+A single annotation command is provided
+ * annotate (a): (where available) Display the code for this function with call cost annotations
+
+In this example we profile the part of the class which handles callgrind files:
+
+```
+lhumphreys@localhost ~/Documents/Profiler $ ./profile gather.out 
+Building call graph...done
+Process started up in 27 mili-seconds
+
+|ROOT> sr .*SetCurrent.*
+ --> CallgrindNative::CallgrindNative(std::string const&)/CallgrindNative::SetCurrentFunction(std::string const&) : 17750144 / 3040 (5838)
+There are 0 more results
+
+|CallgrindNative::SetCurrentFunction> a
+  191:            ( 0%): 
+  192:            ( 0%): //        01234
+  193:            ( 0%): // Format fn=(<ID>) [fname'parent'...'root]
+  194:      42560 ( 0%): void CallgrindNative::SetCurrentFunction ( const std::string& line) {
+  195:            ( 0%):     size_t id_end = line.find_first_of(')');
+  196:      76000 ( 1%):     int id = atoi(line.substr(4,(id_end - 4)).c_str());
+  197:            ( 0%):     auto it = idMap.find(id);
+  198:     359934 ( 6%):     Path path("");
+  199:       6080 ( 0%):     if ( it == idMap.end() ) {
+  200:       9768 ( 0%):         if ( line.find_first_of(' ') != string::npos ) {
+  201:            ( 0%):             // Haven't seen this before, need the path...
+  202:            ( 0%):             size_t index = id_end;
+  203:       6040 ( 0%):             size_t last_index = line.length()-1;
+  204:     156381 ( 2%):             bool foundMain = false;
+  205:      56075 ( 1%):             for ( index = line.find_last_of('\'');
+  206:            ( 0%):                   index != string::npos;
+  207:            ( 0%):                   index = line.find_last_of('\'',index-1))
+  208:            ( 0%):             {
+  209:     112146 ( 2%):                 string&& token = line.substr(index+1,(last_index-index));
+  210:            ( 0%): 
+  211:            ( 0%):         SLOG_FROM(LOG_VERBOSE, "CallgrindNative::SetCurrentFunction", "Token:...
+  212:      13641 ( 0%):                 last_index = index-1;
+  213:      88756 ( 1%):                 if ( !foundMain && token == "main" ) {
+  214:            ( 0%):                     foundMain = true;
+  215:            ( 0%):                 }
+  216:            ( 0%):                 if ( foundMain ) {
+  217:            ( 0%):                     path.Extend(token);
+  218:            ( 0%):                 }
+  219:            ( 0%):             }
+  220:            ( 0%): 
+  221:            ( 0%):             // Finally pick up the actual function name
+  222:      16610 ( 0%):             string name(line.substr(id_end + 2,(last_index+1)-(id_end +2)));
+  223:       7174 ( 0%):             if ( foundMain || name == "main" ) {
+  224:            ( 0%):                 // Place the node in the graph
+  225:       3402 ( 0%):                 if ( name == "main" ) {
+  226:            ( 0%):                     current = root.CreateNode(Path(""),name);
+  227:            ( 0%):                 } else {
+  228:    4156788 (79%):                     current = root.CreateNode(path,name);
+  229:            ( 0%):                 }
+  230:            ( 0%): 
+  231:            ( 0%):                 // Link the ID to the node
+  232:       4536 ( 0%):                 idMap.emplace(id,current);
+  233:            ( 0%): 
+  234:            ( 0%):                 // Link the node to the source file...
+  235:      23357 ( 0%):                 current->SourceId() = currentFile;
+  236:            ( 0%):                  
+  237:            ( 0%):                 SLOG_FROM(LOG_VERBOSE,"CallgrindNative::SetCurrentFunction", ...
+  238:            ( 0%):             } else {
+  239:        752 ( 0%):                 SLOG_FROM(LOG_VERBOSE,"CallgrindNative::SetCurrentFunction", ...
+  240:            ( 0%):             }
+  241:            ( 0%):         }
+  242:            ( 0%):     } else {
+  243:            ( 0%):         // Alreay know about this function - nothing else to do...
+  244:       2352 ( 0%):         current = it->second;
+  245:            ( 0%): 
+  246:       2352 ( 0%):         currentFile = current->SourceId();
+  247:      71979 ( 1%):         childFile = currentFile;
+  248:            ( 0%): 
+  249:            ( 0%):         SLOG_FROM(LOG_VERBOSE, "CallgrindNative::SetCurrentFunction", "Curren...
+  250:            ( 0%):     }
+  251:      35588 ( 0%): }
+
 ```
 
 Viewing the call tree
