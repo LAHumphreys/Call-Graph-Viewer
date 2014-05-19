@@ -47,7 +47,7 @@ RegSearch::RegSearch() : regPattern(nullptr) {
 }
 
 void RegSearch::AddTree(NodePtr& node ) {
-    if ( regPattern && boost::regex_match(node->Name(),*regPattern) ) {
+    if ( regPattern && boost::regex_search(node->Name(),*regPattern) ) {
         this->AddNode(node);
     } else {
         SLOG_FROM(LOG_VERBOSE,"RegSearch::Search",
