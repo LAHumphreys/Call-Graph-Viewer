@@ -15,7 +15,8 @@ public:
 
     std::string Annotate(const Annotation& annotations, 
                          int start, 
-                         int end);
+                         int end,
+                         long total = 0);
 
     void Initialise();
 

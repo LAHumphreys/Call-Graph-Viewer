@@ -115,30 +115,36 @@ int annotate_native(testLogger& log ) {
 
     string actual = native.Annotate(div);
     string expected = 
-"   22:           : \n"
-"   23:           : int main(int argc, const char *argv[])\n"
-"   24:           : {\n"
-"   25:         63: \n"
-"   26:          7:     Test(\"Checking root node...\",RootNode).RunTest();\n"
-"   27:           :     Test(\"Adding some nodes...\",AddNodes).RunTest();\n"
-"   28:           :     Test(\"Checking path retrieval...\",PathAccess).RunTest();\n"
-"   29:           :     Test(\"Printing Results...\",CheckResults).RunTest();\n"
-"   30:           :     Test(\"Printing Short Results...\",CheckShortResults).RunTest();\n"
-"   31:           :     Test(\"Seaching the graph\",Search).RunTest();\n"
-"   32:           :     Test(\"Seaching the graph with regex\",CheckRegSearch).RunTest();\n"
-"   33:           :     Test(\"Testing child creation\",MakeNode).RunTest();\n"
-"   34:           :     Test(\"Loading an empty callggrind tree\",EmptyCallgrindData).RunTest();\n"
-"   35:           :     Test(\"Loading an empty callggrind tree from native file strings\",EmptyCallgrindData_Native).RunTest();\n"
-"   36:           :     Test(\"Loading a full callgrind tree\",CallgrindTree).RunTest();\n"
-"   37:           :     Test(\"Loading a full callgrind tree from native file strings\",CallgrindTree_Native).RunTest();\n"
-"   38:           :     Test(\"Loading a full callgrind tree and table\",CallgrindTable).RunTest();\n"
-"   39:           :     Test(\"Loading a full callgrind tree and table from native file strings\",CallgrindTable_Native).RunTest();\n"
-"   40:          7:     Test(\"Tabulating Children (LS)...\",LS).RunTest();\n"
-"   41:           :     return 0;\n"
-"   42:           : }\n"
-"   43:           : \n";
+"   22:            ( 0%): \n"
+"   23:            ( 0%): int main(int argc, const char *argv[])\n"
+"   24:            ( 0%): {\n"
+"   25:         63 (96%): \n"
+"   26:          7 (10%):     Test(\"Checking root node...\",RootNode).RunTest();\n"
+"   27:            ( 0%):     Test(\"Adding some nodes...\",AddNodes).RunTest();\n"
+"   28:            ( 0%):     Test(\"Checking path retrieval...\",PathAccess).RunTest();\n"
+"   29:            ( 0%):     Test(\"Printing Results...\",CheckResults).RunTest();\n"
+"   30:            ( 0%):     Test(\"Printing Short Results...\",CheckShortResults).RunTest();\n"
+"   31:            ( 0%):     Test(\"Seaching the graph\",Search).RunTest();\n"
+"   32:            ( 0%):     Test(\"Seaching the graph with regex\",CheckRegSearch).RunTest();\n"
+"   33:            ( 0%):     Test(\"Testing child creation\",MakeNode).RunTest();\n"
+"   34:            ( 0%):     Test(\"Loading an empty callggrind tree\",EmptyCallgrindData).RunTest();\n"
+"   35:            ( 0%):     Test(\"Loading an empty callggrind tree from native file strings\",EmptyCallgrindData_Native).RunTest();\n"
+"   36:            ( 0%):     Test(\"Loading a full callgrind tree\",CallgrindTree).RunTest();\n"
+"   37:            ( 0%):     Test(\"Loading a full callgrind tree from native file strings\",CallgrindTree_Native).RunTest();\n"
+"   38:            ( 0%):     Test(\"Loading a full callgrind tree and table\",CallgrindTable).RunTest();\n"
+"   39:            ( 0%):     Test(\"Loading a full callgrind tree and table from native file strings\",CallgrindTable_Native).RunTest();\n"
+"   40:          7 (10%):     Test(\"Tabulating Children (LS)...\",LS).RunTest();\n"
+"   41:            ( 0%):     return 0;\n"
+"   42:            ( 0%): }\n"
+"   43:            ( 0%): \n"
+"   44:            ( 0%): int CheckNode(testLogger& log,\n"
+"   45:            ( 0%):               NodePtr node,\n"
+"   46:            ( 0%):               bool isRoot,\n"
+"   47:            ( 0%):               string name,\n";
+
     if (actual != expected ) {
-        log << "Annotation: " << native.Annotate(div);
+        log << "Annotation: >" << native.Annotate(div) << "<";
+        log << "Expected : >" << expected  << "<";
         return 1;
     }
 

@@ -178,14 +178,12 @@ CallgrindNative::CallgrindNative(const std::string& fname)
                 } else if ( token == "fl=(" || token == "fi=(" || token == "fe=(" ) {
                     ChangeFile(line);
                 } else {
-                    SLOG_FROM(LOG_VERY_VERBOSE, "CallgrindNative::CallgrindNative",
-                       "Skipped line (no token match) : " << line)
+                    SLOG_FROM(LOG_VERY_VERBOSE, "CallgrindNative::CallgrindNative", "Skipped line (no token match) : " << line)
                 }
             }
         } else {
             file.ignore(numeric_limits<streamsize>::max(),'\n');
-            SLOG_FROM(LOG_VERY_VERBOSE, "CallgrindNative::CallgrindNative",
-               "Skipped line (wrong c) : " << c)
+            SLOG_FROM(LOG_VERY_VERBOSE, "CallgrindNative::CallgrindNative", "Skipped line (wrong c) : " << c)
         }
 
     }
@@ -208,19 +206,27 @@ void CallgrindNative::SetCurrentFunction ( const std::string& line) {
                   index != string::npos;
                   index = line.find_last_of('\'',index-1))
             {
-                string&& token = line.substr(index+1,last_index-1);
-                last_index = index;
+                string&& token = line.substr(index+1,(last_index-index));
+
+        SLOG_FROM(LOG_VERBOSE, "CallgrindNative::SetCurrentFunction", "Token: " << token)
+                last_index = index-1;
                 if ( !foundMain && token == "main" ) {
                     foundMain = true;
                 }
-                path.Extend(token);
+                if ( foundMain ) {
+                    path.Extend(token);
+                }
             }
 
             // Finally pick up the actual function name
             string name(line.substr(id_end + 2,(last_index+1)-(id_end +2)));
-if ( foundMain || name == "main" ) {
+            if ( foundMain || name == "main" ) {
                 // Place the node in the graph
-                current = root.CreateNode(path,name);
+                if ( name == "main" ) {
+                    current = root.CreateNode(Path(""),name);
+                } else {
+                    current = root.CreateNode(path,name);
+                }
 
                 // Link the ID to the node
                 idMap.emplace(id,current);
@@ -228,14 +234,9 @@ if ( foundMain || name == "main" ) {
                 // Link the node to the source file...
                 current->SourceId() = currentFile;
                  
-                SLOG_FROM(LOG_VERBOSE,"CallgrindNative::SetCurrentFunction",
-                           "Found new func: " << current->Name() << " ( " << id << " ) " 
-                           << endl  << "from: " << line << endl
-                           << "File: " << currentFile << endl
-                           << "Parent: " << current->Parent()->Name())
+                SLOG_FROM(LOG_VERBOSE,"CallgrindNative::SetCurrentFunction", "Found new func: " << current->Name() << " ( " << id << " ) " << endl  << "from: " << line << endl << "File: " << currentFile << endl << "Parent: " << current->Parent()->Name())
             } else {
-                SLOG_FROM(LOG_VERBOSE,"CallgrindNative::SetCurrentFunction",
-                           "Discarded: " << line << " because there it is not under main")
+                SLOG_FROM(LOG_VERBOSE,"CallgrindNative::SetCurrentFunction", "Discarded: " << line << " because it is not under main" << "Name: " << name) current= &root;
             }
         }
     } else {
@@ -245,9 +246,7 @@ if ( foundMain || name == "main" ) {
         currentFile = current->SourceId();
         childFile = currentFile;
 
-        SLOG_FROM(LOG_VERBOSE, "CallgrindNative::SetCurrentFunction",
-           "Current is now : " << current->Name() << endl
-           << "From: " << line )
+        SLOG_FROM(LOG_VERBOSE, "CallgrindNative::SetCurrentFunction", "Current is now : " << current->Name() << endl << "From: " << line )
     }
 }
 
@@ -273,32 +272,30 @@ void CallgrindNative::CallChild ( const std::string& line) {
             // Finally pick up the actual function name
             string name(line.substr(id_end +2,(name_end)-(id_end +2)));
 
-            // Create the child in the call graph
-            child = current->MakeChild(name);
+            // We're not interested in stuff below main...
+            if ( !(current == RootNode()) || name == "main" ) {
+                // Create the child in the call graph
+                child = current->MakeChild(name);
 
-            // Link the function to the id
-            idMap.emplace(id,child);
+                // Link the function to the id
+                idMap.emplace(id,child);
 
-            // Link the function to a source file
-            child->SourceId() = childFile;
+                // Link the function to a source file
+                child->SourceId() = childFile;
 
-            SLOG_FROM(LOG_VERBOSE,"CallgrindNative::CallChild",
-                       "Added new child func: " << child->Name() << " ( " << id <<" ) " 
-                       << "Parent: " << child->Parent()->Name() << endl
-                       << "File: " << childFile
-                       << endl  << "from: " << line << endl )
+                SLOG_FROM(LOG_VERBOSE,"CallgrindNative::CallChild", "Added new child func: " << child->Name() << " ( " << id <<" ) " << "Parent: " << child->Parent()->Name() << endl << "File: " << childFile << endl  << "from: " << line << endl )
+            } else {
+                SLOG_FROM(LOG_VERBOSE, "CallgrindNative::CallChild", " Not using child as its below main.." << name << endl << line)
+            }
         } else {
-            SLOG_FROM(LOG_VERBOSE, "CallgrindNative::CallChild",
-                       "Discarded: " << line << " because it has no name and we don't know the id")
+            SLOG_FROM(LOG_VERBOSE, "CallgrindNative::CallChild", "Discarded: " << line << " because it has no name and we don't know the id")
         }
 
     } else {
         // Alreay know about this function - nothing else to do...
         child = it->second;
 
-        SLOG_FROM(LOG_VERBOSE, "CallgrindNative::CallChild",
-           "Child is now : " << child->Name() << endl
-           << "From: " << line )
+        SLOG_FROM(LOG_VERBOSE, "CallgrindNative::CallChild", "Child is now : " << child->Name() << endl << "From: " << line )
     }
 
     // Reset the file pointer...
@@ -331,8 +328,7 @@ void CallgrindNative::AddCost(const std::string& line) {
         currentLine = atoi(line.substr(0,nstart).c_str());
     }
 
-    SLOG_FROM(LOG_VERBOSE, "CallgrindNative::AddCall",
-         "Current line is now " << currentLine << " after line " << line)
+    SLOG_FROM(LOG_VERBOSE, "CallgrindNative::AddCall", "Current line is now " << currentLine << " after line " << line)
 
     // But only calculate the cost if we need it
     if ( current->SourceId() == currentFile  || child.IsNull() ) {
@@ -351,14 +347,12 @@ void CallgrindNative::AddCost(const std::string& line) {
             if ( current->SourceStart() > currentLine ) {
                 current->SourceStart() = currentLine;
 
-                SLOG_FROM(LOG_VERBOSE, "CallgrindNative::AddCall",
-                     current->Name() << " start is now " << currentLine)
+                SLOG_FROM(LOG_VERBOSE, "CallgrindNative::AddCall", current->Name() << " start is now " << currentLine)
             }
             if ( current->SourceEnd() < currentLine ) {
                 current->SourceEnd() = currentLine;
 
-                SLOG_FROM(LOG_VERBOSE, "CallgrindNative::AddCall",
-                     current->Name() << " stop is now " << currentLine)
+                SLOG_FROM(LOG_VERBOSE, "CallgrindNative::AddCall", current->Name() << " stop is now " << currentLine)
             }
         }
 
@@ -367,10 +361,11 @@ void CallgrindNative::AddCost(const std::string& line) {
         if ( !child.IsNull() ) {
             child->AddCall(cost,numCalls);
             counter.AddCall(child->Name(),cost,numCalls);
-
             child = nullptr;
             numCalls = 0;
         }
+    } else {
+        SLOG_FROM(LOG_VERBOSE, "CallgrindNative::AddCall", "Ignoring cost line!: " << line )
     }
 }
 
@@ -396,13 +391,9 @@ void CallgrindNative::ChangeFile(const std::string& line) {
     if ( it == sources.end() ) {
         AddFile(currentFile, line.substr(id_end+2));
 
-        SLOG_FROM(LOG_VERBOSE, "CallgrindNative::ChangeFile",
-              "Current file is now (new): " << currentFile << "(" << line.substr(id_end+2) << ")" << endl
-              << "Changed from line: " << line )
+        SLOG_FROM(LOG_VERBOSE, "CallgrindNative::ChangeFile", "Current file is now (new): " << currentFile << "(" << line.substr(id_end+2) << ")" << endl << "Changed from line: " << line )
     } else {
-        SLOG_FROM(LOG_VERBOSE, "CallgrindNative::ChangeFile",
-              "Current file is now: " << currentFile << "(" << it->second.Name() << ")" << endl
-              << "Changed from line: " << line )
+        SLOG_FROM(LOG_VERBOSE, "CallgrindNative::ChangeFile", "Current file is now: " << currentFile << "(" << it->second.Name() << ")" << endl << "Changed from line: " << line )
     }
 
 }
@@ -417,13 +408,9 @@ void CallgrindNative::SetChildFile(const std::string& line) {
     if ( it == sources.end() ) {
         AddFile(childFile, line.substr(id_end+2));
 
-        SLOG_FROM(LOG_VERBOSE, "CallgrindNative::SetChildFile",
-              "Child file is now (new): " << childFile << "(" << line.substr(id_end+2) << ")" << endl
-              << "Changed from line: " << line )
+        SLOG_FROM(LOG_VERBOSE, "CallgrindNative::SetChildFile", "Child file is now (new): " << childFile << "(" << line.substr(id_end+2) << ")" << endl << "Changed from line: " << line )
     } else {
-        SLOG_FROM(LOG_VERBOSE, "CallgrindNative::SetChildFile",
-              "Child file is now: " << childFile << "(" << it->second.Name() << ")" << endl
-              << "Changed from line: " << line )
+        SLOG_FROM(LOG_VERBOSE, "CallgrindNative::SetChildFile", "Child file is now: " << childFile << "(" << it->second.Name() << ")" << endl << "Changed from line: " << line )
     }
 
 }
@@ -447,7 +434,7 @@ string CallgrindNative::Annotate(NodePtr node) {
         start -= 3;
     }
 
-    int stop = node->SourceEnd() +3;
+    int stop = node->SourceEnd() +7;
 
-    return f.Annotate(node->Annotations(),start,stop);
+    return f.Annotate(node->Annotations(),start,stop,node->RunTime());
 }

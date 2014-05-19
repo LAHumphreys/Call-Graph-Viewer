@@ -32,7 +32,8 @@ string SourceFile::Print(size_t start, size_t end) {
 
 string SourceFile::Annotate(const Annotation& annotations,
                             int start, 
-                            int stop) 
+                            int stop,
+                            long total) 
 {
     stringstream output;
 
@@ -40,16 +41,23 @@ string SourceFile::Annotate(const Annotation& annotations,
         Initialise();
     }
     
-    if ( start > 0 && start <= stop && stop < static_cast<int>(lines.size()) ) {
+    if ( stop  >=  static_cast<int>(lines.size()) ) {
+        stop = lines.size()-1;
+    }
+
+    if ( start > 0 && start <= stop ) {
         for ( int i = start; i <= stop; ++i ) {
             output << setw(5) << i << ": ";
             const auto& l = annotations.CheckLine(i);
             if ( l.cost != 0 ) { 
-                output << setw(10) << l.cost << ": ";
+                output << setw(10) << l.cost;
             } else {
-                output << setw(12) << ": ";
+                output << setw(10) << "";
             }
-            output << lines[i-1] << endl;
+            if (total != 0 ) {
+                output << " (" << setw(2) << ( l.cost*100 / total) << "%)";
+            }
+            output << ": " << lines[i-1] << endl;
         }
     } else {
         SLOG_FROM(LOG_ERROR,"SourceFile::Print",
