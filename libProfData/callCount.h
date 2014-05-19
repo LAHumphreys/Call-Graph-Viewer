@@ -5,7 +5,7 @@
 #include <unordered_map>
 #include <string>
 #include <vector>
-#include <boost/regex.hpp>
+#include "regex.h"
 
 
 class CallCount {
@@ -46,7 +46,7 @@ private:
     void PopulateTables(unsigned tableSize, 
                         std::vector<call_pair>& mostTotalTime, 
                         std::vector<call_pair>& mostTimePerCall,
-                        const boost::regex& patternRegex) const;
+                        const RegPattern& patternRegex) const;
 
     void PrintWideRow(std::stringstream& output,
                       const std::string& name, 

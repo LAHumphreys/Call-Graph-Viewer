@@ -3,7 +3,7 @@
 #include <vector>
 #include "node.h"
 #include <string>
-#include <boost/regex.hpp>
+#include "regex.h"
 
 class SearchResult {
 public:
@@ -66,7 +66,7 @@ public:
     }
 
 private:
-    boost::regex* regPattern;
+    RegPattern* regPattern;
     NodeList nodes;
 };
 

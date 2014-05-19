@@ -122,7 +122,7 @@ void CallCount::PopulateTables( unsigned tableSize,
 void CallCount::PopulateTables( unsigned tableSize, 
                                 vector<call_pair>& mostTotalTime, 
                                 vector<call_pair>& mostTimePerCall,
-                                const boost::regex& patternRegex) const
+                                const RegPattern& patternRegex) const
 {
 
     mostTotalTime.resize(tableSize);
@@ -131,17 +131,17 @@ void CallCount::PopulateTables( unsigned tableSize,
     // Select the tableSize most expensive function in terms of total time
     partial_sort_copy(fcalls.begin(),fcalls.end(),
                       mostTotalTime.begin(),mostTotalTime.end(),
-                      [=] (const call_pair& lhs, const call_pair& rhs) -> bool {
-                          if ( boost::regex_search(lhs.first,patternRegex )) 
+                      [=, &patternRegex] (const call_pair& lhs, const call_pair& rhs) -> bool {
+                          if ( patternRegex.Search(lhs.first) ) 
                           {
-                              if (boost::regex_search(rhs.first,patternRegex)) {
+                              if (patternRegex.Search(rhs.first) ) {
                                   // Both match, check them
                                   return lhs.second.usecs>rhs.second.usecs;
                               } else {
                                   // LHS matches => it is bigger
                                   return 1;
                               }
-                          } else if (boost::regex_search(rhs.first,patternRegex)) {
+                          } else if (patternRegex.Search(rhs.first) ) {
                               // RHS matchnes => it is bigger
                               return 0;
                           } else {
@@ -157,17 +157,17 @@ void CallCount::PopulateTables( unsigned tableSize,
 
     partial_sort_copy(fcalls.begin(),fcalls.end(),
                       mostTimePerCall.begin(),mostTimePerCall.end(),
-                      [=] (const call_pair& lhs, const call_pair& rhs) -> bool {
-                          if ( boost::regex_search(lhs.first,patternRegex )) 
+                      [=, &patternRegex] (const call_pair& lhs, const call_pair& rhs) -> bool {
+                          if ( patternRegex.Search(lhs.first)) 
                           {
-                              if (boost::regex_search(rhs.first,patternRegex)) {
+                              if (patternRegex.Search(rhs.first)) {
                                   // Both match, check them
                                   return cost_gt(lhs,rhs);
                               } else {
                                   // LHS matches => it is bigger
                                   return 1;
                               }
-                          } else if (boost::regex_search(rhs.first,patternRegex)) {
+                          } else if (patternRegex.Search(rhs.first)) {
                               // RHS matchnes => it is bigger
                               return 0;
                           } else {
@@ -200,7 +200,8 @@ string CallCount::FilteredPrint(const string& pattern, unsigned tableSize) const
     }
 
     try {
-        boost::regex patternRegex(pattern);
+        RegPattern patternRegex(pattern);
+
 
         PopulateTables(tableSize, mostTotalTime,mostTimePerCall, patternRegex);
 
@@ -212,7 +213,7 @@ string CallCount::FilteredPrint(const string& pattern, unsigned tableSize) const
         //         0000000001111111111222222222233333333334444444444
         // Now print each one...
         for ( const call_pair& it: mostTotalTime ) {
-            if ( !boost::regex_search(it.first,patternRegex) ) {
+            if ( !patternRegex.Search(it.first) ) {
                 break;
             }
             PrintWideRow(output,it.first,it.second.calls, it.second.usecs);
@@ -225,12 +226,12 @@ string CallCount::FilteredPrint(const string& pattern, unsigned tableSize) const
         output << "---------  -----------   -------------  --------\n";
 
         for ( const call_pair& it: mostTimePerCall ) {
-            if ( !boost::regex_search(it.first,patternRegex) ) {
+            if ( !patternRegex.Search(it.first) ) {
                 break;
             }
             PrintWideRow(output,it.first,it.second.calls, it.second.usecs);
         }
-    } catch ( boost::regex_error& e ) {
+    } catch ( RegError& e ) {
         output << "Invalid regular expression: \n";
         output << e.what();
     }

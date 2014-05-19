@@ -47,7 +47,7 @@ RegSearch::RegSearch() : regPattern(nullptr) {
 }
 
 void RegSearch::AddTree(NodePtr& node ) {
-    if ( regPattern && boost::regex_search(node->Name(),*regPattern) ) {
+    if ( regPattern && regPattern->Search(node->Name()) ) {
         this->AddNode(node);
     } else {
         SLOG_FROM(LOG_VERBOSE,"RegSearch::Search",
@@ -61,12 +61,12 @@ size_t RegSearch::Search(NodePtr root, const string& pattern) {
     nodes.clear();
     size_t results = 0;
     try {
-        boost::regex thePattern(pattern);
+        RegPattern thePattern(pattern);
         regPattern = &thePattern;
 
         root->ForEach([=] ( NodePtr&& node ) -> void {
             this->AddTree(node); });
-    } catch ( boost::regex_error& e ) {
+    } catch ( RegError& e ) {
         SLOG_FROM(LOG_ERROR, "RegSearch::Search",
             "Invalid Regex: " << e.what()) 
         results = 0;
