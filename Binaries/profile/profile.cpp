@@ -154,6 +154,10 @@ void GetHelp(NodePtr& activeNode, stringstream& command) {
     cout << "widetable [max] [regex]    (wt) Print the flat table for the full program with full names" << endl;
     cout << "ls [max] [depth=1] [regex] Create a local flat view" << endl; 
     cout << endl;
+    cout << "  Source Code" << endl;
+    cout << "---------------" << endl;
+    cout << "annotate                   (a) Print and annotate the source for thie function" << endl;
+    cout << endl;
     cout << "  Searching" << endl;
     cout << "-------------" << endl;
     cout << "search <name>              (s) All calls to function <name>" << endl;
@@ -167,7 +171,7 @@ void GetHelp(NodePtr& activeNode, stringstream& command) {
     cout << "  Tree Navigation" << endl;
     cout << "------------------" << endl;
     cout << "tree  [depth=5]            Print the tree for the current node" << endl;
-    cout << "cd                         Jump to this node" << endl;
+    cout << "cd                         Jump to this child node" << endl;
     cout << "..                         Go to the parent node" << endl;
     cout << "pwd                        Get the address of the current node" << endl;
 }
