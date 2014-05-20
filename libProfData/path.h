@@ -40,6 +40,9 @@ public:
     void Extend(const std::string& next ) {
         path.push_back(next);
     }
+    void Extend(std::string&& next ) {
+        path.emplace_back(next);
+    }
 
     /*
      * Used to take a splice of a path

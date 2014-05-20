@@ -8,6 +8,7 @@ class Annotation {
 public:
     Annotation();
     struct Line {
+        Line(): cost(0) {}
         long cost;
     };
     using Lines = std::unordered_map<int,Line>;

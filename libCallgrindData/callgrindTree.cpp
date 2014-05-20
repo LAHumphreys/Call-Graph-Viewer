@@ -193,12 +193,21 @@ CallgrindNative::CallgrindNative(const std::string& fname)
 // Format fn=(<ID>) [fname'parent'...'root]
 void CallgrindNative::SetCurrentFunction ( const std::string& line) {
     size_t id_end = line.find_first_of(')');
-    int id = atoi(line.substr(4,(id_end - 4)).c_str());
+    int id = atoi(line.c_str()+4);
     auto it = idMap.find(id);
     Path path("");
     if ( it == idMap.end() ) {
         if ( line.find_first_of(' ') != string::npos ) {
             // Haven't seen this before, need the path...
+              
+            /*
+             * We're going to work backwards from the end of the string,
+             * this is equivalent of going down the call stack, starting at
+             * the root node.
+             *
+             * We avoid constructing the std::string until the last
+             * minute to avoid construction overhead if it is not necessary
+             */
             size_t index = id_end;
             size_t last_index = line.length()-1;
             bool foundMain = false;
@@ -206,16 +215,18 @@ void CallgrindNative::SetCurrentFunction ( const std::string& line) {
                   index != string::npos;
                   index = line.find_last_of('\'',index-1))
             {
-                string&& token = line.substr(index+1,(last_index-index));
-
-        SLOG_FROM(LOG_VERBOSE, "CallgrindNative::SetCurrentFunction", "Token: " << token)
-                last_index = index-1;
-                if ( !foundMain && token == "main" ) {
+                const char* token = line.c_str() + index +1;
+                if (    !foundMain 
+                     && (last_index - index) == 4 
+                     && strncmp(token,"main",4) == 0 ) 
+                {
                     foundMain = true;
                 }
                 if ( foundMain ) {
-                    path.Extend(token);
+                    path.Extend(string(token,(last_index - index)));
                 }
+
+                last_index = index-1;
             }
 
             // Finally pick up the actual function name
@@ -319,13 +330,13 @@ void CallgrindNative::AddCost(const std::string& line) {
         // currentLine is unchanged
     } else if ( line[0] == '+' ) {
         // Relative offset
-        currentLine += atoi(line.substr(1,nstart-1).c_str());
+        currentLine += atoi(line.c_str()+1);
     } else if ( line[0] == '-' ) {
         // Relative offset
-        currentLine -= atoi(line.substr(1,nstart-1).c_str());
+        currentLine -= atoi(line.c_str()+1);
     } else {
         // absolute position
-        currentLine = atoi(line.substr(0,nstart).c_str());
+        currentLine = atoi(line.c_str());
     }
 
     SLOG_FROM(LOG_VERBOSE, "CallgrindNative::AddCall", "Current line is now " << currentLine << " after line " << line)
@@ -335,7 +346,7 @@ void CallgrindNative::AddCost(const std::string& line) {
     if( nend == string::npos) {
         nend = line.length();
     }
-    long cost = atol(line.substr(nstart+1,(nend-nstart-1)).c_str());
+    long cost = atol(line.c_str() + nstart + 1);
 
     // But only calculate the cost if we need it
     if ( current->SourceId() == currentFile  || !child.IsNull() ) {

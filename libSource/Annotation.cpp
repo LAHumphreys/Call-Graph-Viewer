@@ -9,8 +9,6 @@ Annotation::Annotation()
 void Annotation::AddAnnotation(const int& lineno, const long& cost) {
     GetLine(lineno).cost += cost;
 
-
-
     if ( lineno < start ) {
         start = lineno;
     } else if ( lineno > stop ) {
@@ -20,12 +18,7 @@ void Annotation::AddAnnotation(const int& lineno, const long& cost) {
 
 
 Annotation::Line& Annotation::GetLine(const int& lineno) {
-    Line empty ({ 0 });
-    auto it = annotations.find(lineno);
-    if ( it == annotations.end() ) {
-        it = annotations.emplace(lineno,std::move(empty)).first;
-    }
-    return it->second;
+    return annotations[lineno];
 }
 
 Annotation::Line Annotation::CheckLine(const int& lineno) const {
@@ -33,7 +26,7 @@ Annotation::Line Annotation::CheckLine(const int& lineno) const {
     if ( it != annotations.end() ) {
         return it->second;
     } else {
-        return {0};
+        return Line();
     }
 }
 
