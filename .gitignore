@@ -33,3 +33,5 @@ test.full_log
 profile
 dumptree
 callgrind.out.*
+Tests/toy.out
+Tests/toy.data
