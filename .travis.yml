@@ -10,6 +10,7 @@ before_install:
   - sudo apt-get install -qq libboost-regex-dev
   - sudo apt-get install libplplot-dev
   - sudo apt-get install libboost-filesystem-dev
+  - sudo apt-get install valgrind
   - sudo pip install cpp-coveralls --use-mirrors
 
 script: 
