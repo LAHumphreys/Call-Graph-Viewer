@@ -260,10 +260,9 @@ int InvalidRegex(testLogger& log) {
     counter.AddCall("Func1",102);
     counter.AddCall("Really Long Name that is far too long to fit in the box, no really it is really long",500);
 
-    string expected = "Invalid regular expression: \n"
-                      "Unmatched marking parenthesis ( or \\(.  The error occurred while parsing the regular expression fragment: 'c|Really.*>>>HERE>>>'.";
+    string expected = "Invalid regular expression: \n";
     string actual = counter.FilteredPrint("(Func|Really.*");
-    if ( expected != actual ) {
+    if ( actual.find(expected) == string::npos ) {
         log << "Failed to handle invalid regex!" << endl;
         log << "Expected: " << expected << endl;
         log << "Actual: " << actual << endl;
