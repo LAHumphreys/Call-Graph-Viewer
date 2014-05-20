@@ -152,16 +152,18 @@ CallgrindNative::CallgrindNative(const std::string& fname)
      *
      */
 
+    string line;
+    line.reserve(10240);
     while ( file.good() ) {
         char c = file.peek();
         if ( c == '*' || c == '+' || c== '-' || ( c >= '0' && c <= '9') ) {
-            string line;
+            line.clear();
             std::getline(file,line);
             AddCost(line);
             // a cost line
         } else if ( c == 'f' || c == 'c' ) {
             // Could be a defn, a file or a func
-            string line;
+            line.clear();
             std::getline(file,line);
             if ( line.length() > 4 ) {
                 string&& token = line.substr(0,4);
@@ -341,11 +343,6 @@ void CallgrindNative::AddCost(const std::string& line) {
 
     SLOG_FROM(LOG_VERBOSE, "CallgrindNative::AddCall", "Current line is now " << currentLine << " after line " << line)
 
-    // Extract the cost
-    auto nend = line.find_first_of(' ',nstart+1);
-    if( nend == string::npos) {
-        nend = line.length();
-    }
     long cost = atol(line.c_str() + nstart + 1);
 
     // But only calculate the cost if we need it
