@@ -1,4 +1,4 @@
-Call-Graph-Viewer [![Build Status](https://travis-ci.org/Grauniad/Call-Graph-Viewer.png)](https://travis-ci.org/Grauniad/Call-Graph-Viewer) [![Coverage Status](https://coveralls.io/repos/Grauniad/Call-Graph-Viwer/badge.png?branch=master)](https://coveralls.io/r/Grauniad/Call-Graph-Viwer?branch=master)
+Call-Graph-Viewer [![Build Status](https://travis-ci.org/Grauniad/Call-Graph-Viewer.png)](https://travis-ci.org/Grauniad/Call-Graph-Viewer) [![Coverage Status](https://coveralls.io/repos/Grauniad/Call-Graph-Viewer/badge.png?branch=master)](https://coveralls.io/r/Grauniad/Call-Graph-Viewer?branch=master)
 ==================
 
 A simple tool for profiling processes based on callgraph data.
