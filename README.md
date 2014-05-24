@@ -1,5 +1,7 @@
 Call-Graph-Viewer [![Build Status](https://travis-ci.org/Grauniad/Call-Graph-Viewer.png)](https://travis-ci.org/Grauniad/Call-Graph-Viewer) [![Coverage Status](https://coveralls.io/repos/Grauniad/Call-Graph-Viewer/badge.png?branch=master)](https://coveralls.io/r/Grauniad/Call-Graph-Viewer?branch=master)
 ==================
+!["Example screen shot showing the annotaiton, list and tree views"](https://raw.githubusercontent.com/Grauniad/Call-Graph-Viewer/master/ExampleScreenshot.png "Example screen shot showing the annotaiton, list and tree view in a split-pane mode")
+
 
 A simple tool for profiling processes based on callgraph data.
 
