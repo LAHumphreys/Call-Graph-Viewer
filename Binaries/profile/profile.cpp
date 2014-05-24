@@ -30,11 +30,17 @@ RegSearch  finder;
 
 NodePtr rootNode = nullptr;
 
+struct BarProperties {
+    string  command = "";
+    bool    showing = false;
+    bool    locked = false;
+} topbarProps, sidebarProbs;
+
 // Utils
 string GetCommand(Terminal& term, NodePtr& activeNode);
 void GetHelp(Terminal& term, NodePtr& activeNode, stringstream& command);
 void Clear(Terminal& term, NodePtr& activeNode);
-void DoCommand(Terminal& term, NodePtr& node, stringstream& command);
+void DoCommand(Terminal& term, NodePtr& node, stringstream& command, string action = "");
 
 // Searching
 void AdvanceSearch(Terminal& term, NodePtr& activeNode, short direction);
@@ -56,7 +62,8 @@ void PrintWideTable(Terminal& term, NodePtr& activeNode, stringstream& command);
 void PrintAnnotation(Terminal& term, NodePtr& activeNode);
 
 // Windows
-void Topbar(NodePtr& activeNode, stringstream& command);
+void DoTopCommand(NodePtr& node, stringstream& command);
+void DoSideCommand(NodePtr& node, stringstream& command);
 
 int main(int argc, const char *argv[])
 {
@@ -92,24 +99,97 @@ int main(int argc, const char *argv[])
     /*
      * Main Loop
      */
+    NodePtr oldNode = activeNode;
     while ( 1 ) {
         stringstream command(GetCommand(term, activeNode));
         DoCommand(term, activeNode,command);
+        if ( ! (activeNode==oldNode) ) {
+            if ( topbarProps.showing && !topbarProps.locked ) {
+                stringstream command(topbarProps.command);
+                DoTopCommand(activeNode,command);
+            }
+            if ( sidebarProbs.showing && !sidebarProbs.locked ) {
+                stringstream command(sidebarProbs.command);
+                DoSideCommand(activeNode,command);
+            }
+        }
     }
     return 0;
 }
 
-void DoCommand(Terminal& term, NodePtr& activeNode, stringstream& command) {
+void DoTopCommand(NodePtr& node, stringstream& command) {
     std::string action;
     command >> action;
+    topbarProps.showing = true;
+    // Ignore an additional topbar instruction...
+    while ( action == "topbar"  || action == "to" ) {
+        action.clear();
+        command >> action;
+    }
+    SLOG_FROM(LOG_OVERVIEW, "DoTopCommand", "Got action: '" << action 
+                                       << "' from command '" << command.str() << "'")
+    // Clear the topbar
+    if ( action == "height" ) {
+        int lines = 0;
+        command >> lines;
+        if ( lines != 0 ) {
+            Screen::Instance().SetTopBarHeight(lines);
+        }
+    } else if ( action == "lock" ) {
+        topbarProps.locked = true;
+    } else if ( action == "unlock" ) {
+        topbarProps.locked = false;
+    } else {
+        Screen::Instance().TopBar().Clear();
+        // Execute the command in the topbar
+        DoCommand(Screen::Instance().TopBar(),node,command, action);
+        topbarProps.command = command.str();
+    }
+}
+
+void DoSideCommand(NodePtr& node, stringstream& command) {
+    std::string action;
+    command >> action;
+    sidebarProbs.showing = true;
+    // Ignore an additional topbar instruction...
+    while ( action == "sidebar"  || action == "si") {
+        action.clear();
+        command >> action;
+    }
+    SLOG_FROM(LOG_OVERVIEW, "DoSideCommand", "Got action: '" << action 
+                                       << "' from command '" << command.str() << "'")
+    // Clear the topbar
+    if ( action == "width" ) {
+        int cols = 0;
+        command >> cols;
+        if ( cols != 0 ) {
+            Screen::Instance().SetSideBarWidth(cols);
+        }
+    } else if ( action == "lock" ) {
+        sidebarProbs.locked = true;
+    } else if ( action == "unlock" ) {
+        sidebarProbs.locked = false;
+    } else {
+        Screen::Instance().SideBar().Clear();
+        // Execute the command in the topbar
+        DoCommand(Screen::Instance().SideBar(),node,command, action);
+        sidebarProbs.command = command.str();
+    }
+}
+
+void DoCommand(Terminal& term, NodePtr& activeNode, stringstream& command, string action) {
+
+    if ( action == "" ) {
+        command >> action;
+    }
+
     SLOG_FROM(LOG_OVERVIEW, "DoCommand", "Got action: '" << action 
                                        << "' from command '" << command.str() << "'")
 
-    if ( action == "topbar" ) {
-        // Clear the topbar
-        Screen::Instance().TopBar().Clear();
-        // Execute the command in the topbar
-        DoCommand(Screen::Instance().TopBar(),activeNode,command);
+    if ( action == "topbar" || action == "to" ) {
+        DoTopCommand(activeNode, command);
+    } else if ( action == "sidebar" || action == "si" ) {
+        DoSideCommand(activeNode, command);
     } else {
         if ( action == "help" ) {
             GetHelp(term, activeNode, command);
@@ -202,6 +282,17 @@ void GetHelp(Terminal& term, NodePtr& activeNode, stringstream& command) {
     helptext << "cd                         Jump to this child node" << endl;
     helptext << "..                         Go to the parent node" << endl;
     helptext << "pwd                        Get the address of the current node" << endl;
+    helptext << endl;
+    helptext << "  Windows " << endl;
+    helptext << "-----------" << endl;
+    helptext << "topbar <cmd>               (to) Run <cmd> in the topbar on node change" << endl;
+    helptext << "topbar lock                (to) Lock the contents of the topbar" << endl;
+    helptext << "topbar unlock              (to) Start running commands in the topbar again" << endl;
+    helptext << "topbar height              (to) Adjust the height of the topbar" << endl;
+    helptext << "sidebar <cmd>              (si) Run <cmd> in the sidebar on node change" << endl;
+    helptext << "sidebar lock               (si) Lock the contents of the sidebar" << endl;
+    helptext << "sidebar unlock             (si) Start running commands in the sidebar again" << endl;
+    helptext << "sidebar width <cols>       (si) Adjust the width of the topbar" << endl;
     helptext << endl;
     Screen::Instance().MainTerminal().PutString(helptext.str());
 }
