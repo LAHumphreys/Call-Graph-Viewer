@@ -6,6 +6,18 @@
 #include "util_time.h"
 #include "nodeSearchCache.h"
 #include "callgrindTree.h"
+#include "screen.h"
+#include <cstdlib>
+
+/*
+ * Helper macro to print to terminal
+ */
+#define COUT(line) \
+    {   \
+        stringstream __buf; \
+        __buf << line; \
+        term.PutString(__buf.str()); \
+    }   \
 
 using namespace std;
 
@@ -19,48 +31,55 @@ RegSearch  finder;
 NodePtr rootNode = nullptr;
 
 // Utils
-string GetCommand(NodePtr& activeNode);
-void GetHelp(NodePtr& activeNode, stringstream& command);
+string GetCommand(Terminal& term, NodePtr& activeNode);
+void GetHelp(Terminal& term, NodePtr& activeNode, stringstream& command);
+void Clear(Terminal& term, NodePtr& activeNode);
+void DoCommand(Terminal& term, NodePtr& node, stringstream& command);
 
 // Searching
-void AdvanceSearch(NodePtr& activeNode, short direction);
-void ListSearch();
-void Search(NodePtr& activeNode, stringstream& command);
-void SearchChildren(NodePtr& activeNode, stringstream& command);
+void AdvanceSearch(Terminal& term, NodePtr& activeNode, short direction);
+void ListSearch(Terminal& term);
+void Search(Terminal& term, NodePtr& activeNode, stringstream& command);
+void SearchChildren(Terminal& term, NodePtr& activeNode, stringstream& command);
 
 // Navigation
-void GoTo(NodePtr& activeNode, stringstream& command);
-void GoToParent(NodePtr& activeNode, stringstream& command);
-void LS(NodePtr& activeNode, stringstream& command);
-void PWD (NodePtr& activeNode);
+void GoTo(Terminal& term, NodePtr& activeNode, stringstream& command);
+void GoToParent(Terminal& term, NodePtr& activeNode, stringstream& command);
+void LS(Terminal& term, NodePtr& activeNode, stringstream& command);
+void PWD (Terminal& term, NodePtr& activeNode);
 
 // Information
-void PrintFilteredTable(NodePtr& activeNode, stringstream& command);
-void PrintTable(NodePtr& activeNode, stringstream& command);
-void PrintTree(NodePtr& activeNode, stringstream& command);
-void PrintWideTable(NodePtr& activeNode, stringstream& command);
-void PrintAnnotation(NodePtr& activeNode);
+void PrintFilteredTable(Terminal& term, NodePtr& activeNode, stringstream& command);
+void PrintTable(Terminal& term, NodePtr& activeNode, stringstream& command);
+void PrintTree(Terminal& term, NodePtr& activeNode, stringstream& command);
+void PrintWideTable(Terminal& term, NodePtr& activeNode, stringstream& command);
+void PrintAnnotation(Terminal& term, NodePtr& activeNode);
+
+// Windows
+void Topbar(NodePtr& activeNode, stringstream& command);
 
 int main(int argc, const char *argv[])
 {
     NodePtr activeNode = nullptr;
 
+    Terminal& term = Screen::Instance().MainTerminal();
+
     if ( argc != 2 && argc != 4) {
-        cout << "Usage: profile <data file>" << endl;
-        cout << "Usage: profile <flist file> <calls file> <cost file>" << endl;
+        COUT ( "Usage: profile <data file>" << endl)
+        COUT ( "Usage: profile <flist file> <calls file> <cost file>" << endl)
         return 1;
     }
 
     LOG_FROM(LOG_OVERVIEW, "main", "Building Profile...")
-    cout << "Building call graph...";
-    cout.flush();
+    Screen::Instance().MainTerminal().PutString("Building call graph...");
     Time start;
 
     data = new CallgrindNative(argv[1]);
 
     Time end;
-    cout << "done" << endl;
-    cout << "Process started up in " << end.DiffUSecs(start)/1000 << " mili-seconds" << endl;
+    Screen::Instance().MainTerminal().PutString("done\n");
+    Screen::Instance().MainTerminal().PutString("done\n");
+    COUT ( "Process started up in " << end.DiffUSecs(start)/1000 << " mili-seconds" << endl;)
     LOG_FROM(LOG_OVERVIEW, "main", "Profile built - program ready!")
 
     // start at the top of the tree
@@ -70,150 +89,164 @@ int main(int argc, const char *argv[])
     // start at the top of the tree
     activeNode = rootNode;
 
-
-
     /*
      * Main Loop
      */
     while ( 1 ) {
-        stringstream command(GetCommand(activeNode));
-        std::string action;
-        command >> action;
-        SLOG_FROM(LOG_OVERVIEW, "main", "Got action: '" << action 
-                                           << "' from command '" << command.str() << "'")
+        stringstream command(GetCommand(term, activeNode));
+        DoCommand(term, activeNode,command);
+    }
+    return 0;
+}
+
+void DoCommand(Terminal& term, NodePtr& activeNode, stringstream& command) {
+    std::string action;
+    command >> action;
+    SLOG_FROM(LOG_OVERVIEW, "DoCommand", "Got action: '" << action 
+                                       << "' from command '" << command.str() << "'")
+
+    if ( action == "topbar" ) {
+        // Clear the topbar
+        Screen::Instance().TopBar().Clear();
+        // Execute the command in the topbar
+        DoCommand(Screen::Instance().TopBar(),activeNode,command);
+    } else {
         if ( action == "help" ) {
-            GetHelp(activeNode, command);
+            GetHelp(term, activeNode, command);
         } else if ( action == "exit" ) {
-            break;
+            exit(0);
         } else if ( action == "table" || action == "t" ) {
-            PrintTable(activeNode, command);
+            PrintTable(term, activeNode, command);
         } else if ( action == "widetable" || action == "wt" ) {
-            PrintWideTable(activeNode, command);
+            PrintWideTable(term, activeNode, command);
         } else if ( action == "searchtable" || action == "st" ) {
-            PrintFilteredTable(activeNode, command);
+            PrintFilteredTable(term, activeNode, command);
         } else if ( action == "tree" ) {
-            PrintTree(activeNode, command);
+            PrintTree(term, activeNode, command);
         } else if ( action == "cd" ) {
-            GoTo(activeNode, command);
+            GoTo(term, activeNode, command);
         } else if ( action == ".." ) {
-            GoToParent(activeNode, command);
+            GoToParent(term, activeNode, command);
         } else if ( action == "pwd" ) {
-            PWD(activeNode);
+            PWD(term, activeNode);
         } else if ( action == "ls" ) {
-            LS(activeNode, command);
+            LS(term, activeNode, command);
+        } else if ( action == "clear" ) {
+            Clear(term, activeNode);
         } else if ( action == "search"  || action == "s") {
-            Search(activeNode, command);
+            Search(term, activeNode, command);
         } else if ( action == "searchchildren" || action == "sc" ) {
-            SearchChildren(activeNode, command);
+            SearchChildren(term, activeNode, command);
         } else if ( action == "searchroot" || action == "sr" ) {
             activeNode = rootNode;
-            SearchChildren(activeNode, command);
+            SearchChildren(term, activeNode, command);
         } else if ( action == "this" ) {
-            AdvanceSearch(activeNode, 0);
+            AdvanceSearch(term, activeNode, 0);
         } else if ( action == "previous" || action == "p" ) {
-            AdvanceSearch(activeNode, -1);
+            AdvanceSearch(term, activeNode, -1);
         } else if ( action == "next"  || action == "n") {
-            AdvanceSearch(activeNode, 1);
+            AdvanceSearch(term, activeNode, 1);
         } else if ( action == "list" ) {
-            ListSearch();
+            ListSearch(term);
         } else if ( action == "annotate" || action == "a" ) {
-            PrintAnnotation(activeNode);
+            PrintAnnotation(term, activeNode);
         } else {
-            cout << "Unknown command!" << endl;
-            GetHelp(activeNode,command);
+            COUT ( "Unknown command!" << endl;)
+            GetHelp(term, activeNode,command);
         }
     }
-
-
-    return 0;
 }
 
 /*
  * Get the next command from the user ( a single line of text)
  */
-string GetCommand(NodePtr& activeNode) {
-    char buf[10240];
+string GetCommand(Terminal& term, NodePtr& activeNode) {
     string name = activeNode->Name();
     string shortName = name.substr(0,name.find("("));
-    cout << endl << "|" << shortName << "> ";
-    cin.getline(buf,10240);
-    return string(buf);
+    return Screen::Instance().MainTerminal().GetLine("|" + shortName + "> ");
 }
 
 /*
  * Display the usage text
  */
-void GetHelp(NodePtr& activeNode, stringstream& command) {
-    cout << "help                   Display this help message" << endl;
-    cout << "exit                   Quit the application" << endl;
-    cout << endl;
-    cout << "  Flat View" << endl;
-    cout << "-------------" << endl;
-    cout << "table [max]                (t) Print the flat table for the full program" << endl;
-    cout << "searchtable <regex>        (st) Filter the flat table by a regular expression" << endl;
-    cout << "widetable [max] [regex]    (wt) Print the flat table for the full program with full names" << endl;
-    cout << "ls [max] [depth=1] [regex] Create a local flat view" << endl; 
-    cout << endl;
-    cout << "  Source Code" << endl;
-    cout << "---------------" << endl;
-    cout << "annotate                   (a) Print and annotate the source for thie function" << endl;
-    cout << endl;
-    cout << "  Searching" << endl;
-    cout << "-------------" << endl;
-    cout << "search <name>              (s) All calls to function <name>" << endl;
-    cout << "searchroot <regex>         (sr) Search child nodes of root for children matching <regex>" << endl;
-    cout << "searchchildren <regex>     (sc) Search child nodes for children matching <regex>" << endl;
-    cout << "  next                     Go to the next search result" << endl;
-    cout << "  previous                 Go to the previous search result" << endl;
-    cout << "  this                     Go back to the current search result" << endl;
-    cout << "  list                     List the current search results" << endl;
-    cout << endl;
-    cout << "  Tree Navigation" << endl;
-    cout << "------------------" << endl;
-    cout << "tree  [depth=5]            Print the tree for the current node" << endl;
-    cout << "cd                         Jump to this child node" << endl;
-    cout << "..                         Go to the parent node" << endl;
-    cout << "pwd                        Get the address of the current node" << endl;
+void GetHelp(Terminal& term, NodePtr& activeNode, stringstream& command) {
+    stringstream helptext;
+    helptext << "help                   Display this help message" << endl;
+    helptext << "clear                  Clear the display" << endl;
+    helptext << "exit                   Quit the application" << endl;
+    helptext << endl;
+    helptext << "  Flat View" << endl;
+    helptext << "-------------" << endl;
+    helptext << "table [max]                (t) Print the flat table for the full program" << endl;
+    helptext << "searchtable <regex>        (st) Filter the flat table by a regular expression" << endl;
+    helptext << "widetable [max] [regex]    (wt) Print the flat table for the full program with full names" << endl;
+    helptext << "ls [max] [depth=1] [regex] Create a local flat view" << endl; 
+    helptext << endl;
+    helptext << "  Source Code" << endl;
+    helptext << "---------------" << endl;
+    helptext << "annotate                   (a) Print and annotate the source for thie function" << endl;
+    helptext << endl;
+    helptext << "  Searching" << endl;
+    helptext << "-------------" << endl;
+    helptext << "search <name>              (s) All calls to function <name>" << endl;
+    helptext << "searchroot <regex>         (sr) Search child nodes of root for children matching <regex>" << endl;
+    helptext << "searchchildren <regex>     (sc) Search child nodes for children matching <regex>" << endl;
+    helptext << "  next                     Go to the next search result" << endl;
+    helptext << "  previous                 Go to the previous search result" << endl;
+    helptext << "  this                     Go back to the current search result" << endl;
+    helptext << "  list                     List the current search results" << endl;
+    helptext << endl;
+    helptext << "  Tree Navigation" << endl;
+    helptext << "------------------" << endl;
+    helptext << "tree  [depth=5]            Print the tree for the current node" << endl;
+    helptext << "cd                         Jump to this child node" << endl;
+    helptext << "..                         Go to the parent node" << endl;
+    helptext << "pwd                        Get the address of the current node" << endl;
+    helptext << endl;
+    Screen::Instance().MainTerminal().PutString(helptext.str());
+}
+void Clear(Terminal& term, NodePtr& activeNode) {
+    Screen::Instance().MainTerminal().Clear();
 }
 
 /*
  * Callback triggered by a new search
  */
-void Search(NodePtr& activeNode, stringstream& command) {
+void Search(Terminal& term, NodePtr& activeNode, stringstream& command) {
     string name = "";
     getline(command,name);
 
     if ( name == "" ) {
-        cout << "usage: search <function name>" << endl;
+        COUT ( "usage: search <function name>" << endl;)
     } else {
         if ( cache == nullptr ) {
             cache = new SearchCache();
-            cout << "Building one time search cache.. " << endl;
+            COUT ( "Building one time search cache.. " << endl;)
             Time start;
             NodePtr ptr = rootNode;
             cache->AddTree(ptr);
             Time end;
-            cout << "done" << endl;
-            cout << "Search cache built in " << end.DiffSecs(start) << " seconds" << endl;
+            COUT ( "done" << endl;)
+            COUT ( "Search cache built in " << end.DiffSecs(start) << " seconds" << endl;)
         }
         delete result;
         result = new SearchResult(cache->Search(name.substr(1)));
-        AdvanceSearch(activeNode,0);
+        AdvanceSearch(term, activeNode,0);
     }
 }
-void SearchChildren(NodePtr& activeNode, stringstream& command) {
+void SearchChildren(Terminal& term, NodePtr& activeNode, stringstream& command) {
     string pattern = "";
     getline(command,pattern);
 
     if ( pattern == "" ) {
-        cout << "usage: searchchildren <pattern to search>" << endl;
-        cout << "usage: sc <pattern to search>" << endl;
+        COUT ( "usage: searchchildren <pattern to search>" << endl;)
+        COUT ( "usage: sc <pattern to search>" << endl;)
     } else {
 
         delete result;
         finder.Search(activeNode,pattern.substr(1));
         result = new SearchResult(finder.Results());
-        AdvanceSearch(activeNode,0);
+        AdvanceSearch(term, activeNode,0);
     }
 }
 
@@ -223,9 +256,9 @@ void SearchChildren(NodePtr& activeNode, stringstream& command) {
  *     0:  Jump back to the current result
  *     -1: Jump back to the previous result
  */
-void AdvanceSearch(NodePtr& activeNode, short direction) {
+void AdvanceSearch(Terminal& term, NodePtr& activeNode, short direction) {
     if ( result == nullptr ) {
-        cout << "Error: No active search!" << endl;
+        COUT ( "Error: No active search!" << endl;)
     } else {
         if ( direction > 0 ) {
             ++(*result);
@@ -235,8 +268,8 @@ void AdvanceSearch(NodePtr& activeNode, short direction) {
 
         if ( !result->Node().IsNull() ) {
             activeNode = result->Node();
-            ListSearch();
-            cout << "There are " << result->Remaining() << " more results" << endl;
+            ListSearch(term);
+            COUT ( "There are " << result->Remaining() << " more results" << endl;)
         } else {
             // unwind the change
             if ( direction > 0 ) {
@@ -244,7 +277,7 @@ void AdvanceSearch(NodePtr& activeNode, short direction) {
             } else if ( direction < 0 ) {
                 ++(*result);
             }
-            cout << "Error: No nodes found" << endl;
+            COUT ( "Error: No nodes found" << endl;)
         }
     }
 }
@@ -252,23 +285,23 @@ void AdvanceSearch(NodePtr& activeNode, short direction) {
 /*
  * List the search results
  */
-void ListSearch() {
+void ListSearch(Terminal& term) {
     if ( result == nullptr ) {
-        cout << "Error: No active search!" << endl;
+        COUT ( "Error: No active search!" << endl;)
     } else {
         for ( SearchResult it(result->First()); it.Ok(); ++it) {
             NodePtr node = it.Node();
             if (  node == result->Node() ) {
-                cout << " --> ";
+                COUT ( " --> ";)
             } else {
-                cout << "     ";
+                COUT ( "     ";)
             }
-            cout << node->Parent()->Name() << "/" << node->Name();
-            cout << " : " << node->RunTime() << " / " << node->Calls();
-            cout << " (" << ( node->Calls() == 0 ? 
+            COUT ( node->Parent()->Name() << "/" << node->Name();)
+            COUT ( " : " << node->RunTime() << " / " << node->Calls();)
+            COUT ( " (" << ( node->Calls() == 0 ? 
                                    0 : 
                                    node->RunTime() / node->Calls() 
-                            ) << ")" << endl;
+                            ) << ")" << endl);
         }
     }
 }
@@ -276,45 +309,45 @@ void ListSearch() {
 /*
  * Print the flat table of results.
  */
-void PrintTable(NodePtr& activeNode, stringstream& command) {
+void PrintTable(Terminal& term, NodePtr& activeNode, stringstream& command) {
     int rows = 0;
     command >> rows;
-    cout << counter->PrintResults(rows) << endl;
+    COUT ( counter->PrintResults(rows) << endl;)
 }
-void PrintWideTable(NodePtr& activeNode, stringstream& command) {
+void PrintWideTable(Terminal& term, NodePtr& activeNode, stringstream& command) {
     int rows = 0;
     command >> rows;
     string pattern;
     getline(command,pattern);
     if ( pattern == "" ) {
-        cout << counter->WidePrint(rows) << endl;
+        COUT ( counter->WidePrint(rows) << endl;)
     } else {
         pattern = pattern.substr(1);
-        cout << "Searching flat table for: '" << pattern << "'" << endl;
-        cout << counter->FilteredPrint(pattern,rows) << endl;
+        COUT ( "Searching flat table for: '" << pattern << "'" << endl;)
+        COUT ( counter->FilteredPrint(pattern,rows) << endl;)
     }
 }
-void PrintFilteredTable(NodePtr& activeNode, stringstream& command) {
+void PrintFilteredTable(Terminal& term, NodePtr& activeNode, stringstream& command) {
     string pattern = "";
     getline(command,pattern);
     pattern = pattern.substr(1);
-    cout << "Searching flat table for: '" << pattern << "'" << endl;
-    cout << counter->FilteredPrint(pattern) << endl;
+    COUT ( "Searching flat table for: '" << pattern << "'" << endl;)
+    COUT ( counter->FilteredPrint(pattern) << endl;)
 }
 
 /*
  * Print the tree for the current node
  */
-void PrintTree(NodePtr& activeNode, stringstream& command) {
+void PrintTree(Terminal& term, NodePtr& activeNode, stringstream& command) {
     int depth = 5;
     command >> depth;
-    cout << activeNode->PrintResults(2,depth,false) << endl;
+    COUT ( activeNode->PrintResults(2,depth,false) << endl;)
 }
 
 /*
  * Show the direct descendents of the current node
  */
-void LS(NodePtr& activeNode, stringstream& command) {
+void LS(Terminal& term, NodePtr& activeNode, stringstream& command) {
     int max = 0;
     int depth = 1;
     command >> max;
@@ -326,17 +359,17 @@ void LS(NodePtr& activeNode, stringstream& command) {
     if ( pattern != "" ) {
         pattern = pattern.substr(1);
     }
-    cout << activeNode->Tabulate(depth,max,pattern) << endl;
+    COUT ( activeNode->Tabulate(depth,max,pattern) << endl;)
 }
 
 
 /*
  * Jump to the parent node
  */
-void GoToParent(NodePtr& activeNode, stringstream& command) {
+void GoToParent(Terminal& term, NodePtr& activeNode, stringstream& command) {
     NodePtr parent = activeNode->Parent();
     if ( parent.IsNull() ) {
-        cout << "Error: No such node!" << endl;
+        COUT ( "Error: No such node!" << endl;)
     } else {
         activeNode = parent;
     }
@@ -345,14 +378,14 @@ void GoToParent(NodePtr& activeNode, stringstream& command) {
 /*
  * Build the path string of the current node
  */
-void PWD (NodePtr& activeNode) {
+void PWD (Terminal& term, NodePtr& activeNode) {
     string path = activeNode->Name();
     for ( NodePtr i = activeNode->Parent();
           !i.IsNull();
           i = i->Parent() ) {
         path = i->Name() + "/\n  " + path;
     }
-    cout << path << endl;
+    COUT ( path << endl;)
 }
 
 
@@ -363,7 +396,7 @@ void PWD (NodePtr& activeNode) {
  * ROOT/...   : An absolute path
  * (other)    : A relative path
  */
-void GoTo(NodePtr& activeNode, stringstream& command) {
+void GoTo(Terminal& term, NodePtr& activeNode, stringstream& command) {
     // Read the path
     std::string path_string;
     getline(command,path_string);
@@ -372,7 +405,8 @@ void GoTo(NodePtr& activeNode, stringstream& command) {
     Path::PathNode rootPathNode = path.Root();
 
     if ( path_string == ".." ) {
-        GoToParent(activeNode,command); } else { // Find the node...
+        GoToParent(term, activeNode,command); 
+    } else { // Find the node...
         NodePtr node = nullptr;
         if ( rootPathNode.Name() == "ROOT" ) {
             node = rootNode->GetNode(rootPathNode.Next());
@@ -383,21 +417,21 @@ void GoTo(NodePtr& activeNode, stringstream& command) {
         if ( !node.IsNull() ) {
             activeNode = node;
         } else {
-            cout << "Error: no such node!" << endl;
+            COUT ( "Error: no such node!" << endl;)
         }
     }
 }
 
-void PrintAnnotation(NodePtr& activeNode) {
+void PrintAnnotation(Terminal& term, NodePtr& activeNode) {
     if ( data == nullptr ) {
-            cout << "Error: annotations are unavailable" << endl;
+            COUT ( "Error: annotations are unavailable" << endl;)
     } else {
         string results = data->Annotate(activeNode);
         if ( results == "" ) {
             results = "Error: annotations are unavailable for this node";
         }
 
-        cout << results << endl;
+        COUT ( results << endl;)
     }
 }
 
