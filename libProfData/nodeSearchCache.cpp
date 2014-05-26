@@ -2,6 +2,7 @@
 #include <iterator>
 #include "logger.h"
 #include <functional>
+#include <algorithm>
 
 using namespace std;
 
@@ -79,6 +80,19 @@ size_t RegSearch::Search( NodePtr root,
         results = 0;
     } 
 
+    /*
+     * Now sort the results to the node which 
+     * as the most total time spent in it is first
+     */
+    sort(nodes.begin(), nodes.end(), 
+      [=] (const NodePtr& lhs, const NodePtr& rhs) -> bool 
+      {
+          return lhs->RunTime() > rhs->RunTime();
+      });
+
+
+    // The pointer is invalid once this stack frame
+    // has been unwound
     regPattern = nullptr;
     return results;
 }

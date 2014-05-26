@@ -416,7 +416,7 @@ void ListSearch(Terminal& term) {
                 COUT ( "     ";)
             }
             COUT ( node->Parent()->Name() << "/" << node->Name();)
-            COUT ( " : " << node->RunTime() << " / " << node->Calls();)
+            COUT ( " : " <<  scientific << (float) node->RunTime() << " / " << node->Calls();)
             COUT ( " (" << ( node->Calls() == 0 ? 
                                    0 : 
                                    node->RunTime() / node->Calls() 
