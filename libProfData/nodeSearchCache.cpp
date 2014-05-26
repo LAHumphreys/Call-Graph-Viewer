@@ -46,18 +46,25 @@ SearchResult SearchCache::Search ( const std::string& name) {
 RegSearch::RegSearch() : regPattern(nullptr) {
 }
 
-void RegSearch::AddTree(NodePtr& node ) {
+void RegSearch::AddTree(NodePtr& node, int depth) {
     if ( regPattern && regPattern->Search(node->Name()) ) {
         this->AddNode(node);
     } else {
         SLOG_FROM(LOG_VERBOSE,"RegSearch::Search",
            "Rejected Node: " << node->Name() )
     }
-    node->ForEach([=] ( NodePtr&& node ) -> void {
-        this->AddTree(node); });
+
+    --depth;
+    if ( depth != 0 ) {
+        node->ForEach([=] ( NodePtr&& node ) -> void {
+            this->AddTree(node, depth); });
+    }
 }
 
-size_t RegSearch::Search(NodePtr root, const string& pattern) {
+size_t RegSearch::Search( NodePtr root, 
+                          const string& pattern,
+                          int depth) 
+{
     nodes.clear();
     size_t results = 0;
     try {
@@ -65,7 +72,7 @@ size_t RegSearch::Search(NodePtr root, const string& pattern) {
         regPattern = &thePattern;
 
         root->ForEach([=] ( NodePtr&& node ) -> void {
-            this->AddTree(node); });
+            this->AddTree(node,depth); });
     } catch ( RegError& e ) {
         SLOG_FROM(LOG_ERROR, "RegSearch::Search",
             "Invalid Regex: " << e.what()) 

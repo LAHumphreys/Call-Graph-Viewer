@@ -10,6 +10,7 @@ int CheckShortResults(testLogger& log);
 int PathAccess(testLogger& log);
 int Search(testLogger& log);
 int CheckRegSearch(testLogger& log);
+int CheckLocalRegSearch(testLogger& log);
 int MakeNode(testLogger& log);
 int EmptyCallgrindData(testLogger& log);
 int EmptyCallgrindData_Native(testLogger& log);
@@ -29,6 +30,7 @@ int main(int argc, const char *argv[])
     Test("Printing Short Results...",CheckShortResults).RunTest();
     Test("Seaching the graph",Search).RunTest();
     Test("Seaching the graph with regex",CheckRegSearch).RunTest();
+    Test("Seaching the local graph with regex",CheckLocalRegSearch).RunTest();
     Test("Testing child creation",MakeNode).RunTest();
     Test("Loading an empty callggrind tree",EmptyCallgrindData).RunTest();
     Test("Loading an empty callggrind tree from native file strings",EmptyCallgrindData_Native).RunTest();
@@ -640,6 +642,66 @@ int CallgrindTable ( testLogger& log ) {
         log << ">" << actual << "<" ;
         return 1;
     }
+    return 0;
+}
+
+int CheckLocalRegSearch(testLogger& log) {
+    Node rootNode;
+    Path rootPath("");
+
+    Path mainPath("main");
+    Path f1path("main/f1");
+
+    /*
+     * ROOT
+     * |
+     * main---F1 (2x101)---F2 (2x102)--NULL
+     *      |            |
+     *      |            --F3 (1x103)--NULL
+     *      --F3 (2x103)
+     */
+
+    // Add main to root
+    rootNode.AddCall(rootPath.Root(),"main",100);
+
+    // Add F1 to main 
+    rootNode.AddCall(mainPath.Root(),"f1",101); 
+
+    // Add F2 and F3 to F1
+    rootNode.AddCall(f1path.Root(),"f2",102);
+    rootNode.AddCall(f1path.Root(),"f2",102);
+    rootNode.AddCall(f1path.Root(),"f3",103);
+
+    // Add F3 to main 
+    rootNode.AddCall(mainPath.Root(),"f3",103);
+    rootNode.AddCall(mainPath.Root(),"f3",103);
+
+    // Add F1 to main (again)
+    rootNode.AddCall(mainPath.Root(),"f1",101);
+
+    NodePtr rootPtr = rootNode.THIS();
+
+    RegSearch finder;
+    finder.Search(rootPtr, "f3",2);
+    SearchResult result = finder.Results();
+
+    if ( result.Remaining() != 0 ) {
+        log << "Search returned an invlaid # of results (expected 0 remaining)" << endl;
+        log << result.Remaining();
+        return 1;
+    }
+
+    if ( result.Node().IsNull() ) {
+        log << "Result node is null!" << endl;
+        return 1;
+    }
+
+    if ( result.Node()->Parent()->Name() != "main" ) {
+        log << "I thought the frist result would be in main :(" << endl;
+        log << result.Node()->Parent()->Name() << endl;
+        return 1;
+    }
+
     return 0;
 }
 

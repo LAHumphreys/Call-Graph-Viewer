@@ -47,6 +47,7 @@ void AdvanceSearch(Terminal& term, NodePtr& activeNode, short direction);
 void ListSearch(Terminal& term);
 void Search(Terminal& term, NodePtr& activeNode, stringstream& command);
 void SearchChildren(Terminal& term, NodePtr& activeNode, stringstream& command);
+void SearchLocalChildren(Terminal& term, NodePtr& activeNode, stringstream& command);
 
 // Navigation
 void GoTo(Terminal& term, NodePtr& activeNode, stringstream& command);
@@ -222,6 +223,8 @@ void DoCommand(Terminal& term, NodePtr& activeNode, stringstream& command, strin
             Search(term, activeNode, command);
         } else if ( action == "searchchildren" || action == "sc" ) {
             SearchChildren(term, activeNode, command);
+        } else if ( action == "searchlocal" || action == "sl" ) {
+            SearchLocalChildren(term, activeNode, command);
         } else if ( action == "searchroot" || action == "sr" ) {
             activeNode = rootNode;
             SearchChildren(term, activeNode, command);
@@ -276,6 +279,7 @@ void GetHelp(Terminal& term, NodePtr& activeNode, stringstream& command) {
     helptext << "search <name>              (s) All calls to function <name>" << endl;
     helptext << "searchroot <regex>         (sr) Search child nodes of root for children matching <regex>" << endl;
     helptext << "searchchildren <regex>     (sc) Search child nodes for children matching <regex>" << endl;
+    helptext << "searchlocal [depth] <regex>(sl) Search child nodes, up to [depth], for <regex>" << endl;
     helptext << "  next                     Go to the next search result" << endl;
     helptext << "  previous                 Go to the previous search result" << endl;
     helptext << "  this                     Go back to the current search result" << endl;
@@ -341,6 +345,25 @@ void SearchChildren(Terminal& term, NodePtr& activeNode, stringstream& command) 
 
         delete result;
         finder.Search(activeNode,pattern.substr(1));
+        result = new SearchResult(finder.Results());
+        AdvanceSearch(term, activeNode,0);
+    }
+}
+
+void SearchLocalChildren(Terminal& term, NodePtr& activeNode, stringstream& command) {
+    int depth = -1;
+    command >> depth;
+
+    string pattern = "";
+    getline(command,pattern);
+
+    if ( depth <= 0 || pattern == "" ) {
+        COUT ( "usage: searchlocal <pattern to search>" << endl;)
+        COUT ( "usage: sl [depth] <pattern to search>" << endl;)
+    } else {
+
+        delete result;
+        finder.Search(activeNode,pattern.substr(1),depth);
         result = new SearchResult(finder.Results());
         AdvanceSearch(term, activeNode,0);
     }
@@ -513,7 +536,10 @@ void GoTo(Terminal& term, NodePtr& activeNode, stringstream& command) {
         if ( !node.IsNull() ) {
             activeNode = node;
         } else {
-            COUT ( "Error: no such node!" << endl;)
+            stringstream newcommand;
+            newcommand << 1;
+            newcommand << " " << path_string;
+            SearchLocalChildren(term,activeNode,newcommand);
         }
     }
 }

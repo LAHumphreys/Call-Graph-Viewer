@@ -194,7 +194,7 @@ NodePtr Node::GetNode(Path::PathNode&& pathNode) {
         if ( !node.IsNull() ) {
             node = node->GetNode(pathNode.Next());
         } else {
-            SLOG_FROM(LOG_WARNING, "Node::GetNode",
+            SLOG_FROM(LOG_VERBOSE, "Node::GetNode",
                "No such node '" << pathNode.Name() << "' in node '" 
                     << name << "'" << endl;)
         }
