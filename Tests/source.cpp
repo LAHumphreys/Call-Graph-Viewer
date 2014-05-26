@@ -112,12 +112,12 @@ int annotate_native(testLogger& log ) {
         return 1;
     }
 
-    string actual = native.Annotate(div);
+    string actual = native.Annotate(div,82);
     string expected = 
 "   22:            ( 0%): \n"
 "   23:            ( 0%): int main(int argc, const char *argv[])\n"
 "   24:            ( 0%): {\n"
-"   25:         64 (82%): \n"
+"   25:         64 !82%!: \n"
 "   26:          7 ( 8%):     Test(\"Checking root node...\",RootNode).RunTest();\n"
 "   27:            ( 0%):     Test(\"Adding some nodes...\",AddNodes).RunTest();\n"
 "   28:            ( 0%):     Test(\"Checking path retrieval...\",PathAccess).RunTest();\n"

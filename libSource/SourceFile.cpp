@@ -33,7 +33,8 @@ string SourceFile::Print(size_t start, size_t end) {
 string SourceFile::Annotate(const Annotation& annotations,
                             int start, 
                             int stop,
-                            long total) 
+                            long total,
+                            int threshold) 
 {
     stringstream output;
 
@@ -60,7 +61,12 @@ string SourceFile::Annotate(const Annotation& annotations,
                 output << setw(10) << "";
             }
             if (total != 0 ) {
-                output << " (" << setw(2) << ( l.cost*100 / total) << "%)";
+                int pcnt = ( l.cost*100 / total);
+                if ( pcnt < threshold ) {
+                    output << " (" << setw(2) <<  pcnt << "%)";
+                } else {
+                    output << " !" << setw(2) <<  pcnt << "%!";
+                }
             }
             output << ": " << lines[i-1] << endl;
         }

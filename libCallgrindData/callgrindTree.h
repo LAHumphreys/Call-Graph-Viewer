@@ -62,7 +62,7 @@ public:
 
     SourceFile& GetFile(const int& id);
 
-    std::string Annotate(NodePtr node);
+    std::string Annotate(NodePtr node, int threshold = 101);
 
 private:
     Node           root;

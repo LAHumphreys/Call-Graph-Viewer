@@ -59,7 +59,7 @@ void PrintFilteredTable(Terminal& term, NodePtr& activeNode, stringstream& comma
 void PrintTable(Terminal& term, NodePtr& activeNode, stringstream& command);
 void PrintTree(Terminal& term, NodePtr& activeNode, stringstream& command);
 void PrintWideTable(Terminal& term, NodePtr& activeNode, stringstream& command);
-void PrintAnnotation(Terminal& term, NodePtr& activeNode);
+void PrintAnnotation(Terminal& term, NodePtr& activeNode, stringstream& command);
 
 // Windows
 void DoTopCommand(NodePtr& node, stringstream& command);
@@ -179,6 +179,11 @@ void DoSideCommand(NodePtr& node, stringstream& command) {
 
 void DoCommand(Terminal& term, NodePtr& activeNode, stringstream& command, string action) {
 
+    /*
+     * The terminal is about to be changed, clear the search - it is no longer relevant
+     */
+    term.SearchOff();
+
     if ( action == "" ) {
         command >> action;
     }
@@ -229,7 +234,7 @@ void DoCommand(Terminal& term, NodePtr& activeNode, stringstream& command, strin
         } else if ( action == "list" ) {
             ListSearch(term);
         } else if ( action == "annotate" || action == "a" ) {
-            PrintAnnotation(term, activeNode);
+            PrintAnnotation(term, activeNode, command);
         } else {
             COUT ( "Unknown command!" << endl;)
             GetHelp(term, activeNode,command);
@@ -264,7 +269,7 @@ void GetHelp(Terminal& term, NodePtr& activeNode, stringstream& command) {
     helptext << endl;
     helptext << "  Source Code" << endl;
     helptext << "---------------" << endl;
-    helptext << "annotate                   (a) Print and annotate the source for thie function" << endl;
+    helptext << "annotate [warning %]       (a) Print and annotate, highlighting functions with >warning%% of the time" << endl;
     helptext << endl;
     helptext << "  Searching" << endl;
     helptext << "-------------" << endl;
@@ -513,16 +518,19 @@ void GoTo(Terminal& term, NodePtr& activeNode, stringstream& command) {
     }
 }
 
-void PrintAnnotation(Terminal& term, NodePtr& activeNode) {
+void PrintAnnotation(Terminal& term, NodePtr& activeNode, stringstream& command) {
+    int threshold = 25;
+    command >> threshold;
     if ( data == nullptr ) {
             COUT ( "Error: annotations are unavailable" << endl;)
     } else {
-        string results = data->Annotate(activeNode);
+        string results = data->Annotate(activeNode,threshold);
         if ( results == "" ) {
             results = "Error: annotations are unavailable for this node";
         }
 
-        COUT ( results << endl;)
+        term.Search("![0-9 ][0-9]%!");
+        term.PutString(results);
     }
 }
 

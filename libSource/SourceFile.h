@@ -16,7 +16,8 @@ public:
     std::string Annotate(const Annotation& annotations, 
                          int start, 
                          int end,
-                         long total = 0);
+                         long total = 0,
+                         int threshold=25);
 
     void Initialise();
 

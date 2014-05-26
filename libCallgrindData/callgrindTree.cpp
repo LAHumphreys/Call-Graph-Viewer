@@ -437,7 +437,7 @@ SourceFile& CallgrindNative::GetFile(const int& id ) {
     return it->second;
 }
 
-string CallgrindNative::Annotate(NodePtr node) {
+string CallgrindNative::Annotate(NodePtr node, int threshold) {
     SourceFile& f = GetFile(node->SourceId());
     int start = node->SourceStart();
     if ( start <= 3 ) {
@@ -448,5 +448,5 @@ string CallgrindNative::Annotate(NodePtr node) {
 
     int stop = node->SourceEnd() +7;
 
-    return f.Annotate(node->Annotations(),start,stop,node->RunTime());
+    return f.Annotate(node->Annotations(),start,stop,node->RunTime(),threshold);
 }
