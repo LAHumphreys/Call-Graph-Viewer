@@ -52,9 +52,11 @@ public:
 
     RegSearch();
 
-    void AddTree(NodePtr& node);
+    void AddTree(NodePtr& node, int depth);
 
-    size_t Search(NodePtr root, const std::string& pattern);
+    size_t Search( NodePtr root, 
+                   const std::string& pattern,
+                   int depth=-1);
 
     SearchResult Results() const {
         return SearchResult(nodes.begin(), nodes);

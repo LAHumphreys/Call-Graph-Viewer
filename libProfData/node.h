@@ -14,6 +14,7 @@ public:
     NodePtr(Node* theNode): p (theNode) {}
 
     inline Node* operator->() {return p;}
+    inline const Node* operator->() const {return p;}
     bool operator==(const NodePtr&rhs) { return p == rhs.p; }
     inline bool IsNull() { return p == nullptr;} 
 
