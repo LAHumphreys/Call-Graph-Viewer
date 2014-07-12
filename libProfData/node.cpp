@@ -189,6 +189,10 @@ NodePtr Node::GetNode(Path::PathNode&& pathNode) {
 
     if ( pathNode.IsEnd() ) {
         node = this;
+    } else if (pathNode.Name() == "..") {
+        if ( !Parent().IsNull() ) {
+            node = Parent()->GetNode(pathNode.Next());
+        }
     } else {
         node = GetChild(pathNode.Name());
         if ( !node.IsNull() ) {
