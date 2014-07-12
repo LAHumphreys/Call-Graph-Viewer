@@ -4,11 +4,13 @@
 int LoadValidConfig(testLogger& log);
 int LoadNonFile(testLogger& log);
 int LoadEmptyFile(testLogger& log);
+int LoadScript(testLogger& log);
 
 int main(int argc, const char *arg[]) {
     Test("Loading a non existent file",LoadNonFile).RunTest();
     Test("Loading an empty file",LoadEmptyFile).RunTest();
     Test("Loading a valid file",LoadValidConfig).RunTest();
+    Test("Loading a valid script",LoadScript).RunTest();
     return 0;
 }
 
@@ -45,6 +47,43 @@ int LoadEmptyFile(testLogger& log ) {
 int LoadValidConfig(testLogger& log ) {
     CommandFile commands("data/example.cfg");
 
+    if ( commands.Commands().size() != 3 ) {
+        log << "Command file should have had 3 commands, actually " 
+            << commands.Commands().size();
+        return 1;
+    }
+    std::string expected[] = {
+     "command1 argument1 argument2",
+     "command2 argument1 argument2",
+     "command2 argument1 // argument2",
+    };
+
+    for ( int i =0; i<3; i++ ) {
+        if ( commands.Commands()[i] != expected[i] ) {
+            log << "Command missmatch for command " << i << endl;
+            log << "Expected: >" << expected[i] << "<" << endl;
+            log << "Actual: >" << commands.Commands()[i] << "<" << endl;
+            return 2;
+        }
+    }
+    return 0;
+}
+
+int LoadScript(testLogger& log ) {
+    CommandScript commands( R"EOF(
+        // Start of config
+
+            
+          
+
+        command1 argument1 argument2
+
+            command2 argument1 argument2          
+
+        command2 argument1 // argument2          
+            // End of Config
+
+    )EOF");
     if ( commands.Commands().size() != 3 ) {
         log << "Command file should have had 3 commands, actually " 
             << commands.Commands().size();

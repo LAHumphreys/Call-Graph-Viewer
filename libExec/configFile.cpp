@@ -5,29 +5,52 @@
 
 using namespace std;
 
+CommandScript::CommandScript()
+  : ok (false)
+{
+}
+
+CommandScript::CommandScript(istream& input) 
+   : ok (false)
+{
+    Initialise(input);
+}
+
+CommandScript::CommandScript(std::string script) 
+   : ok (false)
+{
+    stringstream scriptStream(script);
+    Initialise(scriptStream);
+}
+
+void CommandScript::Initialise(istream& input)
+{
+    std::string command;
+    command.reserve(1024);
+    while ( GetNextCommand(command, input) ) {
+        commands.push_back(command);
+    }
+    ok = true;
+}
+
 CommandFile::CommandFile(const std::string& fname)
-  : file(fname), ok (false)
+  : file(fname)
 {
     if (file.good()) {
-        std::string command;
-        command.reserve(1024);
-        while ( GetNextCommand(command) ) {
-            commands.push_back(command);
-        }
-        ok = true;
+        Initialise(file);
     } else {
-       SLOG_FROM(LOG_WARNING,"CommandFile::CommandFile","Failed to load " << fname)
+       SLOG_FROM(LOG_WARNING,"CommandScript::CommandScript","Failed to load " << fname)
     }
 }
 
-bool CommandFile::GetNextCommand(std::string& buf) {
+bool CommandScript::GetNextCommand(std::string& buf, istream& input) {
     bool found = false;
     buf.clear();
     /*
      * Keep searching until we run out of input
      * or we find a command
      */
-    for( std::getline(file,buf); file.good() && !found;)
+    for( std::getline(input,buf); input.good() && !found;)
     { 
         /*
          * Not interested in leading / trailing whitespace...
@@ -36,7 +59,7 @@ bool CommandFile::GetNextCommand(std::string& buf) {
         found = LineIsCommand(buf);
         if ( !found ) {
             buf.clear();
-             std::getline(file,buf);
+             std::getline(input,buf);
         }
     }
 
@@ -44,7 +67,7 @@ bool CommandFile::GetNextCommand(std::string& buf) {
 
 }
 
-bool CommandFile::LineIsCommand(const std::string& line) {
+bool CommandScript::LineIsCommand(const std::string& line) {
     bool valid = false;
 
     
@@ -54,7 +77,7 @@ bool CommandFile::LineIsCommand(const std::string& line) {
     return valid;
 }
 
-bool CommandFile::LineIsComment(const std::string& line) {
+bool CommandScript::LineIsComment(const std::string& line) {
     static RegPattern commentPattern("^ *//");
     return commentPattern.Search(line);
 }
