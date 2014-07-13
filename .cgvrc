@@ -1,0 +1,21 @@
+// ---------------------------------
+// --      Define new commands
+// ---------------------------------
+// silent <command>
+//   Execute <command> with no output
+alias silent "output_off; ${1@}; output_on"
+
+// with <node> <command>
+//   Utility alias to run <command> on <node>
+alias with "silent pushd ${1}; ${2@}; silent popd"
+
+// ls [pattern]
+//   Display flat view for this function
+alias ls "flat 1 0 ${1@}"
+
+
+// ---------------------------------
+// --        Initialisation
+// ---------------------------------
+// Start in the function
+cd main
