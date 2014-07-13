@@ -8,6 +8,7 @@
 #include <forward_list>
 #include "Commands.h"
 #include <functional>
+#include "nodeSearchCache.h"
 
 /*
  * Utility class to read in a input file and 
@@ -25,11 +26,15 @@ public:
      */
     NodeApp(NodePtr root, OutputTerminal& output);
 
+    /***************************
+     *        Commands
+     **************************/
+
+
     /*
      * Write the path of the current working node to the output
      */
     int PWD();
-
     /*
      * Change into node at path...
      */
@@ -41,14 +46,64 @@ public:
     int PUSHD(std::string s);
     int POPD();
 
+    /*
+     * Create a local flat view
+     */
+    int Flat(int depth, int max, std::string pattern);
+
+    /*
+     * Print a tree view
+     */
+    int Tree(int depth);
+
+    /*
+     * Search for a node...
+     */
+    int Search(int depth, std::string pattern);
+    int Next();
+    int Previous();
+    int ListSearch();
+
+    /***************************
+     * Public help functions
+     **************************/
+
+    /*
+     * Add application commands to a Commmands dispatcher
+     * object
+     */
     int RegisterCommands(Commands& dispatcher);
 
+    NodePtr ActiveNode() {
+        return pwd;
+    }
+
+    void SetOutputTerminal(OutputTerminal& term) {
+        output = &term;
+    }
+
 private:
+    /*
+     * Utility functions
+     */
     std::string PrintPopdStack();
+
+    /*
+     * Data
+     */
+    // location data
     NodePtr   root;
     NodePtr   pwd;
-    OutputTerminal* output;
+
     std::forward_list<NodePtr> popdstack;
+
+    // Where to send output to
+    OutputTerminal* output;
+
+    // Search tools
+    RegSearch      finder;
+    SearchResult*  result = nullptr;
+
 
     /*
      * Commands
@@ -57,5 +112,8 @@ private:
     std::function<int(std::string)> f_cd;
     std::function<int(std::string)> f_pushd;
     std::function<int()> f_popd;
+    std::function<int(int,int,std::string)> f_flat;
+    std::function<int(int)> f_tree;
+    std::function<int(int,std::string)> f_search;
 };
 #endif

@@ -75,6 +75,10 @@ public:
      * Read the config file
      */
     CommandFile(const std::string& fname);
+
+    bool Ok() const {
+        return file.good();
+    }
 private:
      std::fstream file;
 
