@@ -60,7 +60,7 @@ int NodeApp::CD(string path_string) {
     if ( !working.IsNull() ) {
         pwd = working;
     } else {
-        Search(1,path_string);
+        Search(1,"^" + path_string);
         //output->PutString("error, no such node: " + path_string + "\n");
         //ret = 1;
     }
