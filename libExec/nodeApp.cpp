@@ -15,6 +15,9 @@ NodeApp::NodeApp(NodePtr _root, OutputTerminal& _output)
      f_search(std::bind(&NodeApp::Search,this,_1,_2))
 {
 }
+NodeApp::~NodeApp() {
+    delete result;
+}
 
 int NodeApp::RegisterCommands(Commands& dispatcher) {
     dispatcher.AddCommand("pwd",f_pwd);

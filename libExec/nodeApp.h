@@ -25,6 +25,7 @@ public:
      *
      */
     NodeApp(NodePtr root, OutputTerminal& output);
+    virtual ~NodeApp();
 
     /***************************
      *        Commands
