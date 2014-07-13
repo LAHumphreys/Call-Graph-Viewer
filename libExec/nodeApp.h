@@ -6,6 +6,8 @@
 #include <string>
 #include "outputTerminal.h"
 #include <forward_list>
+#include "Commands.h"
+#include <functional>
 
 /*
  * Utility class to read in a input file and 
@@ -31,19 +33,29 @@ public:
     /*
      * Change into node at path...
      */
-    int CD(const std::string& s);
+    int CD(std::string s);
 
     /*
      * Change to another directory, but add the pwd to the popd stack
      */
-    int PUSHD(const std::string& s);
-
+    int PUSHD(std::string s);
     int POPD();
+
+    int RegisterCommands(Commands& dispatcher);
+
 private:
     std::string PrintPopdStack();
     NodePtr   root;
     NodePtr   pwd;
     OutputTerminal* output;
     std::forward_list<NodePtr> popdstack;
+
+    /*
+     * Commands
+     */
+    std::function<int()> f_pwd;
+    std::function<int(std::string)> f_cd;
+    std::function<int(std::string)> f_pushd;
+    std::function<int()> f_popd;
 };
 #endif

@@ -2,6 +2,7 @@ LINKED_LIBS= libSource libExec libCallgrindData libProfData \
              libUtils  \
 			 libIOInterface \
 			 libTest
+MAKE_DIRS=NodeApp
 
 BUILD_TIME_TESTS=config source load path callCount stack profile graph 
 CPP_TAGS_FILE=profiler-tests-c++.tags

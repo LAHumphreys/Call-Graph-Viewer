@@ -2,10 +2,23 @@
 #include "path.h"
 
 using namespace std;
+using namespace std::placeholders;
 
 NodeApp::NodeApp(NodePtr _root, OutputTerminal& _output) 
-    : root(_root), pwd(_root), output(&_output)
+    : root(_root), pwd(_root), output(&_output),
+     f_pwd(std::bind(&NodeApp::PWD,this)),
+     f_cd(std::bind(&NodeApp::CD,this,_1)),
+     f_pushd(std::bind(&NodeApp::PUSHD,this,_1)),
+     f_popd(std::bind(&NodeApp::POPD,this))
 {
+}
+
+int NodeApp::RegisterCommands(Commands& dispatcher) {
+    dispatcher.AddCommand("pwd",f_pwd);
+    dispatcher.AddCommand("cd",f_cd);
+    dispatcher.AddCommand("pushd",f_pushd);
+    dispatcher.AddCommand("popd",f_popd);
+    return 0;
 }
 
 int NodeApp::PWD() {
@@ -18,16 +31,20 @@ int NodeApp::PWD() {
 }
 
 
-int NodeApp::CD(const string& path_string) {
+int NodeApp::CD(string path_string) {
     int ret = 0;
-    Path path (path_string);
-    Path::PathNode rootPathNode = path.Root();
     NodePtr working = nullptr;
-    if ( path_string != "" ) {
-        if ( rootPathNode.Name() == "ROOT") {
-            working = root->GetNode(rootPathNode.Next());
-        } else {
-            working = pwd->GetNode(std::move(rootPathNode));
+    if ( path_string == "ROOT" ) {
+        working = root;
+    } else  {
+        Path path (path_string);
+        Path::PathNode rootPathNode = path.Root();
+        if ( path_string != "" ) {
+            if ( rootPathNode.Name() == "ROOT") {
+                working = root->GetNode(rootPathNode.Next());
+            } else {
+                working = pwd->GetNode(std::move(rootPathNode));
+            }
         }
     }
     if ( !working.IsNull() ) {
@@ -39,7 +56,7 @@ int NodeApp::CD(const string& path_string) {
     return ret;
 }
 
-int NodeApp::PUSHD(const string& path_string) {
+int NodeApp::PUSHD(string path_string) {
     NodePtr startingDir = pwd;
     int ret  = CD(path_string);
     if ( ret == 0 ) {

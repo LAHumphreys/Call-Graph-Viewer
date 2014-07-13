@@ -50,7 +50,7 @@ bool CommandScript::GetNextCommand(std::string& buf, istream& input) {
      * Keep searching until we run out of input
      * or we find a command
      */
-    for( std::getline(input,buf); input.good() && !found;)
+    for( std::getline(input,buf); !input.fail() && !found;)
     { 
         /*
          * Not interested in leading / trailing whitespace...

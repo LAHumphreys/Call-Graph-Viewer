@@ -1,6 +1,7 @@
 #include "tester.h"
 #include "callgrindTree.h"
 #include "nodeApp.h"
+#include "nodeUserApp.h"
 
 CallgrindNative native("../data/native/flist_costs.callgrind");
 
@@ -26,11 +27,14 @@ CallgrindNative native("../data/native/flist_costs.callgrind");
 int Initialisation(testLogger& log);
 int CD(testLogger& log);
 int PUSHD(testLogger& log);
+int Scripting(testLogger& log);
+
 int main(int argc, const char *argv[])
 {
     Test("Initialising an app...",Initialisation).RunTest();
     Test("Testing pwd changing...",CD).RunTest();
     Test("Testing pushd / popd...",PUSHD).RunTest();
+    Test("Doing some basic scripting...",Scripting).RunTest();
     return 0;
 }
 
@@ -45,53 +49,67 @@ int Initialisation(testLogger& log) {
     return 0;
 }
 
-#define SCRIPT(descr,output,code) \
+#define DIRECT_CALL(descr,output,code) \
     tester.Reset(); \
     code \
     if ( tester.OutputAsString() != output ) { \
         log << descr << endl; \
-        log << "Exected: >" output << "<" << endl; \
-        log << "Actual: >" << tester.OutputAsString() <<"<"; \
+        log << "exected: >" output << "<" << endl; \
+        log << "actual: >" << tester.OutputAsString() <<"<"; \
+        return 1; \
+    }
+
+#define SCRIPT(descr,output,code) \
+    tester.Reset(); \
+    app.Execute(CommandScript(code)); \
+    if ( tester.OutputAsString() != output ) { \
+        log << descr << endl; \
+        log << "exected: >" << output << "<" << endl; \
+        log << "actual: >" << tester.OutputAsString() <<"<"; \
         return 1; \
     }
 
 int CD(testLogger& log) {
     TestTerminal tester; 
     NodeApp app(native.RootNode(),tester);
-    SCRIPT ("Change into main", "ROOT/\n  main", 
+    DIRECT_CALL ("Change into main", "ROOT/\n  main", 
         app.CD("main");
         app.PWD();
     )
-    SCRIPT ("change down two levels","ROOT/\n  main/\n  odds/\n  div",
+    DIRECT_CALL ("change down two levels","ROOT/\n  main/\n  odds/\n  div",
         app.CD("odds/div");
         app.PWD();
     )
-    SCRIPT ("Handle an empty path","error, no such node:",
+    DIRECT_CALL ("Handle an empty path","error, no such node:",
         app.CD("");
     )
-    SCRIPT ("Handle a space path","error, no such node:" ,
+    DIRECT_CALL ("Handle a space path","error, no such node:" ,
         app.CD(" ");
     )
-    SCRIPT ("No path change after invalid paths", "ROOT/\n  main/\n  odds/\n  div",
+    DIRECT_CALL ("No path change after invalid paths", "ROOT/\n  main/\n  odds/\n  div",
         app.PWD();
     )
-    SCRIPT ("Changing via the root node", "ROOT/\n  main/\n  evens/\n  div/\n  pos_div2", 
+    DIRECT_CALL ("Changing via the root node", "ROOT/\n  main/\n  evens/\n  div/\n  pos_div2", 
         app.CD("ROOT/main/evens/div/pos_div2");
         app.PWD();
     )
-    SCRIPT ("Change up two levels", "ROOT/\n  main/\n  evens",
+    DIRECT_CALL ("Change up two levels", "ROOT/\n  main/\n  evens",
         app.CD("../..");
         app.PWD();
     )
-    SCRIPT("Changing up to many levels","error, no such node: ../../../../..",
+    DIRECT_CALL("Changing up to many levels","error, no such node: ../../../../..",
         app.CD("../../../../..");
     )
-    SCRIPT("pwd after invalid ..s","ROOT/\n  main/\n  evens",
+    DIRECT_CALL("pwd after invalid ..s","ROOT/\n  main/\n  evens",
        app.PWD();
     )
-    SCRIPT("CD via parent's parent","ROOT/\n  main/\n  odds/\n  div",
+    DIRECT_CALL("CD via parent's parent","ROOT/\n  main/\n  odds/\n  div",
        app.CD("../../main/odds/div");
        app.PWD();
+    )
+    DIRECT_CALL ("Change into ROOT", "ROOT", 
+        app.CD("ROOT");
+        app.PWD();
     )
     return 0;
 }
@@ -100,25 +118,65 @@ int PUSHD(testLogger& log) {
     TestTerminal tester; 
     NodeApp app(native.RootNode(),tester);
     
-    SCRIPT ("Push root on to the stack", "ROOT/main\nROOT\nROOT/\n  main", 
+    DIRECT_CALL ("Push root on to the stack", "ROOT/main\nROOT\nROOT/\n  main", 
         app.PUSHD("main");
         app.PWD();
     )
-    SCRIPT ("Push odds onto the statck","main/odds\nROOT/main\nROOT",
+    DIRECT_CALL ("Push odds onto the statck","main/odds\nROOT/main\nROOT",
         app.PUSHD("odds");
         app.CD("ROOT/main/evens");
     )
-    SCRIPT ("pop the stack","ROOT/main\nROOT\nROOT/\n  main",
+    DIRECT_CALL ("pop the stack","ROOT/main\nROOT\nROOT/\n  main",
         app.POPD();
         app.PWD();
     )
-    SCRIPT ("pop the stack again","ROOT\nROOT",
+    DIRECT_CALL ("pop the stack again","ROOT\nROOT",
         app.POPD();
         app.PWD();
     )
-    SCRIPT ("pop an empty stack","error: Node stack is empty!",
+    DIRECT_CALL ("pop an empty stack","error: Node stack is empty!",
         app.CD("main");
         app.POPD();
     )
+    return 0;
+}
+
+int Scripting(testLogger& log) {
+    TestTerminal tester;
+    NodeUserApp app(native.RootNode(),tester);;
+
+    string code = R"CODE(
+        pushd main
+        pwd
+    )CODE";
+    SCRIPT("Check starting node", "ROOT/main\nROOT\nROOT/\n  main",code)
+
+    code = R"CODE(
+        // Push odds onto the stack for safe keeping
+        pushd odds
+
+        // Change into evens, see if the stack is preserved...
+        cd ROOT/main/evens
+    )CODE";
+    SCRIPT ("Push odds onto the statck","main/odds\nROOT/main\nROOT",code)
+
+    code = R"CODE(
+        alias with "pushd ${1}; ${2@}; popd"
+        with ROOT pwd
+        pwd
+    )CODE";
+string expected= R"(ROOT
+main/evens
+ROOT/main
+ROOT
+ROOT
+main/evens
+ROOT/main
+ROOT
+ROOT/
+  main/
+  evens)";
+    SCRIPT ("Use with",expected,code)
+
     return 0;
 }
