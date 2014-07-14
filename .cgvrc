@@ -18,7 +18,8 @@ alias ls "flat 1 0 \"${1}\""
 alias table "flat 100000 0 ${1@}"
 
 // class [pattern]
-//   Display flat view for all calls below this function to members of a function
+//   Display flat view for all calls below this function to members of a 
+//   class or namespace
 alias class "flat 100000 0 \"^${1@}::\""
 
 // goto [pattern]
@@ -28,6 +29,10 @@ alias goto "search 1 ^${1}"
 // find <pattern>
 //   Search for the pattern in the full tree
 alias find "search 10000000 \"${1}\""
+
+// graph
+//   Display the full call tree
+alias graph "tree 100000"
 
 // ---------------------------------
 // --      Define shortcuts
