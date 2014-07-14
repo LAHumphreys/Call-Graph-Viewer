@@ -129,7 +129,7 @@ int NodeApp::Search(int depth, string pattern) {
         pwd = result->Node();
         ListSearch();
     } else {
-        output->PutString("Error: No nodes found\n");
+        output->PutString("error, no such node: " + pattern + "\n");
     }
     return 0;
 }

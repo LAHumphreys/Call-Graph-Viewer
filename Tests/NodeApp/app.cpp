@@ -80,10 +80,10 @@ int CD(testLogger& log) {
         app.CD("odds/div");
         app.PWD();
     )
-    DIRECT_CALL ("Handle an empty path","error, no such node:",
+    DIRECT_CALL ("Handle an empty path","error, no such node: ^",
         app.CD("");
     )
-    DIRECT_CALL ("Handle a space path","error, no such node:" ,
+    DIRECT_CALL ("Handle a space path","error, no such node: ^" ,
         app.CD(" ");
     )
     DIRECT_CALL ("No path change after invalid paths", "ROOT/\n  main/\n  odds/\n  div",
@@ -97,7 +97,7 @@ int CD(testLogger& log) {
         app.CD("../..");
         app.PWD();
     )
-    DIRECT_CALL("Changing up to many levels","error, no such node: ../../../../..",
+    DIRECT_CALL("Changing up to many levels","error, no such node: ^../../../../..",
         app.CD("../../../../..");
     )
     DIRECT_CALL("pwd after invalid ..s","ROOT/\n  main/\n  evens",
