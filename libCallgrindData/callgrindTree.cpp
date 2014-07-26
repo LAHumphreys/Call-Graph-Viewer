@@ -98,12 +98,22 @@ void CallgrindCallTree::AddCalls(NodePtr node) {
     });
 }
 
+CallgrindNative::~CallgrindNative() {
+    delete costFactory;
+}
 void CallgrindNative::AddFile(const int& id, const std::string& path ) {
     sources.emplace(id,SourceFile(path));
 }
 
 CallgrindNative::CallgrindNative(const std::string& fname) 
-    : child(nullptr), current(&root), numCalls(0), currentFile(-1), childFile(-1), currentLine(0), currentActiveLine(0)
+    : child(nullptr), 
+      current(&root), 
+      numCalls(0), 
+      currentFile(-1), 
+      childFile(-1), 
+      currentLine(0), 
+      currentActiveLine(0),
+      costFactory(0)
 {
 
     // Default to not caring about this file...
@@ -117,6 +127,10 @@ CallgrindNative::CallgrindNative(const std::string& fname)
      *    http://valgrind.org/docs/manual/cl-manual.html
      *
      * Types of line we have to handle:
+     *
+     * Definitions:
+     *    defines in what cost units will appear...
+     *    events: <unit 1> <unit 2> ...
      *
      * Cost lines: 
      *     <line No> <cost>
@@ -154,6 +168,19 @@ CallgrindNative::CallgrindNative(const std::string& fname)
 
     string line;
     line.reserve(10240);
+    // Before we load anything we need to know what we are looking for
+    while ( file.good() && costFactory == nullptr ) {
+        char c = file.peek();
+        if ( c == 'e' ) {
+            line.clear();
+            std::getline(file,line);
+            if ( line.substr(0,7) == "events:" ) {
+                costFactory = 
+                    new StringStructFactory(line.substr(8).c_str());
+            }
+        }
+        file.ignore(numeric_limits<streamsize>::max(),'\n');
+    }
     while ( file.good() ) {
         char c = file.peek();
         if ( c == '*' || c == '+' || c== '-' || ( c >= '0' && c <= '9') ) {
@@ -187,7 +214,6 @@ CallgrindNative::CallgrindNative(const std::string& fname)
             file.ignore(numeric_limits<streamsize>::max(),'\n');
             SLOG_FROM(LOG_VERY_VERBOSE, "CallgrindNative::CallgrindNative", "Skipped line (wrong c) : " << c)
         }
-
     }
 }
 
@@ -449,4 +475,17 @@ string CallgrindNative::Annotate(NodePtr node, int threshold) {
     int stop = node->SourceEnd() +7;
 
     return f.Annotate(node->Annotations(),start,stop,node->RunTime(),threshold);
+}
+
+size_t CallgrindNative::GetCostIdx(const string& unit) const {
+    if ( costFactory ) {
+        return costFactory->GetIdx(unit);
+    } else {
+        return numeric_limits<int>::max();
+    }
+}
+
+CallgrindNative::CostStruct CallgrindNative::MakeCosts(const char* line) const 
+{
+    return costFactory->New(line);
 }

@@ -6,13 +6,25 @@
 int Table(testLogger& log);
 int Tree(testLogger& log);
 int Annotate(testLogger& log);
+int CheckUnits(testLogger& log);
 
 int main(int argc, const char *argv[])
 {
 
-    Test("Checking call table...",Table).RunTest();
-    Test("Checking call tree...",Tree).RunTest();
-    Test("Checking source annotation...",Annotate).RunTest();
+    Test("Checking units loaded correctly...",CheckUnits).RunTest();
+    return 0;
+}
+
+int CheckUnits(testLogger& log) {
+    CallgrindNative native("data/toy_cache.data");
+    vector<string> events = { "Ir", "Dr", "Dw", "I1mr", "D1mr", "D1mw", "ILmr", "DLmr", "DLmw" };
+    for ( size_t i = 0; i < events.size(); ++i ) {
+        if ( native.GetCostIdx(events[i]) != i ) {
+            log << events[i] + " should be at index " << i << "!" << endl;
+            return 1;
+        }
+    }
+    StringStruct costs = native.MakeCosts("1 0 1 1 0 0 1");
     return 0;
 }
 

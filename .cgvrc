@@ -17,6 +17,10 @@ alias ls "flat 1 0 \"${1}\""
 //   Display flat view for all calls below this function
 alias table "flat 100000 0 ${1@}"
 
+// top [count] [pattern]
+//   Display flat view for all calls below this function
+alias top "flat 100000 ${1} ${2@}"
+
 // class [pattern]
 //   Display flat view for all calls below this function to members of a 
 //   class or namespace

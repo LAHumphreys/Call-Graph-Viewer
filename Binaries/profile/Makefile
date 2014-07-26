@@ -3,6 +3,7 @@ SOURCES=$(shell echo *.cpp)
 LINKED_LIBS= libExec libCallgrindData libProfData libSource\
              libScreen \
              libUtils  \
+             libString  \
 			 libIOInterface 
 EXECUTABLE=profile
 MODE=CPP
