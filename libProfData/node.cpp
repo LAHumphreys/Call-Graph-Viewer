@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <iomanip>
 #include <climits>
+#include "nodeConfig.h"
 
 using namespace std;
 
@@ -14,9 +15,9 @@ Node::Node()
       sourceStart(INT_MAX),
       sourceEnd(-1),
       callCount(0), 
-      usecs(0), 
       name("ROOT"), 
-      parent(nullptr)
+      parent(nullptr),
+      costStruct(NodeConfig::Instance().NewCost())
 {
 }
 
@@ -25,21 +26,23 @@ Node::Node(const std::string& _name, Node* _parent, long _usecs)
       sourceStart(INT_MAX),
       sourceEnd(-1),
       callCount(0), 
-      usecs(_usecs), 
       name(_name), 
-      parent(_parent)
+      parent(_parent),
+      costStruct(NodeConfig::Instance().NewCost())
 {
+    (*costStruct)[0] = _usecs;
 }
 
 Node::~Node() {
     for ( auto& p: children ) {
         delete p.second;
     }
+    delete costStruct;
 }
 
 void Node::AddCall(long _usecs, int count) {
     callCount += count;
-    usecs += _usecs;
+    (*costStruct)[0] += _usecs;
 }
 
 // Update the node <name> with a call for <usecs>
@@ -51,7 +54,7 @@ NodePtr Node::AddCall(const std::string& name,
     if ( !child.IsNull() ) {
         // Child exists - update it.
         ++child->callCount;
-        child->usecs += usecs;
+        child->costStruct->operator[](0) += usecs;
     } else {
         // No such child - create it
         Node* node = new Node(name,this,usecs);
@@ -163,8 +166,11 @@ std::string Node::PrintInfo(unsigned int indent,
         s << endl;
     }
     indent+=INDENT_TAB_SIZE;
+    const std::string& unitName = NodeConfig::Instance().CostFactory()
+                                    .GetName(0);
+    long& cost = (*costStruct)[0];
     s << setw(indent) << "" << "Calls: " << callCount;
-    s << ", Time: " << usecs << ", Av. Time: " << (callCount == 0 ? 0: usecs/callCount) << endl;
+    s << ", " << unitName << ": " << cost << ", Av. " << unitName << ": " << (callCount == 0 ? 0: cost/callCount) << endl;
     return s.str();
 }
 
@@ -172,11 +178,12 @@ void Node::SortByTime(vector<PAIR>& sortedNodes) {
     sortedNodes.empty();
     sortedNodes.resize(children.size());
 
-    partial_sort_copy(children.begin(),children.end(),
-                      sortedNodes.begin(),sortedNodes.end(),
-                      [] (const PAIR& lhs, const PAIR& rhs) -> bool {
-                          return lhs.second->usecs>rhs.second->usecs;
-                      });
+    partial_sort_copy(
+         children.begin(),children.end(),
+         sortedNodes.begin(),sortedNodes.end(),
+         [] (const PAIR& lhs, const PAIR& rhs) -> bool {
+             return lhs.second->RunTime()>rhs.second->RunTime();
+         });
 
 }
 
@@ -215,7 +222,7 @@ NodePtr Node::CreateNode( const Path& path,
 }
 
 void Node::AddChildren(CallCount& counter, int depth) {
-    counter.AddCall(name,usecs,callCount);
+    counter.AddCall(name,RunTime(),callCount);
     --depth;
     if ( depth > 0 ) {
         ForEach([=, &counter] (NodePtr node) -> void {

@@ -1,8 +1,42 @@
 #include "callCount.h"
+#include "nodeConfig.h"
 #include <algorithm>
 #include <utility>
 #include <iomanip>
 using namespace std;
+
+CallCount::Calls::Calls() 
+    : calls(0), costs(NodeConfig::Instance().NewCost())
+{
+}
+
+CallCount::Calls::Calls(const Calls& rhs) 
+    : costs(NodeConfig::Instance().NewCost())
+{
+    (*this) = rhs;
+}
+
+CallCount::Calls::Calls(Calls&& moveFrom) 
+    : calls(moveFrom.calls), costs(moveFrom.costs)
+{
+    moveFrom.costs = nullptr;
+}
+
+CallCount::Calls& CallCount::Calls::operator=(const Calls& rhs)
+{
+    if ( costs == nullptr ) {
+        costs = NodeConfig::Instance().NewCost();
+    }
+    calls = rhs.calls;
+    for( size_t i = 0; i< costs->Size(); ++i ) {
+        (*costs)[i] = (*rhs.costs)[i];
+    }
+    return *this;
+}
+
+CallCount::Calls::~Calls() {
+    delete costs;
+}
 
 void CallCount::AddCall(const string& name, 
                         const long& usecs,
@@ -11,21 +45,24 @@ void CallCount::AddCall(const string& name,
     auto it = fcalls.find(name);
     if ( it != fcalls.end() ) {
         it->second.calls += callCount;
-        it->second.usecs += usecs;
+        it->second[0] += usecs;
     } else {
         Calls& count = fcalls[name];
         count.calls = callCount;
-        count.usecs = usecs;
+        count[0] = usecs;
     }
 }
 
 std::string CallCount::PrintResults(unsigned tableSize) const {
     stringstream result("");
     static const unsigned name_width = 70;
+    const std::string& unitName = NodeConfig::Instance().CostFactory()
+                                     .GetName(0);
     result << "-----------------------------------------------------------------------------------------------------------\n";
     result << "|-               Most Time Spent in Function                                                             -|\n";
     result << "-----------------------------------------------------------------------------------------------------------\n";
-    result << "|    Function Name                                                      | Calls  | Time(us)   | us/call   |\n";
+    result << "|    Function Name                                                      | Calls  | " 
+           << left << setw(11) << unitName   << "| " << left << setw(9) << unitName + "/call" << " |\n";
     result << "-----------------------------------------------------------------------------------------------------------\n";
     //           <-          35                   ->  <- 7 ->  <- 11    ->  <- 10   ->
     // Sort into order of most expensive...
@@ -47,16 +84,17 @@ std::string CallCount::PrintResults(unsigned tableSize) const {
             name = name.substr(0,name_width -3) + "...";
         }
 
+        const long& cost = it.second[0];
         result << "| ";
         result << left << setw(name_width) << name;
         result << "| ";
         result << setw(7) << it.second.calls;
         result << "| ";
-        result << setw(11) << it.second.usecs;
+        result << setw(11) << cost;
         result << "| ";
         result << setw(10) << (it.second.calls == 0 ? 
                                   0 : 
-                                  it.second.usecs / it.second.calls);
+                                  cost / it.second.calls);
         result << "|\n";
     }
 
@@ -67,7 +105,8 @@ std::string CallCount::PrintResults(unsigned tableSize) const {
     result << "-----------------------------------------------------------------------------------------------------------\n";
     result << "|-               Most Expensive Function Calls                                                           -|\n";
     result << "-----------------------------------------------------------------------------------------------------------\n";
-    result << "|    Function Name                                                      | Calls  | Time(us)   | us/call   |\n";
+    result << "|    Function Name                                                      | Calls  | " 
+           << left << setw(11) << unitName   << "| " << left << setw(9) << unitName + "/call" << " |\n";
     result << "-----------------------------------------------------------------------------------------------------------\n";
 
     // Now print each one...
@@ -78,16 +117,17 @@ std::string CallCount::PrintResults(unsigned tableSize) const {
             name = name.substr(0,name_width -3) + "...";
         }
 
+        const long& cost = it.second[0];
         result << "| ";
         result << left << setw(name_width) << name;
         result << "| ";
         result << setw(7) << it.second.calls;
         result << "| ";
-        result << setw(11) << it.second.usecs;
+        result << setw(11) << cost;
         result << "| ";
         result << setw(10) << (it.second.calls == 0 ?  
                                   0 : 
-                                  it.second.usecs / it.second.calls);
+                                  cost / it.second.calls);
         result << "|\n";
     }
 
@@ -107,15 +147,19 @@ void CallCount::PopulateTables( unsigned tableSize,
     partial_sort_copy(fcalls.begin(),fcalls.end(),
                       mostTotalTime.begin(),mostTotalTime.end(),
                       [] (const call_pair& lhs, const call_pair& rhs) -> bool {
-                          return lhs.second.usecs>rhs.second.usecs;
+                          return lhs.second[0] > rhs.second[0];
                       });
 
     // Select the tableSize most expensive function in terms time per call
     partial_sort_copy(fcalls.begin(),fcalls.end(),
                       mostTimePerCall.begin(),mostTimePerCall.end(),
                       [] (const call_pair& lhs, const call_pair& rhs) -> bool {
-                          return ( lhs.second.calls == 0 ? 0 : lhs.second.usecs/lhs.second.calls ) >
-                                 ( rhs.second.calls == 0 ? 0 : rhs.second.usecs/rhs.second.calls);
+                          return ( lhs.second.calls == 0 ? 
+                                    0 : 
+                                    lhs.second[0] / lhs.second.calls ) >
+                                    (rhs.second.calls == 0 ? 
+                                     0 : 
+                                     rhs.second[0] / rhs.second.calls);
                       });
 }
 
@@ -136,7 +180,7 @@ void CallCount::PopulateTables( unsigned tableSize,
                           {
                               if (patternRegex.Search(rhs.first) ) {
                                   // Both match, check them
-                                  return lhs.second.usecs>rhs.second.usecs;
+                                  return lhs.second[0]> rhs.second[0];
                               } else {
                                   // LHS matches => it is bigger
                                   return 1;
@@ -145,14 +189,19 @@ void CallCount::PopulateTables( unsigned tableSize,
                               // RHS matchnes => it is bigger
                               return 0;
                           } else {
-                              return lhs.second.usecs>rhs.second.usecs;
+                              return lhs.second[0] > rhs.second[0];
                           }
                       });
 
     // Select the tableSize most expensive function in terms time per call
     auto cost_gt = [] (const call_pair& lhs, const call_pair& rhs) -> bool {
-        return ( lhs.second.calls == 0 ? 0 : lhs.second.usecs/lhs.second.calls ) >
-               ( rhs.second.calls == 0 ? 0 : rhs.second.usecs/rhs.second.calls);
+        return ( lhs.second.calls == 0 ? 
+                 0 : 
+                 lhs.second[0] / lhs.second.calls 
+               ) >
+               ( rhs.second.calls == 0 ? 
+                 0 : 
+                 rhs.second[0] /rhs.second.calls);
     };
 
     partial_sort_copy(fcalls.begin(),fcalls.end(),
@@ -204,10 +253,13 @@ string CallCount::FilteredPrint(const string& pattern, unsigned tableSize) const
 
 
         PopulateTables(tableSize, mostTotalTime,mostTimePerCall, patternRegex);
+        const std::string& unitName = NodeConfig::Instance().CostFactory()
+                                         .GetName(0);
 
         output << "                 Most Time Spent in Function\n";
         output << "               ===============================\n";
-        output << "  Calls      Time(us)      us/call        Name\n";
+        output << "  Calls      " << left << setw(8) << unitName  << "      " 
+               << left << setw(9) << unitName  + "/call" << "      Name\n";
         output << "---------  -----------   -------------  --------\n";
         //         1234567890123456789012345678901234567890123456789
         //         0000000001111111111222222222233333333334444444444
@@ -216,20 +268,23 @@ string CallCount::FilteredPrint(const string& pattern, unsigned tableSize) const
             if ( !patternRegex.Search(it.first) ) {
                 break;
             }
-            PrintWideRow(output,it.first,it.second.calls, it.second.usecs);
+            PrintWideRow(output,it.first,it.second.calls, 
+                                         it.second[0]);
         }
         output << endl << endl;
 
         output << "                 Most Expensive Function Calls\n";
         output << "               =================================\n";
-        output << "  Calls      Time(us)      us/call        Name\n";
+        output << "  Calls      " << left << setw(8) << unitName  << "      " 
+               << left << setw(9) << unitName + "/call" << "      Name\n";
         output << "---------  -----------   -------------  --------\n";
 
         for ( const call_pair& it: mostTimePerCall ) {
             if ( !patternRegex.Search(it.first) ) {
                 break;
             }
-            PrintWideRow(output,it.first,it.second.calls, it.second.usecs);
+            PrintWideRow(output,it.first,it.second.calls, 
+                                         it.second[0]);
         }
     } catch ( RegError& e ) {
         output << "Invalid regular expression: \n";
@@ -249,27 +304,33 @@ std::string CallCount::WidePrint(unsigned tableSize) const {
     }
 
     PopulateTables(tableSize, mostTotalTime,mostTimePerCall);
+    const std::string& unitName = NodeConfig::Instance().CostFactory()
+                                     .GetName(0);
 
     stringstream output;
     output << "                 Most Time Spent in Function\n";
     output << "               ===============================\n";
-    output << "  Calls      Time(us)      us/call        Name\n";
+    output << "  Calls      " << left << setw(8) << unitName  << "      " 
+           << left << setw(9) << unitName + "/call" << "      Name\n";
     output << "---------  -----------   -------------  --------\n";
     //         1234567890123456789012345678901234567890123456789
     //         0000000001111111111222222222233333333334444444444
     // Now print each one...
     for ( const call_pair& it: mostTotalTime ) {
-        PrintWideRow(output,it.first,it.second.calls, it.second.usecs);
+        PrintWideRow(output,it.first,it.second.calls, 
+                                     it.second[0]);
     }
     output << endl << endl;
 
     output << "                 Most Expensive Function Calls\n";
     output << "               =================================\n";
-    output << "  Calls      Time(us)      us/call        Name\n";
+    output << "  Calls      " << left << setw(8) << unitName  << "      " 
+           << left << setw(9) << unitName +"/call" << "      Name\n";
     output << "---------  -----------   -------------  --------\n";
 
     for ( const call_pair& it: mostTimePerCall ) {
-        PrintWideRow(output,it.first,it.second.calls, it.second.usecs);
+        PrintWideRow(output,it.first,it.second.calls, 
+                                     it.second[0]);
     }
     return output.str();
 }

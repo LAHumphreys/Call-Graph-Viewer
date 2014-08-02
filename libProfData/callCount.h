@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 #include "regex.h"
-
+#include "stringStruct.h"
 
 class CallCount {
 public:
@@ -15,8 +15,20 @@ public:
 
     struct Calls
     {
+        Calls();
+        Calls(const Calls& rhs);
+        Calls(Calls&& moveFrom);
+        Calls& operator=(const Calls& rhs);
+        ~Calls();
+        long& operator[](const size_t& idx) {
+            return (*costs)[idx];
+        }
+        const long& operator[](const size_t& idx) const {
+            return (*costs)[idx];
+        }
+
         int calls;
-        long usecs;
+        StringStruct* costs;
     };
 
     using call_pair = std::pair<std::string,Calls>;

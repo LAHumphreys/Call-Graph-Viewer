@@ -6,6 +6,7 @@
 #include <sstream>
 #include "callCount.h"
 #include "Annotation.h"
+#include "stringStruct.h"
 
 class Node;
 
@@ -38,7 +39,7 @@ public:
     // data access
     const std::string& Name() const { return name; }
     const long& Calls() const { return callCount; }
-    const long& RunTime() const { return usecs; }
+    const long& RunTime() const { return (*costStruct)[0]; }
     size_t NumChildren() const { return children.size(); }
 
     // element access
@@ -46,7 +47,8 @@ public:
     NodePtr THIS() { return this;}
 
     /*
-     * Add call 
+     * Add call:
+     *   This function has been called again, record the data..
      */
     void AddCall(long usecs, int count = 1);
 
@@ -141,11 +143,11 @@ private:
     int                                  sourceEnd;
     Annotation                           annotations;
     long                                 callCount;
-    long                                 usecs;
     std::string                          name;
     Node*                                parent;
     std::unordered_map<std::string,
                        Node*>            children;
+    StringStruct*                        costStruct;
 };
 
 #include "node.hpp"
