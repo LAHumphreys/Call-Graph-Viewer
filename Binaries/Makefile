@@ -1,4 +1,4 @@
-MAKE_DIRS= profile cgv
+MAKE_DIRS= cgv
 
 # makefile tools library  for bulding multi-directory projects
 #
