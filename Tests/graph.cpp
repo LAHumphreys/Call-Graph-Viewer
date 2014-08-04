@@ -2,9 +2,12 @@
 #include "node.h"
 #include "nodeSearchCache.h"
 #include "callgrindTree.h"
+#include "nodeConfig.h"
+#include "stringStruct.h"
 
 int RootNode(testLogger& log);
 int AddNodes(testLogger& log);
+int AddNodesWithCosts(testLogger& log);
 int CheckResults(testLogger& log);
 int CheckShortResults(testLogger& log);
 int PathAccess(testLogger& log);
@@ -25,6 +28,7 @@ int main(int argc, const char *argv[])
 
     Test("Checking root node...",RootNode).RunTest();
     Test("Adding some nodes...",AddNodes).RunTest();
+    Test("Adding some nodes with cost structs...",AddNodesWithCosts).RunTest();
     Test("Checking path retrieval...",PathAccess).RunTest();
     Test("Printing Results...",CheckResults).RunTest();
     Test("Printing Short Results...",CheckShortResults).RunTest();
@@ -74,6 +78,57 @@ int CheckNode(testLogger& log,
         log << "Unepxect Run time!" << endl;
         log << "Expected: " << time << endl;
         log << "Actual : " << node->RunTime() << endl;
+        return 1;
+    }
+    if  ( node->NumChildren() != children ) {
+        log << "Unepxect ## of children!" << endl;
+        log << "Expected: " << children << endl;
+        log << "Actual : " << node->NumChildren() << endl;
+        return 1;
+    }
+    return 0;
+}
+
+int CheckNode(testLogger& log,
+              NodePtr node,
+              bool isRoot,
+              string name,
+              long   count,
+              long   Ir,
+              long   Dr,
+              size_t children) 
+{
+    log << "Checking " << node->Name() << " against " << name << endl;
+    if ( isRoot != node->IsRoot() ) {
+        log << "Node has incorrect root setting" << endl;
+        return 1;
+    }
+
+    if ( node->Name() != name ) {
+        log << "Unexpected Name!" << endl;
+        log << "Expected: " << name << endl;
+        log << "Actual : " << node->Name() << endl;
+        return 1;
+    }
+
+    if ( node->Calls() != count ) {
+        log << "Unexpected Call Count!" << endl;
+        log << "Expected: " << count << endl;
+        log << "Actual : " << node->Calls() << endl;
+        return 1;
+    }
+
+    if ( node->Costs()[0] != Ir ) {
+        log << "Unepxect Ir!" << endl;
+        log << "Expected: " << Ir << endl;
+        log << "Actual : " << node->Costs()[0] << endl;
+        return 1;
+    }
+
+    if ( node->Costs()[1] != Dr ) {
+        log << "Unepxect Dr!" << endl;
+        log << "Expected: " << Dr << endl;
+        log << "Actual : " << node->Costs()[1] << endl;
         return 1;
     }
     if  ( node->NumChildren() != children ) {
@@ -194,7 +249,113 @@ int AddNodes(testLogger& log) {
     return ok;
 }
 
+int AddNodesWithCosts(testLogger& log ) {
+    NodeConfig::Instance().Reset();
+    NodeConfig::Instance().ConfigureCostFactory("Ir Dr");
+
+    Node rootNode;
+    Path rootPath("");
+    Path mainPath("main");
+    Path f1path("main/f1");
+
+
+    /*
+     * ROOT
+     * |
+     * main---F1 (2x101,5)---F2 (2x102,2)--NULL
+     *      |            |
+     *      |            --F3 (1x103,0)--NULL
+     *      --F3 (2x103,8)
+     */
+    StringStructFactory& factory = NodeConfig::Instance().CostFactory();
+
+    // Call F2 twice from F1...
+    NodePtr f2 = rootNode.AddCall(f1path.Root(),"f2",factory.New("102 2"));
+    rootNode.AddCall(f1path.Root(),"f2",factory.New("102 2"));
+
+    // Call F3 once from F1...
+    NodePtr f3_f1 = rootNode.AddCall(f1path.Root(),"f3",factory.New("103"));
+
+    // Add F3 to main (twice)...
+    NodePtr f3_main = rootNode.AddCall(mainPath.Root(),"f3",factory.New("103 8"));
+    rootNode.AddCall(mainPath.Root(),"f3",factory.New("103 8"));
+
+    // Add F1 to main, twice...
+    rootNode.AddCall(mainPath.Root(),"f1",factory.New("101 5"));
+    NodePtr f1 = rootNode.AddCall(mainPath.Root(),"f1",factory.New("101 5"));
+
+    // Add main to root
+    NodePtr main = rootNode.AddCall(rootPath.Root(),"main",100);
+
+    int ok = CheckNode(log,main, false,  // isRoot
+                                 "main", // name
+                                 1,      // count
+                                 100,    // Ir
+                                 0,      // Dr
+                                 2);     // children
+    if ( ok == 0 ) {
+        ok = CheckNode(log,f1, false,  // isRoot
+                               "f1",   // name
+                               2,      // count
+                               202,    // Ir
+                               10,     // Dr
+                               2);     // children
+    }
+
+    if ( ok == 0 ) {
+        ok = CheckNode(log,f2, false,  // isRoot
+                               "f2", // name
+                               2,      // count
+                               204,    // Ir
+                               4,      // Dr
+                               0);     // children
+    }
+
+    if ( ok == 0 ) {
+        ok = CheckNode(log,f3_f1, false,  // isRoot
+                               "f3",      // name
+                               1,         // count
+                               103,       // Ir
+                               0,       // Dr
+                               0);        // children
+    }
+
+    if ( ok == 0 ) {
+        ok = CheckNode(log,f3_main, false,  // isRoot
+                               "f3",        // name
+                               2,           // count
+                               206,         // Ir
+                               16,           // Dr
+                               0);          // children
+    }
+
+    /*
+     * Finally check the root node...
+     */
+    if ( ok == 0 ) {
+        ok = CheckNode(log,main->Parent(), 
+                               true,   // isRoot
+                               "ROOT", // name
+                               0,      // count
+                               0,      // Ir
+                               0,      // Dr
+                               1);     // children
+    }
+
+    if ( ok == 0 ) {
+        ok = CheckNode(log,rootNode.THIS(), 
+                               true,   // isRoot
+                               "ROOT", // name
+                               0,      // count
+                               0,      // Ir
+                               0,      // Dr
+                               1);     // children
+    }
+    return ok;
+}
+
 int CheckResults(testLogger& log) {
+    NodeConfig::Instance().Reset();
     Node rootNode;
     Path rootPath("");
 
@@ -307,6 +468,7 @@ int CheckShortResults(testLogger& log) {
 }
 
 int PathAccess(testLogger& log) {
+    NodeConfig::Instance().Reset();
     Node rootNode;
     Path rootPath("");
 
@@ -358,6 +520,7 @@ int PathAccess(testLogger& log) {
 }
 
 int Search(testLogger& log) {
+    NodeConfig::Instance().Reset();
     Node rootNode;
     Path rootPath("");
 
@@ -503,6 +666,7 @@ int Search(testLogger& log) {
 }
 
 int MakeNode (testLogger& log ) {
+    NodeConfig::Instance().Reset();
     Node rootNode;
     NodePtr apple = rootNode.MakeChild("apple");
     NodePtr apple2 = rootNode.MakeChild("apple");
@@ -537,6 +701,7 @@ int MakeNode (testLogger& log ) {
 }
 
 int EmptyCallgrindData ( testLogger& log ) {
+    NodeConfig::Instance().Reset();
     CallgrindCallTree data("data/flist.csv");
     string expected = 
         "ROOT (ROOT)\n"
@@ -570,25 +735,27 @@ int EmptyCallgrindData ( testLogger& log ) {
 }
 
 int CallgrindTree ( testLogger& log ) {
+    NodeConfig::Instance().Reset();
+    NodeConfig::Instance().ConfigureCostFactory("Ir");
     CallgrindCallTree data("data/flist.csv");
     data.LoadCalls("data/calls.csv");
     string expected = 
         "ROOT (ROOT)\n" 
-        "    Calls: 0, Time: 0, Av. Time: 0\n" 
+        "    Calls: 0, Ir: 0, Av. Ir: 0\n" 
         "    main (ROOT/main)\n" 
-        "        Calls: 0, Time: 0, Av. Time: 0\n" 
+        "        Calls: 0, Ir: 0, Av. Ir: 0\n" 
         "        odds (ROOT/main/odds)\n" 
-        "            Calls: 1, Time: 75, Av. Time: 75\n" 
+        "            Calls: 1, Ir: 75, Av. Ir: 75\n" 
         "            div (ROOT/main/odds/div)\n" 
-        "                Calls: 3, Time: 45, Av. Time: 15\n" 
+        "                Calls: 3, Ir: 45, Av. Ir: 15\n" 
         "        evens (ROOT/main/evens)\n" 
-        "            Calls: 1, Time: 65, Av. Time: 65\n" 
+        "            Calls: 1, Ir: 65, Av. Ir: 65\n" 
         "            div (ROOT/main/evens/div)\n" 
-        "                Calls: 2, Time: 42, Av. Time: 21\n" 
+        "                Calls: 2, Ir: 42, Av. Ir: 21\n" 
         "                pos_div2 (ROOT/main/evens/div/pos_div2)\n" 
-        "                    Calls: 1, Time: 7, Av. Time: 7\n" 
+        "                    Calls: 1, Ir: 7, Av. Ir: 7\n" 
         "                pos_div4 (ROOT/main/evens/div/pos_div4)\n" 
-        "                    Calls: 1, Time: 7, Av. Time: 7\n";
+        "                    Calls: 1, Ir: 7, Av. Ir: 7\n";
     string actual = data.RootNode()->PrintResults();
 
     if ( expected != actual ) {
@@ -603,6 +770,8 @@ int CallgrindTree ( testLogger& log ) {
 }
 
 int CallgrindTable ( testLogger& log ) {
+    NodeConfig::Instance().Reset();
+    NodeConfig::Instance().Reset();
     CallgrindCallTree data("data/flist.csv");
     data.LoadCalls("data/calls.csv");
     data.LoadCosts("data/cost.csv");
@@ -646,6 +815,7 @@ int CallgrindTable ( testLogger& log ) {
 }
 
 int CheckLocalRegSearch(testLogger& log) {
+    NodeConfig::Instance().Reset();
     Node rootNode;
     Path rootPath("");
 
@@ -706,6 +876,7 @@ int CheckLocalRegSearch(testLogger& log) {
 }
 
 int CheckRegSearch(testLogger& log) {
+    NodeConfig::Instance().Reset();
     Node rootNode;
     Path rootPath("");
 
@@ -852,6 +1023,7 @@ int CheckRegSearch(testLogger& log) {
 }
 
 int LS(testLogger& log) {
+    NodeConfig::Instance().Reset();
     Node rootNode;
     Path rootPath("");
 
@@ -951,25 +1123,27 @@ int LS(testLogger& log) {
 }
 
 int EmptyCallgrindData_Native(testLogger& log) {
+    NodeConfig::Instance().Reset();
+    NodeConfig::Instance().ConfigureCostFactory("Ir");
     CallgrindNative native("data/native/flist.callgrind");
 
     string expected = 
         "ROOT (ROOT)\n"
-        "    Calls: 0, Time: 0, Av. Time: 0\n"
+        "    Calls: 0, Ir: 0, Av. Ir: 0\n"
         "    main (ROOT/main)\n"
-        "        Calls: 0, Time: 0, Av. Time: 0\n"
+        "        Calls: 0, Ir: 0, Av. Ir: 0\n"
         "        odds (ROOT/main/odds)\n"
-        "            Calls: 0, Time: 0, Av. Time: 0\n"
+        "            Calls: 0, Ir: 0, Av. Ir: 0\n"
         "            div (ROOT/main/odds/div)\n"
-        "                Calls: 0, Time: 0, Av. Time: 0\n"
+        "                Calls: 0, Ir: 0, Av. Ir: 0\n"
         "        evens (ROOT/main/evens)\n"
-        "            Calls: 0, Time: 0, Av. Time: 0\n"
+        "            Calls: 0, Ir: 0, Av. Ir: 0\n"
         "            div (ROOT/main/evens/div)\n"
-        "                Calls: 0, Time: 0, Av. Time: 0\n"
+        "                Calls: 0, Ir: 0, Av. Ir: 0\n"
         "                pos_div2 (ROOT/main/evens/div/pos_div2)\n"
-        "                    Calls: 0, Time: 0, Av. Time: 0\n"
+        "                    Calls: 0, Ir: 0, Av. Ir: 0\n"
         "                pos_div4 (ROOT/main/evens/div/pos_div4)\n"
-        "                    Calls: 0, Time: 0, Av. Time: 0\n";
+        "                    Calls: 0, Ir: 0, Av. Ir: 0\n";
 
     string actual = native.RootNode()->PrintResults();
 
@@ -985,25 +1159,26 @@ int EmptyCallgrindData_Native(testLogger& log) {
 }
 
 int CallgrindTree_Native(testLogger& log) {
+    NodeConfig::Instance().Reset();
     CallgrindNative native("data/native/flist_costs.callgrind");
 
     string expected = 
         "ROOT (ROOT)\n" 
-        "    Calls: 0, Time: 0, Av. Time: 0\n" 
+        "    Calls: 0, Ir: 0, Av. Ir: 0\n" 
         "    main (ROOT/main)\n" 
-        "        Calls: 1, Time: 54, Av. Time: 54\n" 
+        "        Calls: 1, Ir: 54, Av. Ir: 54\n" 
         "        odds (ROOT/main/odds)\n" 
-        "            Calls: 1, Time: 75, Av. Time: 75\n" 
+        "            Calls: 1, Ir: 75, Av. Ir: 75\n" 
         "            div (ROOT/main/odds/div)\n" 
-        "                Calls: 3, Time: 45, Av. Time: 15\n" 
+        "                Calls: 3, Ir: 45, Av. Ir: 15\n" 
         "        evens (ROOT/main/evens)\n" 
-        "            Calls: 1, Time: 65, Av. Time: 65\n" 
+        "            Calls: 1, Ir: 65, Av. Ir: 65\n" 
         "            div (ROOT/main/evens/div)\n" 
-        "                Calls: 2, Time: 42, Av. Time: 21\n" 
+        "                Calls: 2, Ir: 42, Av. Ir: 21\n" 
         "                pos_div2 (ROOT/main/evens/div/pos_div2)\n" 
-        "                    Calls: 1, Time: 7, Av. Time: 7\n" 
+        "                    Calls: 1, Ir: 7, Av. Ir: 7\n" 
         "                pos_div4 (ROOT/main/evens/div/pos_div4)\n" 
-        "                    Calls: 1, Time: 7, Av. Time: 7\n";
+        "                    Calls: 1, Ir: 7, Av. Ir: 7\n";
     string actual = native.RootNode()->PrintResults();
 
     if ( expected != actual ) {
@@ -1018,12 +1193,13 @@ int CallgrindTree_Native(testLogger& log) {
 }
 
 int CallgrindTable_Native ( testLogger& log ) {
+    NodeConfig::Instance().Reset();
     CallgrindNative native("data/native/flist_costs.callgrind");
     string expected = 
 "-----------------------------------------------------------------------------------------------------------\n"
 "|-               Most Time Spent in Function                                                             -|\n"
 "-----------------------------------------------------------------------------------------------------------\n"
-"|    Function Name                                                      | Calls  | Time       | Time/call |\n"
+"|    Function Name                                                      | Calls  | Ir         | Ir/call   |\n"
 "-----------------------------------------------------------------------------------------------------------\n"
 "| div                                                                   | 5      | 87         | 17        |\n"
 "| odds                                                                  | 1      | 75         | 75        |\n"
@@ -1036,7 +1212,7 @@ int CallgrindTable_Native ( testLogger& log ) {
 "-----------------------------------------------------------------------------------------------------------\n"
 "|-               Most Expensive Function Calls                                                           -|\n"
 "-----------------------------------------------------------------------------------------------------------\n"
-"|    Function Name                                                      | Calls  | Time       | Time/call |\n"
+"|    Function Name                                                      | Calls  | Ir         | Ir/call   |\n"
 "-----------------------------------------------------------------------------------------------------------\n"
 "| odds                                                                  | 1      | 75         | 75        |\n"
 "| evens                                                                 | 1      | 65         | 65        |\n"

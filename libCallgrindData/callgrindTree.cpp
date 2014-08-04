@@ -2,9 +2,11 @@
 #include "stdReader.h"
 #include "path.h"
 #include "csv.h"
+#include "nodeConfig.h"
 #include <fstream>
 #include <string>
 #include <limits>
+
 
 using namespace std;
 
@@ -99,8 +101,9 @@ void CallgrindCallTree::AddCalls(NodePtr node) {
 }
 
 CallgrindNative::~CallgrindNative() {
-    delete costFactory;
+    delete currentCost;
 }
+
 void CallgrindNative::AddFile(const int& id, const std::string& path ) {
     sources.emplace(id,SourceFile(path));
 }
@@ -113,7 +116,7 @@ CallgrindNative::CallgrindNative(const std::string& fname)
       childFile(-1), 
       currentLine(0), 
       currentActiveLine(0),
-      costFactory(0)
+      currentCost(nullptr)
 {
 
     // Default to not caring about this file...
@@ -168,20 +171,25 @@ CallgrindNative::CallgrindNative(const std::string& fname)
 
     string line;
     line.reserve(10240);
+    bool foundCostDescr = false;
     // Before we load anything we need to know what we are looking for
-    while ( file.good() && costFactory == nullptr ) {
+    while ( file.good() && !foundCostDescr) {
         char c = file.peek();
         if ( c == 'e' ) {
             line.clear();
             std::getline(file,line);
             if ( line.substr(0,7) == "events:" ) {
-                costFactory = 
-                    new StringStructFactory(line.substr(8).c_str());
+                NodeConfig::Instance().
+                    ConfigureCostFactory(line.substr(8));
+                currentCost = new StringStruct(
+                                      NodeConfig::Instance()
+                                     .CostFactory().New(""));
+                foundCostDescr = true;
             }
         }
         file.ignore(numeric_limits<streamsize>::max(),'\n');
     }
-    while ( file.good() ) {
+    while ( foundCostDescr && file.good() ) {
         char c = file.peek();
         if ( c == '*' || c == '+' || c== '-' || ( c >= '0' && c <= '9') ) {
             line.clear();
@@ -369,6 +377,7 @@ void CallgrindNative::AddCost(const std::string& line) {
 
     SLOG_FROM(LOG_VERBOSE, "CallgrindNative::AddCall", "Current line is now " << currentLine << " after line " << line)
 
+    currentCost->Reset(line.c_str() + nstart + 1);
     long cost = atol(line.c_str() + nstart + 1);
 
     // But only calculate the cost if we need it
@@ -394,7 +403,7 @@ void CallgrindNative::AddCost(const std::string& line) {
         // If we're making a call, we need to add the cost to 
         // the relevant node...
         if ( !child.IsNull() ) {
-            child->AddCall(cost,numCalls);
+            child->AddCall(*currentCost,numCalls);
             counter.AddCall(child->Name(),cost,numCalls);
             child = nullptr;
             numCalls = 0;
@@ -478,14 +487,10 @@ string CallgrindNative::Annotate(NodePtr node, int threshold) {
 }
 
 size_t CallgrindNative::GetCostIdx(const string& unit) const {
-    if ( costFactory ) {
-        return costFactory->GetIdx(unit);
-    } else {
-        return numeric_limits<int>::max();
-    }
+    return NodeConfig::Instance().CostFactory().GetIdx(unit);
 }
 
 CallgrindNative::CostStruct CallgrindNative::MakeCosts(const char* line) const 
 {
-    return costFactory->New(line);
+    return NodeConfig::Instance().CostFactory().New();
 }

@@ -1,5 +1,6 @@
 #include "tester.h"
 #include "callCount.h"
+#include "nodeConfig.h"
 
 using namespace std;
 

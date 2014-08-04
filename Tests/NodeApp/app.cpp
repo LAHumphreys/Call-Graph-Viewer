@@ -2,6 +2,7 @@
 #include "callgrindTree.h"
 #include "nodeApp.h"
 #include "nodeUserApp.h"
+#include "nodeConfig.h"
 
 CallgrindNative native("../data/native/flist_costs.callgrind");
 
@@ -31,6 +32,7 @@ int Scripting(testLogger& log);
 
 int main(int argc, const char *argv[])
 {
+
     Test("Initialising an app...",Initialisation).RunTest();
     Test("Testing pwd changing...",CD).RunTest();
     Test("Testing pushd / popd...",PUSHD).RunTest();

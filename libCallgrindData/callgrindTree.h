@@ -134,7 +134,7 @@ private:
     int            childFile;
     int            currentLine;
     int            currentActiveLine;
+    StringStruct*  currentCost;
     std::unordered_map<int,SourceFile> sources;
     std::unordered_map<int,NodePtr> idMap;
-    StringStructFactory* costFactory;
 };

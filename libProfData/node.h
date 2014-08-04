@@ -38,8 +38,9 @@ public:
 
     // data access
     const std::string& Name() const { return name; }
+    const StringStruct& Costs() const;
     const long& Calls() const { return callCount; }
-    const long& RunTime() const { return (*costStruct)[0]; }
+    const long& RunTime() const { return Costs()[0]; }
     size_t NumChildren() const { return children.size(); }
 
     // element access
@@ -51,6 +52,7 @@ public:
      *   This function has been called again, record the data..
      */
     void AddCall(long usecs, int count = 1);
+    void AddCall(const StringStruct& costs, int count = 1);
 
     /*
      * Navigate to the leaf node at the end of the path, and then add a function
@@ -59,6 +61,7 @@ public:
      * Return a pointer to the updated (or created) node.
      */
     NodePtr AddCall(Path::PathNode node,const std::string& name, long usecs);
+    NodePtr AddCall(Path::PathNode node,const std::string& name, const StringStruct& cost);
 
     NodePtr CreateNode(const Path& path, const std::string& name);
 
@@ -111,7 +114,7 @@ public:
     Annotation& Annotations() { return annotations;}
 
 private:
-
+    StringStruct& CostStruct();
     using PAIR = std::pair<std::string,Node*>;
     // Populata sorted Node with the element in desceding order of time
     void SortByTime(std::vector<PAIR>& sortedNode);
@@ -131,12 +134,14 @@ private:
 
     // Element Modification
     NodePtr AddCall(const std::string& name, long usecs);
+    NodePtr AddCall(const std::string& name, const StringStruct& costs);
 
     // Find the child node with name, or return null
     NodePtr GetChild(const std::string& name);
 
     // Used to initialise as a child node
     Node(const std::string& name, Node* parent, long _usecs);
+    Node(const std::string& name, Node* parent);
 
     int                                  sourceId;
     int                                  sourceStart;
@@ -147,7 +152,7 @@ private:
     Node*                                parent;
     std::unordered_map<std::string,
                        Node*>            children;
-    StringStruct*                        costStruct;
+    mutable StringStruct*                costStruct;
 };
 
 #include "node.hpp"

@@ -2,6 +2,7 @@
 #include "SourceFile.h"
 #include <string>
 #include "callgrindTree.h"
+#include "nodeConfig.h"
 
 using namespace std;
 
@@ -50,6 +51,7 @@ int basic (testLogger& log ) {
 }
 
 int annotate (testLogger& log ) {
+    NodeConfig::Instance().Reset();
     SourceFile file("data/graph.cpp");
     Annotation a;
     a.AddAnnotation(9,34235);
@@ -83,6 +85,7 @@ int annotate (testLogger& log ) {
 }
 
 int load_ids(testLogger& log ) {
+    NodeConfig::Instance().Reset();
     CallgrindNative native("data/native/flist_files.callgrind");
     NodePtr div = native.RootNode()->GetNode(Path("main/evens/div"));
 
@@ -104,6 +107,7 @@ int load_ids(testLogger& log ) {
 }
 
 int annotate_native(testLogger& log ) {
+    NodeConfig::Instance().Reset();
     CallgrindNative native("data/native/flist_files.callgrind");
     NodePtr div = native.RootNode()->GetNode(Path("main/evens"));
 

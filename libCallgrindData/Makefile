@@ -7,4 +7,6 @@ TAGS_FILE=profiler-libcallgrinddata-c++.tags
 
 LINKED_LIBS=libSource libIOInterface libUtils libString libProfData
 
+ADDITIONAL_INCLUDE_FLAGS+="../libExec/"
+
 include ../makefile.include
