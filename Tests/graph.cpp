@@ -9,6 +9,7 @@ int RootNode(testLogger& log);
 int AddNodes(testLogger& log);
 int AddNodesWithCosts(testLogger& log);
 int CheckResults(testLogger& log);
+int CheckResultsWithCosts(testLogger& log);
 int CheckShortResults(testLogger& log);
 int PathAccess(testLogger& log);
 int Search(testLogger& log);
@@ -31,6 +32,7 @@ int main(int argc, const char *argv[])
     Test("Adding some nodes with cost structs...",AddNodesWithCosts).RunTest();
     Test("Checking path retrieval...",PathAccess).RunTest();
     Test("Printing Results...",CheckResults).RunTest();
+    Test("Printing Results for two units...",CheckResultsWithCosts).RunTest();
     Test("Printing Short Results...",CheckShortResults).RunTest();
     Test("Seaching the graph",Search).RunTest();
     Test("Seaching the graph with regex",CheckRegSearch).RunTest();
@@ -414,7 +416,137 @@ int CheckResults(testLogger& log) {
     return 0;
 }
 
+int CheckResultsWithCosts(testLogger& log) {
+    NodeConfig::Instance().Reset();
+    NodeConfig::Instance().ConfigureCostFactory("Ir Dr");
+    Node rootNode;
+    Path rootPath("");
+
+    Path mainPath("main");
+    Path f1path("main/f1");
+
+    /*
+     * ROOT
+     * |
+     * main---F1 (2x101,5)---F2 (2x102,2)--NULL
+     *      |            |
+     *      |            --F3 (1x103,0)--NULL
+     *      --F3 (2x103,8)
+     */
+
+    StringStructFactory& factory = NodeConfig::Instance().CostFactory();
+
+    // Call F2 twice from F1...
+    rootNode.AddCall(f1path.Root(),"f2",factory.New("102 2"));
+    rootNode.AddCall(f1path.Root(),"f2",factory.New("102 2"));
+
+    // Call F3 once from F1...
+    rootNode.AddCall(f1path.Root(),"f3",factory.New("103"));
+
+    // Add F3 to main (twice)...
+    rootNode.AddCall(mainPath.Root(),"f3",factory.New("103 8"));
+    rootNode.AddCall(mainPath.Root(),"f3",factory.New("103 8"));
+
+    // Add F1 to main, twice...
+    rootNode.AddCall(mainPath.Root(),"f1",factory.New("101 5"));
+    rootNode.AddCall(mainPath.Root(),"f1",factory.New("101 5"));
+
+    // Add main to root
+    rootNode.AddCall(rootPath.Root(),"main",100);
+
+    string actual = rootNode.PrintResults();
+    string expected = 
+       "ROOT (ROOT)\n"
+       "    Calls: 0, Ir: 0, Av. Ir: 0\n"
+       "    Calls: 0, Dr: 0, Av. Dr: 0\n"
+       "    main (ROOT/main)\n"
+       "        Calls: 1, Ir: 100, Av. Ir: 100\n"
+       "        Calls: 1, Dr: 0, Av. Dr: 0\n"
+       "        f3 (ROOT/main/f3)\n"
+       "            Calls: 2, Ir: 206, Av. Ir: 103\n"
+       "            Calls: 2, Dr: 16, Av. Dr: 8\n"
+       "        f1 (ROOT/main/f1)\n"
+       "            Calls: 2, Ir: 202, Av. Ir: 101\n"
+       "            Calls: 2, Dr: 10, Av. Dr: 5\n"
+       "            f2 (ROOT/main/f1/f2)\n"
+       "                Calls: 2, Ir: 204, Av. Ir: 102\n"
+       "                Calls: 2, Dr: 4, Av. Dr: 2\n"
+       "            f3 (ROOT/main/f1/f3)\n"
+       "                Calls: 1, Ir: 103, Av. Ir: 103\n"
+       "                Calls: 1, Dr: 0, Av. Dr: 0\n";
+
+    if ( expected != actual ) {
+       log << expected <<endl;
+       log << "------------------------" << endl;
+       log << actual <<endl;
+       return 1;
+    }
+
+    /*
+     * Now switch to only printing Dr
+     * (NOTE: we haven't changed the sort yet...)
+     */ 
+    NodeConfig::Instance().ConfigureDisplay("Dr");
+    expected = 
+       "ROOT (ROOT)\n"
+       "    Calls: 0, Dr: 0, Av. Dr: 0\n"
+       "    main (ROOT/main)\n"
+       "        Calls: 1, Dr: 0, Av. Dr: 0\n"
+       "        f3 (ROOT/main/f3)\n"
+       "            Calls: 2, Dr: 16, Av. Dr: 8\n"
+       "        f1 (ROOT/main/f1)\n"
+       "            Calls: 2, Dr: 10, Av. Dr: 5\n"
+       "            f2 (ROOT/main/f1/f2)\n"
+       "                Calls: 2, Dr: 4, Av. Dr: 2\n"
+       "            f3 (ROOT/main/f1/f3)\n"
+       "                Calls: 1, Dr: 0, Av. Dr: 0\n";
+    actual = rootNode.PrintResults();
+    if ( expected != actual ) {
+       log << expected <<endl;
+       log << "---------(Dr) ---------------" << endl;
+       log << actual <<endl;
+       return 1;
+    }
+
+    /*
+     * Now print both, in reverse order...
+     * (NOTE: we haven't changed the sort yet...)
+     */ 
+    NodeConfig::Instance().ConfigureDisplay("Dr Ir");
+
+    actual = rootNode.PrintResults();
+    expected = 
+       "ROOT (ROOT)\n"
+       "    Calls: 0, Dr: 0, Av. Dr: 0\n"
+       "    Calls: 0, Ir: 0, Av. Ir: 0\n"
+       "    main (ROOT/main)\n"
+       "        Calls: 1, Dr: 0, Av. Dr: 0\n"
+       "        Calls: 1, Ir: 100, Av. Ir: 100\n"
+       "        f3 (ROOT/main/f3)\n"
+       "            Calls: 2, Dr: 16, Av. Dr: 8\n"
+       "            Calls: 2, Ir: 206, Av. Ir: 103\n"
+       "        f1 (ROOT/main/f1)\n"
+       "            Calls: 2, Dr: 10, Av. Dr: 5\n"
+       "            Calls: 2, Ir: 202, Av. Ir: 101\n"
+       "            f2 (ROOT/main/f1/f2)\n"
+       "                Calls: 2, Dr: 4, Av. Dr: 2\n"
+       "                Calls: 2, Ir: 204, Av. Ir: 102\n"
+       "            f3 (ROOT/main/f1/f3)\n"
+       "                Calls: 1, Dr: 0, Av. Dr: 0\n"
+       "                Calls: 1, Ir: 103, Av. Ir: 103\n";
+
+    if ( expected != actual ) {
+       log << expected <<endl;
+       log << "---------(Dr Ir) ---------------" << endl;
+       log << actual <<endl;
+       return 1;
+    }
+
+    return 0;
+}
+
 int CheckShortResults(testLogger& log) {
+    NodeConfig::Instance().Reset();
     Node rootNode;
     Path rootPath("");
 

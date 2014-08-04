@@ -3,7 +3,9 @@
 
 
 NodeConfig::NodeConfig() 
-    : costAccessed(false), costFactory(new StringStructFactory("Time"))
+    : costAccessed(false), 
+      costFactory(new StringStructFactory("Time")),
+      displayedCosts({0})
 {
 }
 
@@ -29,15 +31,24 @@ void NodeConfig::ConfigureCostFactory(const std::string& definitions) {
     } else {
         delete costFactory;
         costFactory = new StringStructFactory(definitions);
+        displayedCosts = costFactory->GetIdxs(definitions);
     }
 }
 
 void NodeConfig::Reset() {
     LOG_FROM(LOG_WARNING,"NodeConfig::Reset",
-               "**WARNING** Global Config object has been reset, "
-               "it is unlikely you wanted to do this unles you are "
-               "testing the application **WARNING**")
+               "**WARNING** The global Config object has been reset, "
+               "it is extremely unlikely you wanted to do this unless"
+               " you are testing the application, and know"
+               "exactly what you are doing **WARNING**")
     delete costFactory;
     costFactory = new StringStructFactory("Time");
     costAccessed = false;
+    displayedCosts.clear();
+    displayedCosts.push_back(0);
+}
+
+const vector<size_t>& NodeConfig::ConfigureDisplay(const string& units) {
+    displayedCosts = costFactory->GetIdxs(units);
+    return DisplayIdxs();
 }

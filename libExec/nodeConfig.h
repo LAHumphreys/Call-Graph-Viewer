@@ -3,6 +3,7 @@
 
 #include "stringStruct.h"
 #include <string>
+#include <vector>
 
 
 
@@ -26,13 +27,6 @@ public:
     };
 
     /*
-     * Reset the state of the config object as if it has been first 
-     * initialised - useful for testing where the application class may be
-     * instantiatied multiple times
-     */
-    void Reset();
-
-    /*
      * Configure the cost factory used for the application. Attempting to
      * do this after it  has already been accessed will result in an
      * instance of NodeConfig::NodeConfigCostReconfiguredError being
@@ -45,10 +39,32 @@ public:
      */
     StringStructFactory& CostFactory(); 
     /*
-     * Create a new cost struct on the heap - caller responsible for 
-     * cleaning up the memory
-     */
+     * Create a new cost struct on the heap - caller responsible for * cleaning up the memory */
     StringStruct* NewCost();
+
+    /*
+     * Which costs to print..
+     */ 
+    const std::vector<size_t>& DisplayIdxs() {
+        return displayedCosts;
+    }
+    const std::vector<size_t>& ConfigureDisplay(const std::string& units);
+
+    /*
+     * Reset the state of the config object as if it has been first 
+     * initialised - useful for testing where the application class may be
+     * instantiated multiple times
+     *
+     *** WARNING ** ** WARNING ** ** WARNING ** ** WARNING ** ** WARNING **
+     *** WARNING **                                           ** WARNING **
+     *** WARNING **  It only makes sense to call this whilst  ** WARNING **
+     *** WARNING **  testing and the whole application needs  ** WARNING **
+     *** WARNING **  to be "restarted"                        ** WARNING **
+     *** WARNING **                                           ** WARNING **
+     *** WARNING ** ** WARNING ** ** WARNING ** ** WARNING ** ** WARNING **
+     */
+    void Reset();
+
 private:
     // Singleton - private c'tor
     NodeConfig();
@@ -57,6 +73,7 @@ private:
 
     bool costAccessed;
     StringStructFactory* costFactory;
+    std::vector<size_t> displayedCosts;
 };
 
 #endif

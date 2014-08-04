@@ -1,5 +1,6 @@
 #include "nodeApp.h"
 #include "path.h"
+#include "nodeConfig.h"
 
 using namespace std;
 using namespace std::placeholders;
@@ -12,7 +13,8 @@ NodeApp::NodeApp(NodePtr _root, OutputTerminal& _output)
      f_popd(std::bind(&NodeApp::POPD,this)),
      f_flat(std::bind(&NodeApp::Flat,this,_1,_2,_3)),
      f_tree(std::bind(&NodeApp::Tree,this,_1)),
-     f_search(std::bind(&NodeApp::Search,this,_1,_2))
+     f_search(std::bind(&NodeApp::Search,this,_1,_2)),
+     f_display(std::bind(&NodeApp::Display,this,_1))
 {
 }
 NodeApp::~NodeApp() {
@@ -28,6 +30,7 @@ int NodeApp::RegisterCommands(Commands& dispatcher) {
     dispatcher.AddCommand("tree",f_tree, "tree <max depth>");
     dispatcher.AddCommand("search",f_search, "search <max depth> <pattern>");
     dispatcher.AddCommand("next",std::bind(&NodeApp::Next,this));
+    dispatcher.AddCommand("display",f_display,"display <units to print>");
     return 0;
 }
 
@@ -198,5 +201,10 @@ int NodeApp::ListSearch() {
         }
         output->PutString(results.str() + "\n");
     }
+    return 0;
+}
+
+int NodeApp::Display(std::string units) {
+    NodeConfig::Instance().ConfigureDisplay(units);
     return 0;
 }

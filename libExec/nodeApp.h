@@ -65,6 +65,11 @@ public:
     int Previous();
     int ListSearch();
 
+    /*
+     * Modify program output
+     */
+    int Display(std::string units);
+
     /***************************
      * Public help functions
      **************************/
@@ -116,5 +121,6 @@ private:
     std::function<int(int,int,std::string)> f_flat;
     std::function<int(int)> f_tree;
     std::function<int(int,std::string)> f_search;
+    std::function<int(std::string)> f_display;
 };
 #endif

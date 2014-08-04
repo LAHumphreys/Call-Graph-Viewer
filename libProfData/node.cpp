@@ -249,11 +249,13 @@ std::string Node::PrintInfo(unsigned int indent,
         s << endl;
     }
     indent+=INDENT_TAB_SIZE;
-    const std::string& unitName = NodeConfig::Instance().CostFactory()
-                                    .GetName(0);
-    long& cost = CostStruct()[0];
-    s << setw(indent) << "" << "Calls: " << callCount;
-    s << ", " << unitName << ": " << cost << ", Av. " << unitName << ": " << (callCount == 0 ? 0: cost/callCount) << endl;
+    for ( const size_t& i: NodeConfig::Instance().DisplayIdxs() ) {
+        const std::string& unitName = NodeConfig::Instance().CostFactory()
+                                        .GetName(i);
+        long& cost = CostStruct()[i];
+        s << setw(indent) << "" << "Calls: " << callCount;
+        s << ", " << unitName << ": " << cost << ", Av. " << unitName << ": " << (callCount == 0 ? 0: cost/callCount) << endl;
+    }
     return s.str();
 }
 
