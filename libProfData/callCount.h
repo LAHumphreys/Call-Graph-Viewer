@@ -26,6 +26,10 @@ public:
         const long& operator[](const size_t& idx) const {
             return (*costs)[idx];
         }
+        Calls& operator+=(const StringStruct& rhs) {
+            *costs += rhs;
+            return *this;
+        }
 
         int calls;
         StringStruct* costs;
@@ -37,7 +41,7 @@ public:
      * Register a new call with the class
      */
     void AddCall( const std::string& name, 
-                  const long& usecs,
+                  const StringStruct& costs,
                   int   count = 1);
 
     const Calls& GetCount(std::string name) {

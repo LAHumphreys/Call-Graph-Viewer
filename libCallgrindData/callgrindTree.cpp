@@ -81,7 +81,9 @@ void CallgrindCallTree::LoadCosts(const string& fname) {
         if ( it != idMap.end() ) {
             NodePtr called = it->second;
             long cost = costs.GetCell<TOTAL_COST>(i);
-            counter.AddCall( called->Name(), cost, 0);
+            StringStruct s = NodeConfig::Instance().CostFactory().New();
+            s[0] = cost;
+            counter.AddCall( called->Name(), s, 0);
         }
     }
 
@@ -93,7 +95,7 @@ void CallgrindCallTree::LoadCosts(const string& fname) {
 
 void CallgrindCallTree::AddCalls(NodePtr node) {
     counter.AddCall(node->Name(),
-                    0,
+                    NodeConfig::Instance().CostFactory().New(),
                     node->Calls());
     node->ForEach([=] ( NodePtr&& node ) -> void {
         this->AddCalls(node);
@@ -404,7 +406,7 @@ void CallgrindNative::AddCost(const std::string& line) {
         // the relevant node...
         if ( !child.IsNull() ) {
             child->AddCall(*currentCost,numCalls);
-            counter.AddCall(child->Name(),cost,numCalls);
+            counter.AddCall(child->Name(),*currentCost,numCalls);
             child = nullptr;
             numCalls = 0;
         }
@@ -438,9 +440,15 @@ void CallgrindNative::ChangeFile(const std::string& line) {
     if ( it == sources.end() ) {
         AddFile(currentFile, line.substr(id_end+2));
 
-        SLOG_FROM(LOG_VERBOSE, "CallgrindNative::ChangeFile", "Current file is now (new): " << currentFile << "(" << line.substr(id_end+2) << ")" << endl << "Changed from line: " << line )
+        SLOG_FROM(LOG_VERBOSE, "CallgrindNative::ChangeFile", 
+                      "Current file is now (new): " << currentFile 
+                      << "(" << line.substr(id_end+2) << ")" 
+                      << endl << "Changed from line: " << line )
     } else {
-        SLOG_FROM(LOG_VERBOSE, "CallgrindNative::ChangeFile", "Current file is now: " << currentFile << "(" << it->second.Name() << ")" << endl << "Changed from line: " << line )
+        SLOG_FROM(LOG_VERBOSE, "CallgrindNative::ChangeFile", 
+                      "Current file is now: " << currentFile 
+                      << "(" << it->second.Name() << ")" 
+                      << endl << "Changed from line: " << line )
     }
 
 }
@@ -455,9 +463,15 @@ void CallgrindNative::SetChildFile(const std::string& line) {
     if ( it == sources.end() ) {
         AddFile(childFile, line.substr(id_end+2));
 
-        SLOG_FROM(LOG_VERBOSE, "CallgrindNative::SetChildFile", "Child file is now (new): " << childFile << "(" << line.substr(id_end+2) << ")" << endl << "Changed from line: " << line )
+        SLOG_FROM(LOG_VERBOSE, "CallgrindNative::SetChildFile", 
+                      "Child file is now (new): " << childFile 
+                      << "(" << line.substr(id_end+2) << ")" << endl 
+                      << "Changed from line: " << line )
     } else {
-        SLOG_FROM(LOG_VERBOSE, "CallgrindNative::SetChildFile", "Child file is now: " << childFile << "(" << it->second.Name() << ")" << endl << "Changed from line: " << line )
+        SLOG_FROM(LOG_VERBOSE, "CallgrindNative::SetChildFile", 
+                      "Child file is now: " << childFile 
+                      << "(" << it->second.Name() << ")" 
+                      << endl << "Changed from line: " << line )
     }
 
 }

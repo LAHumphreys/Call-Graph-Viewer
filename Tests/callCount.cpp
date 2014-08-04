@@ -10,6 +10,7 @@ int PrintWide(testLogger& log);
 int RegPrint(testLogger& log);
 int InvalidRegex(testLogger& log);
 
+
 int main(int argc, const char *argv[])
 {
     Test("Manuallying adding calls...",Manual).RunTest();
@@ -21,11 +22,17 @@ int main(int argc, const char *argv[])
 }
 
 int Manual(testLogger& log) {
+    NodeConfig::Instance().Reset();
+    StringStructFactory& factory = NodeConfig::Instance().CostFactory();
     CallCount counter;
-    counter.AddCall("Func1",100);
-    counter.AddCall("Func2",200);
-    counter.AddCall("Func1",101);
-    counter.AddCall("main",500);
+    StringStruct s100 = factory.New("100");
+    StringStruct s200 = factory.New("200");
+    StringStruct s101 = factory.New("101");
+    StringStruct s500 = factory.New("500");
+    counter.AddCall("Func1",s100);
+    counter.AddCall("Func2",s200);
+    counter.AddCall("Func1",s101);
+    counter.AddCall("main",s500);
 
     // Now validate the times...
     auto main = counter.GetCount("main");
@@ -73,11 +80,17 @@ int Manual(testLogger& log) {
 }
 
 int Print(testLogger& log) {
+    NodeConfig::Instance().Reset();
+    StringStructFactory& factory = NodeConfig::Instance().CostFactory();
     CallCount counter;
-    counter.AddCall("Func1",100);
-    counter.AddCall("Func2",200);
-    counter.AddCall("Func1",102);
-    counter.AddCall("Really Long Name that is far too long to fit in the box, no really it is really long",500);
+    StringStruct s100 = factory.New("100");
+    StringStruct s200 = factory.New("200");
+    StringStruct s102 = factory.New("102");
+    StringStruct s500 = factory.New("500");
+    counter.AddCall("Func1",s100);
+    counter.AddCall("Func2",s200);
+    counter.AddCall("Func1",s102);
+    counter.AddCall("Really Long Name that is far too long to fit in the box, no really it is really long",s500);
 
     string expected = 
 "-----------------------------------------------------------------------------------------------------------\n"
@@ -135,11 +148,17 @@ int Print(testLogger& log) {
 }
 
 int PrintWide(testLogger& log) {
+    NodeConfig::Instance().Reset();
+    StringStructFactory& factory = NodeConfig::Instance().CostFactory();
     CallCount counter;
-    counter.AddCall("Func1",100);
-    counter.AddCall("Func2",200);
-    counter.AddCall("Func1",102);
-    counter.AddCall("Really Long Name that is far too long to fit in the box, no really it is really long",500);
+    StringStruct s100 = factory.New("100");
+    StringStruct s200 = factory.New("200");
+    StringStruct s102 = factory.New("102");
+    StringStruct s500 = factory.New("500");
+    counter.AddCall("Func1",s100);
+    counter.AddCall("Func2",s200);
+    counter.AddCall("Func1",s102);
+    counter.AddCall("Really Long Name that is far too long to fit in the box, no really it is really long",s500);
 
     string expected = 
 "                 Most Time Spent in Function\n"
@@ -191,15 +210,21 @@ int PrintWide(testLogger& log) {
 }
 
 int RegPrint(testLogger& log) {
+    NodeConfig::Instance().Reset();
+    StringStructFactory& factory = NodeConfig::Instance().CostFactory();
     CallCount counter;
-    counter.AddCall("Other1",100);
-    counter.AddCall("Other1",100);
-    counter.AddCall("Other3",100);
-    counter.AddCall("Other2",100);
-    counter.AddCall("Func1",100);
-    counter.AddCall("Func2",200);
-    counter.AddCall("Func1",102);
-    counter.AddCall("Really Long Name that is far too long to fit in the box, no really it is really long",500);
+    StringStruct s100 = factory.New("100");
+    StringStruct s200 = factory.New("200");
+    StringStruct s102 = factory.New("102");
+    StringStruct s500 = factory.New("500");
+    counter.AddCall("Other1",s100);
+    counter.AddCall("Other1",s100);
+    counter.AddCall("Other3",s100);
+    counter.AddCall("Other2",s100);
+    counter.AddCall("Func1",s100);
+    counter.AddCall("Func2",s200);
+    counter.AddCall("Func1",s102);
+    counter.AddCall("Really Long Name that is far too long to fit in the box, no really it is really long",s500);
 
     string expected = 
 "                 Most Time Spent in Function\n"
@@ -251,15 +276,21 @@ int RegPrint(testLogger& log) {
 }
 
 int InvalidRegex(testLogger& log) {
+    NodeConfig::Instance().Reset();
+    StringStructFactory& factory = NodeConfig::Instance().CostFactory();
     CallCount counter;
-    counter.AddCall("Other1",100);
-    counter.AddCall("Other1",100);
-    counter.AddCall("Other3",100);
-    counter.AddCall("Other2",100);
-    counter.AddCall("Func1",100);
-    counter.AddCall("Func2",200);
-    counter.AddCall("Func1",102);
-    counter.AddCall("Really Long Name that is far too long to fit in the box, no really it is really long",500);
+    StringStruct s100 = factory.New("100");
+    StringStruct s200 = factory.New("200");
+    StringStruct s102 = factory.New("102");
+    StringStruct s500 = factory.New("500");
+    counter.AddCall("Other1",s100);
+    counter.AddCall("Other1",s100);
+    counter.AddCall("Other3",s100);
+    counter.AddCall("Other2",s100);
+    counter.AddCall("Func1",s100);
+    counter.AddCall("Func2",s200);
+    counter.AddCall("Func1",s102);
+    counter.AddCall("Really Long Name that is far too long to fit in the box, no really it is really long",s500);
 
     string expected = "Invalid regular expression: \n";
     string actual = counter.FilteredPrint("(Func|Really.*");

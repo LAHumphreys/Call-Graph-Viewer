@@ -307,7 +307,7 @@ NodePtr Node::CreateNode( const Path& path,
 }
 
 void Node::AddChildren(CallCount& counter, int depth) {
-    counter.AddCall(name,RunTime(),callCount);
+    counter.AddCall(name,Costs(),callCount);
     --depth;
     if ( depth > 0 ) {
         ForEach([=, &counter] (NodePtr node) -> void {

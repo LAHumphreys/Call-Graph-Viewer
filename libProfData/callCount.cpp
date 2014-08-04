@@ -39,17 +39,17 @@ CallCount::Calls::~Calls() {
 }
 
 void CallCount::AddCall(const string& name, 
-                        const long& usecs,
-                        int   callCount) 
+                        const StringStruct& costs,
+                        int   callCount)
 {
     auto it = fcalls.find(name);
     if ( it != fcalls.end() ) {
         it->second.calls += callCount;
-        it->second[0] += usecs;
+        it->second += costs;
     } else {
         Calls& count = fcalls[name];
         count.calls = callCount;
-        count[0] = usecs;
+        count += costs;
     }
 }
 
