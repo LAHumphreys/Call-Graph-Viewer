@@ -169,59 +169,43 @@ void CallCount::PopulateTables( unsigned tableSize,
                                 const RegPattern& patternRegex) const
 {
 
-    mostTotalTime.resize(tableSize);
-    mostTimePerCall.resize(tableSize);
+    vector<call_pair> filteredCalls;
+    /*
+     * First filter the list...
+     */
+    filteredCalls.reserve(fcalls.size());
+    for ( const call_pair& call : fcalls) {
+        if ( patternRegex.Search(call.first) ) {
+            filteredCalls.push_back(call);
+        }
+    }
+
+    if ( tableSize > filteredCalls.size() ) {
+        mostTotalTime.resize(filteredCalls.size());
+        mostTimePerCall.resize(filteredCalls.size());
+    } else {
+        mostTotalTime.resize(tableSize);
+        mostTimePerCall.resize(tableSize);
+    }
+
 
     // Select the tableSize most expensive function in terms of total time
-    partial_sort_copy(fcalls.begin(),fcalls.end(),
+    partial_sort_copy(filteredCalls.begin(),filteredCalls.end(),
                       mostTotalTime.begin(),mostTotalTime.end(),
                       [=, &patternRegex] (const call_pair& lhs, const call_pair& rhs) -> bool {
-                          if ( patternRegex.Search(lhs.first) ) 
-                          {
-                              if (patternRegex.Search(rhs.first) ) {
-                                  // Both match, check them
-                                  return lhs.second[0]> rhs.second[0];
-                              } else {
-                                  // LHS matches => it is bigger
-                                  return 1;
-                              }
-                          } else if (patternRegex.Search(rhs.first) ) {
-                              // RHS matchnes => it is bigger
-                              return 0;
-                          } else {
-                              return lhs.second[0] > rhs.second[0];
-                          }
+                          return lhs.second[0] > rhs.second[0];
                       });
 
-    // Select the tableSize most expensive function in terms time per call
-    auto cost_gt = [] (const call_pair& lhs, const call_pair& rhs) -> bool {
-        return ( lhs.second.calls == 0 ? 
-                 0 : 
-                 lhs.second[0] / lhs.second.calls 
-               ) >
-               ( rhs.second.calls == 0 ? 
-                 0 : 
-                 rhs.second[0] /rhs.second.calls);
-    };
-
-    partial_sort_copy(fcalls.begin(),fcalls.end(),
+    partial_sort_copy(filteredCalls.begin(),filteredCalls.end(),
                       mostTimePerCall.begin(),mostTimePerCall.end(),
                       [=, &patternRegex] (const call_pair& lhs, const call_pair& rhs) -> bool {
-                          if ( patternRegex.Search(lhs.first)) 
-                          {
-                              if (patternRegex.Search(rhs.first)) {
-                                  // Both match, check them
-                                  return cost_gt(lhs,rhs);
-                              } else {
-                                  // LHS matches => it is bigger
-                                  return 1;
-                              }
-                          } else if (patternRegex.Search(rhs.first)) {
-                              // RHS matchnes => it is bigger
-                              return 0;
-                          } else {
-                              return cost_gt(lhs,rhs);
-                          }
+                            return ( lhs.second.calls == 0 ? 
+                                     0 : 
+                                     lhs.second[0] / lhs.second.calls 
+                                   ) >
+                                   ( rhs.second.calls == 0 ? 
+                                     0 : 
+                                     rhs.second[0] /rhs.second.calls);
                       });
 }
 
@@ -251,41 +235,12 @@ string CallCount::FilteredPrint(const string& pattern, unsigned tableSize) const
     try {
         RegPattern patternRegex(pattern);
 
-
+        // filter and sort the data...
         PopulateTables(tableSize, mostTotalTime,mostTimePerCall, patternRegex);
-        const std::string& unitName = NodeConfig::Instance().CostFactory()
-                                         .GetName(0);
 
-        output << "                 Most Time Spent in Function\n";
-        output << "               ===============================\n";
-        output << "  Calls      " << left << setw(8) << unitName  << "      " 
-               << left << setw(9) << unitName  + "/call" << "      Name\n";
-        output << "---------  -----------   -------------  --------\n";
-        //         1234567890123456789012345678901234567890123456789
-        //         0000000001111111111222222222233333333334444444444
-        // Now print each one...
-        for ( const call_pair& it: mostTotalTime ) {
-            if ( !patternRegex.Search(it.first) ) {
-                break;
-            }
-            PrintWideRow(output,it.first,it.second.calls, 
-                                         it.second[0]);
-        }
+        PrintTable("Most Time Spent in Function",mostTotalTime,output);
         output << endl << endl;
-
-        output << "                 Most Expensive Function Calls\n";
-        output << "               =================================\n";
-        output << "  Calls      " << left << setw(8) << unitName  << "      " 
-               << left << setw(9) << unitName + "/call" << "      Name\n";
-        output << "---------  -----------   -------------  --------\n";
-
-        for ( const call_pair& it: mostTimePerCall ) {
-            if ( !patternRegex.Search(it.first) ) {
-                break;
-            }
-            PrintWideRow(output,it.first,it.second.calls, 
-                                         it.second[0]);
-        }
+        PrintTable("Most Expensive Function Calls",mostTimePerCall,output);
     } catch ( RegError& e ) {
         output << "Invalid regular expression: \n";
         output << e.what();
@@ -304,33 +259,39 @@ std::string CallCount::WidePrint(unsigned tableSize) const {
     }
 
     PopulateTables(tableSize, mostTotalTime,mostTimePerCall);
+
+    stringstream output;
+    PrintTable("Most Time Spent in Function",mostTotalTime,output);
+    output << endl << endl;
+    PrintTable("Most Expensive Function Calls",mostTimePerCall,output);
+
+    return output.str();
+}
+
+void CallCount::PrintTable(const string& name, 
+                           const vector<call_pair>& rows,
+                           stringstream& output ) const
+{
+    /*
+     * This loop isn't great, but I suspect it will be dwarfed by the main
+     * for loop, can easiy optimize later otherwise.
+     */
+    output << "                 " << name << endl;
+    output << "               ";
+    for (size_t i=0; i < name.size() + 4; ++i ) {
+        output <<"=";
+    }
+    output << endl;
+
     const std::string& unitName = NodeConfig::Instance().CostFactory()
                                      .GetName(0);
 
-    stringstream output;
-    output << "                 Most Time Spent in Function\n";
-    output << "               ===============================\n";
     output << "  Calls      " << left << setw(8) << unitName  << "      " 
            << left << setw(9) << unitName + "/call" << "      Name\n";
     output << "---------  -----------   -------------  --------\n";
-    //         1234567890123456789012345678901234567890123456789
-    //         0000000001111111111222222222233333333334444444444
+
     // Now print each one...
-    for ( const call_pair& it: mostTotalTime ) {
-        PrintWideRow(output,it.first,it.second.calls, 
-                                     it.second[0]);
+    for ( const call_pair& it: rows ) {
+        PrintWideRow(output,it.first,it.second.calls, it.second[0]);
     }
-    output << endl << endl;
-
-    output << "                 Most Expensive Function Calls\n";
-    output << "               =================================\n";
-    output << "  Calls      " << left << setw(8) << unitName  << "      " 
-           << left << setw(9) << unitName +"/call" << "      Name\n";
-    output << "---------  -----------   -------------  --------\n";
-
-    for ( const call_pair& it: mostTimePerCall ) {
-        PrintWideRow(output,it.first,it.second.calls, 
-                                     it.second[0]);
-    }
-    return output.str();
 }

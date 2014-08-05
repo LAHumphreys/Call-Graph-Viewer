@@ -55,6 +55,10 @@ public:
 
     std::string FilteredPrint(const std::string& pattern, unsigned tableSize = 0) const;
 private:
+    void PrintTable(const std::string& name, 
+                    const std::vector<call_pair>& rows,
+                    std::stringstream& output) const;
+
     void PopulateTables(unsigned tableSize, 
                         std::vector<call_pair>& mostTotalTime, 
                         std::vector<call_pair>& mostTimePerCall) const;
