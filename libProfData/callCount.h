@@ -55,8 +55,13 @@ public:
 
     std::string FilteredPrint(const std::string& pattern, unsigned tableSize = 0) const;
 private:
+    /*
+     * Helper function to draw a results table. If average is set to
+     * true the costs will be averaged of the number of calls
+     */
     void PrintTable(const std::string& name, 
                     const std::vector<call_pair>& rows,
+                    bool  average,
                     std::stringstream& output) const;
 
     void PopulateTables(unsigned tableSize, 

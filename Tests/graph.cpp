@@ -1199,20 +1199,20 @@ int LS(testLogger& log) {
         "\n"
         "                 Most Time Spent in Function\n"
         "               ===============================\n"
-        "  Calls      Time          Time/call      Name\n"
-        "---------  -----------   -------------  --------\n"
-        " 3          309           103            f3\n"
-        " 3          303           101            f1\n"
-        " 2          204           102            f2\n"
+        " Calls    Time       Name\n"
+        "-------  ---------  -------\n"
+        "3        309        f3\n"
+        "3        303        f1\n"
+        "2        204        f2\n"
         "\n"
         "\n"
         "                 Most Expensive Function Calls\n"
         "               =================================\n"
-        "  Calls      Time          Time/call      Name\n"
-        "---------  -----------   -------------  --------\n"
-        " 3          309           103            f3\n"
-        " 2          204           102            f2\n"
-        " 3          303           101            f1\n";
+        " Calls    Av Time    Name\n"
+        "-------  ---------  -------\n"
+        "3        103        f3\n"
+        "2        102        f2\n"
+        "3        101        f1\n";
 
     string expected = 
         "main\n"
@@ -1221,29 +1221,29 @@ int LS(testLogger& log) {
         "\n"
         "                 Most Time Spent in Function\n"
         "               ===============================\n"
-        "  Calls      Time          Time/call      Name\n"
-        "---------  -----------   -------------  --------\n"
-        " 3          303           101            f1\n"
-        " 2          206           103            f3\n"
+        " Calls    Time       Name\n"
+        "-------  ---------  -------\n"
+        "3        303        f1\n"
+        "2        206        f3\n"
         "\n"
         "\n"
         "                 Most Expensive Function Calls\n"
         "               =================================\n"
-        "  Calls      Time          Time/call      Name\n"
-        "---------  -----------   -------------  --------\n"
-        " 2          206           103            f3\n"
-        " 3          303           101            f1\n";
+        " Calls    Av Time    Name\n"
+        "-------  ---------  -------\n"
+        "2        103        f3\n"
+        "3        101        f1\n";
     if ( expected != actual ) {
-       log << "ls 1 failfed! " << endl;
-       log << expected <<endl;
+       log << "ls 1 failed! " << endl;
+       log << ">" << expected << "<" << endl;
        log << "------------------------" << endl;
-       log << actual <<endl;
+       log << ">" << actual << "<" << endl;
        return 1;
     }
 
     if ( expected2 != actual2 ) {
        log << mainNode->PrintResults() << endl;
-       log << "ls 2 failfed! " << endl;
+       log << "ls 2 failed! " << endl;
        log << expected2 <<endl;
        log << "------------------------" << endl;
        log << actual2 <<endl;

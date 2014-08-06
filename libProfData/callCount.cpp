@@ -237,10 +237,13 @@ string CallCount::FilteredPrint(const string& pattern, unsigned tableSize) const
 
         // filter and sort the data...
         PopulateTables(tableSize, mostTotalTime,mostTimePerCall, patternRegex);
-
-        PrintTable("Most Time Spent in Function",mostTotalTime,output);
+        PrintTable("Most Time Spent in Function",mostTotalTime,
+                                                 false,
+                                                 output);
         output << endl << endl;
-        PrintTable("Most Expensive Function Calls",mostTimePerCall,output);
+        PrintTable("Most Expensive Function Calls",mostTimePerCall,
+                                              true,
+                                              output);
     } catch ( RegError& e ) {
         output << "Invalid regular expression: \n";
         output << e.what();
@@ -261,21 +264,22 @@ std::string CallCount::WidePrint(unsigned tableSize) const {
     PopulateTables(tableSize, mostTotalTime,mostTimePerCall);
 
     stringstream output;
-    PrintTable("Most Time Spent in Function",mostTotalTime,output);
+    PrintTable("Most Time Spent in Function",mostTotalTime,
+                                             false,
+                                             output);
     output << endl << endl;
-    PrintTable("Most Expensive Function Calls",mostTimePerCall,output);
+    PrintTable("Most Expensive Function Calls",mostTimePerCall,
+                                              true,
+                                              output);
 
     return output.str();
 }
 
 void CallCount::PrintTable(const string& name, 
                            const vector<call_pair>& rows,
+                           bool  average,
                            stringstream& output ) const
 {
-    /*
-     * This loop isn't great, but I suspect it will be dwarfed by the main
-     * for loop, can easiy optimize later otherwise.
-     */
     output << "                 " << name << endl;
     output << "               ";
     for (size_t i=0; i < name.size() + 4; ++i ) {
@@ -286,12 +290,26 @@ void CallCount::PrintTable(const string& name,
     const std::string& unitName = NodeConfig::Instance().CostFactory()
                                      .GetName(0);
 
-    output << "  Calls      " << left << setw(8) << unitName  << "      " 
-           << left << setw(9) << unitName + "/call" << "      Name\n";
-    output << "---------  -----------   -------------  --------\n";
+    if ( average ) {
+        output << " Calls    " << setw(8) << left << "Av " + unitName;
+        output << "   Name" << endl;
+    } else {
+        output << " Calls    " << setw(8) << left << unitName;
+        output << "   Name" << endl;
+    }
+    output << "-------  ---------  -------\n";
 
     // Now print each one...
     for ( const call_pair& it: rows ) {
-        PrintWideRow(output,it.first,it.second.calls, it.second[0]);
+        if ( average ) {
+            output << left << setw(9) << it.second.calls;
+            output << setw(11) << (it.second.calls == 0 ?  
+                                              0 : 
+                                              it.second[0] / it.second.calls);
+        } else {
+            output << left << setw(9) << it.second.calls;
+            output << setw(11) << it.second[0];
+        }
+        output << it.first << endl;
     }
 }
