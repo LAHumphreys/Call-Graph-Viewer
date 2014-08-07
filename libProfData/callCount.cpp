@@ -286,29 +286,35 @@ void CallCount::PrintTable(const string& name,
         output <<"=";
     }
     output << endl;
+    output << " Calls    ";
+    string underlines="-------";
+    underlines.reserve(90);
 
-    const std::string& unitName = NodeConfig::Instance().CostFactory()
-                                     .GetName(0);
-
-    if ( average ) {
-        output << " Calls    " << setw(8) << left << "Av " + unitName;
-        output << "   Name" << endl;
-    } else {
-        output << " Calls    " << setw(8) << left << unitName;
-        output << "   Name" << endl;
+    for ( const size_t& i: NodeConfig::Instance().DisplayIdxs() ) {
+        const std::string& unitName = NodeConfig::Instance().CostFactory()
+                                         .GetName(i);
+        if ( average ) {
+            output << setw(9) << left << "Av " + unitName << "  ";
+        } else {
+            output << setw(9) << left << unitName  << "  ";
+        }  
+        underlines += "  ---------";
     }
-    output << "-------  ---------  -------\n";
+    output << "Name" << endl;
+    output << underlines << "  -------\n";
 
     // Now print each one...
     for ( const call_pair& it: rows ) {
-        if ( average ) {
-            output << left << setw(9) << it.second.calls;
-            output << setw(11) << (it.second.calls == 0 ?  
-                                              0 : 
-                                              it.second[0] / it.second.calls);
-        } else {
-            output << left << setw(9) << it.second.calls;
-            output << setw(11) << it.second[0];
+        output << left << setw(9) << it.second.calls;
+        for ( const size_t& i: NodeConfig::Instance().DisplayIdxs() ) {
+            if ( average ) {
+                output << setw(11) << 
+                    (it.second.calls == 0 ?  
+                         0 : 
+                         it.second[i] / it.second.calls);
+            } else {
+                output << setw(11) << it.second[i];
+            }
         }
         output << it.first << endl;
     }

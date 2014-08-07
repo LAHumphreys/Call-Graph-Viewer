@@ -7,6 +7,7 @@ using namespace std;
 int Manual(testLogger& log);
 int Print(testLogger& log);
 int PrintWide(testLogger& log);
+int PrintWideMulti(testLogger& log);
 int RegPrint(testLogger& log);
 int InvalidRegex(testLogger& log);
 
@@ -16,6 +17,7 @@ int main(int argc, const char *argv[])
     Test("Manuallying adding calls...",Manual).RunTest();
     Test("Printing Results...",Print).RunTest();
     Test("Printing Wide Results...",PrintWide).RunTest();
+    Test("Printing Wide Results...",PrintWideMulti).RunTest();
     Test("Printing Search Results...",RegPrint).RunTest();
     Test("Checking Invalid Regex",InvalidRegex).RunTest();
     return 0;
@@ -192,6 +194,72 @@ int PrintWide(testLogger& log) {
 "-------  ---------  -------\n"
 "1        500        Really Long Name that is far too long to fit in the box, no really it is really long\n"
 "1        200        Func2\n";
+    string actual = counter.WidePrint();
+    string shorter = counter.WidePrint(2); 
+
+    if ( expected != actual ) {
+        log << "Expected: " << endl << ">" << expected << "<";
+        log << "Got: " << endl <<  ">" << actual << "<";
+        return 1;
+    }
+
+    if ( shorter != expected_shorter ) {
+        log << "Expected: " << endl << ">" << expected_shorter << "<";
+        log << "Got: " << endl <<  ">" << shorter << "<";
+        return 1;
+    }
+   return 0;
+}
+
+int PrintWideMulti(testLogger& log) {
+    NodeConfig::Instance().Reset();
+    NodeConfig::Instance().ConfigureCostFactory("Ir Dr");
+    for ( const auto& i : NodeConfig::Instance().DisplayIdxs() ) {
+        log << i << endl;
+    }
+    StringStructFactory& factory = NodeConfig::Instance().CostFactory();
+    CallCount counter;
+    StringStruct s100 = factory.New("100 1");
+    StringStruct s200 = factory.New("200 2");
+    StringStruct s102 = factory.New("102 1");
+    StringStruct s500 = factory.New("500 5");
+    counter.AddCall("Func1",s100);
+    counter.AddCall("Func2",s200);
+    counter.AddCall("Func1",s102);
+    counter.AddCall("Really Long Name that is far too long to fit in the box, no really it is really long",s500);
+
+    string expected = 
+"                 Most Time Spent in Function\n"
+"               ===============================\n"
+" Calls    Ir         Dr         Name\n"
+"-------  ---------  ---------  -------\n"
+"1        500        5          Really Long Name that is far too long to fit in the box, no really it is really long\n"
+"2        202        2          Func1\n"
+"1        200        2          Func2\n"
+"\n"
+"\n"
+"                 Most Expensive Function Calls\n"
+"               =================================\n"
+" Calls    Av Ir      Av Dr      Name\n"
+"-------  ---------  ---------  -------\n"
+"1        500        5          Really Long Name that is far too long to fit in the box, no really it is really long\n"
+"1        200        2          Func2\n"
+"2        101        1          Func1\n";
+    string expected_shorter = 
+"                 Most Time Spent in Function\n"
+"               ===============================\n"
+" Calls    Ir         Dr         Name\n"
+"-------  ---------  ---------  -------\n"
+"1        500        5          Really Long Name that is far too long to fit in the box, no really it is really long\n"
+"2        202        2          Func1\n"
+"\n"
+"\n"
+"                 Most Expensive Function Calls\n"
+"               =================================\n"
+" Calls    Av Ir      Av Dr      Name\n"
+"-------  ---------  ---------  -------\n"
+"1        500        5          Really Long Name that is far too long to fit in the box, no really it is really long\n"
+"1        200        2          Func2\n";
     string actual = counter.WidePrint();
     string shorter = counter.WidePrint(2); 
 
