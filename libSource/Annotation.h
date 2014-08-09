@@ -2,20 +2,19 @@
 #define __PROFILER_LIBSOURCE_ANNOTATION
 
 #include <unordered_map>
+#include "stringStruct.h"
 
 
 class Annotation {
 public:
     Annotation();
-    struct Line {
-        Line(): cost(0) {}
-        long cost;
-    };
+    ~Annotation();
+    typedef StringStruct Line;
     using Lines = std::unordered_map<int,Line>;
 
-    void AddAnnotation(const int& lineno, const long& cost);
+    void AddAnnotation(const int& lineno, const Line& line);
 
-    Line CheckLine(const int& lineno) const;
+    const Line& CheckLine(const int& lineno) const;
 
     const int& Start() const { return start;}
     const int& Stop() const { return stop;}
@@ -23,10 +22,12 @@ public:
     long Sum() const;
 
 private:
+    Line& NullLine() const;
     int   start;
     int   stop;
     Line& GetLine(const int& lineno);
-    Lines    annotations;
+    Lines annotations;
+    mutable Line*  nullLine;
    
 };
 

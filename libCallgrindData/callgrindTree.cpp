@@ -380,14 +380,13 @@ void CallgrindNative::AddCost(const std::string& line) {
     SLOG_FROM(LOG_VERBOSE, "CallgrindNative::AddCall", "Current line is now " << currentLine << " after line " << line)
 
     currentCost->Reset(line.c_str() + nstart + 1);
-    long cost = atol(line.c_str() + nstart + 1);
 
     // But only calculate the cost if we need it
     if ( current->SourceId() == currentFile  || !child.IsNull() ) {
 
         // Annotate the node...
         if ( current->SourceId() == currentFile ) {
-            current->Annotations().AddAnnotation(currentLine,cost);
+            current->Annotations().AddAnnotation(currentLine,*currentCost);
             currentActiveLine = currentLine;
 
             if ( current->SourceStart() > currentLine ) {
@@ -412,7 +411,7 @@ void CallgrindNative::AddCost(const std::string& line) {
         }
     } else {
         if ( !current.IsNull() ) {
-            current->Annotations().AddAnnotation(currentActiveLine,cost);
+            current->Annotations().AddAnnotation(currentActiveLine,*currentCost);
         }
         SLOG_FROM(LOG_VERBOSE, "CallgrindNative::AddCall", "Ignoring cost line!: " << line )
     }

@@ -4,6 +4,7 @@
 #include <iomanip>
 #include <climits>
 #include "nodeConfig.h"
+#include "stringUtils.h"
 
 using namespace std;
 
@@ -241,22 +242,48 @@ void Node::PrintResults(unsigned int indent,
 std::string Node::PrintInfo(unsigned int indent,
                             const std::string& path,
                             bool printPath) {
-    stringstream s("");
-    s << setw(indent) << "" << name;
+    char buf[15];
+    string str;
+    string sindent;
+    str.reserve(1024 + 80 * NodeConfig::Instance().DisplayIdxs().size());
+    sindent.reserve(indent+1);
+    for ( size_t i = 0; i < indent; ++i ) {
+        sindent += " ";
+    }
+    str += sindent;
+    str += name;
     if ( printPath ) { 
-        s << " (" << path << ")" << endl;
+        str += " (" + path + ")\n";
     } else {
-        s << endl;
+        str += "\n";
     }
     indent+=INDENT_TAB_SIZE;
+    for ( size_t i = 0; i < INDENT_TAB_SIZE; ++i ) {
+        sindent += " ";
+    }
     for ( const size_t& i: NodeConfig::Instance().DisplayIdxs() ) {
         const std::string& unitName = NodeConfig::Instance().CostFactory()
                                         .GetName(i);
         long& cost = CostStruct()[i];
-        s << setw(indent) << "" << "Calls: " << callCount;
-        s << ", " << unitName << ": " << cost << ", Av. " << unitName << ": " << (callCount == 0 ? 0: cost/callCount) << endl;
+        str += sindent;
+        StringUtils::FastPrintLong(callCount,15,buf);
+        str += "Calls: ";
+        str += buf;
+        StringUtils::FastPrintLong(cost,15,buf);
+        str += ", ";
+        str +=  unitName;
+        str += ": ";
+        str += buf;
+        str += ", Av. ";
+        str += unitName;
+        str += ": ";
+        StringUtils::FastPrintLong((callCount == 0 ? 0: cost/callCount),
+                                    15,
+                                    buf);
+        str += buf;
+        str += "\n";
     }
-    return s.str();
+    return str;
 }
 
 void Node::SortByTime(vector<PAIR>& sortedNodes) {

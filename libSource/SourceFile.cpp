@@ -3,6 +3,7 @@
 #include <sstream>
 #include "logger.h"
 #include <iomanip>
+#include "nodeConfig.h"
 
 using namespace std;
 
@@ -55,13 +56,15 @@ string SourceFile::Annotate(const Annotation& annotations,
         for ( int i = start; i <= stop; ++i ) {
             output << setw(5) << i << ": ";
             const auto& l = annotations.CheckLine(i);
-            if ( l.cost != 0 ) { 
-                output << setw(10) << l.cost;
-            } else {
-                output << setw(10) << "";
+            for ( const size_t& i : NodeConfig::Instance().DisplayIdxs() ) {
+                if ( l[i] != 0 ) { 
+                    output << setw(10) << l[i];
+                } else {
+                    output << setw(10) << "";
+                }
             }
             if (total != 0 ) {
-                int pcnt = ( l.cost*100 / total);
+                int pcnt = ( l[0]*100 / total);
                 if ( pcnt < threshold ) {
                     output << " (" << setw(2) <<  pcnt << "%)";
                 } else {

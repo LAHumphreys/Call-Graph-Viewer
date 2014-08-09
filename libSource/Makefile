@@ -5,6 +5,8 @@ MODE=CPP
 TARGET_LIB=libSource
 TAGS_FILE=profiler-libsource-c++.tags
 
-LINKED_LIBS=libIOInterface libUtils libProfData
+ADDITIONAL_INCLUDE_FLAGS=../libExec/
+
+LINKED_LIBS=libIOInterface libString libUtils libProfData
 
 include ../makefile.include

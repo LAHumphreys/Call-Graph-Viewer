@@ -54,9 +54,12 @@ int annotate (testLogger& log ) {
     NodeConfig::Instance().Reset();
     SourceFile file("data/graph.cpp");
     Annotation a;
-    a.AddAnnotation(9,34235);
-    a.AddAnnotation(10,342);
-    a.AddAnnotation(11,999);
+    StringStruct s34235 = NodeConfig::Instance().CostFactory().New("34235");
+    StringStruct s342 = NodeConfig::Instance().CostFactory().New("342");
+    StringStruct s999 = NodeConfig::Instance().CostFactory().New("999");
+    a.AddAnnotation(9,s34235);
+    a.AddAnnotation(10,s342);
+    a.AddAnnotation(11,s999);
     string actual = file.Annotate(a,7,21);
     string expected = 
 "    7:           : int RootNode(testLogger& log);\n"
