@@ -264,7 +264,10 @@ std::string Node::PrintInfo(unsigned int indent,
     for ( const size_t& i: NodeConfig::Instance().DisplayIdxs() ) {
         const std::string& unitName = NodeConfig::Instance().CostFactory()
                                         .GetName(i);
-        long& cost = CostStruct()[i];
+        long cost = 0;
+        if ( costStruct ) {
+            cost = CostStruct()[i];
+        }
         str += sindent;
         StringUtils::FastPrintLong(callCount,15,buf);
         str += "Calls: ";
