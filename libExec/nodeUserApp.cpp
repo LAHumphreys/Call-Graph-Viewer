@@ -1,5 +1,6 @@
 #include "nodeUserApp.h"
 #include "screen.h"
+#include "util_time.h"
 
 using namespace std;
 
@@ -48,7 +49,13 @@ int NodeUserApp::Run() {
         string shortName = name.substr(0,name.find("("));
         string cmd = term->GetLine("|" + shortName + "> ");
         try {
+            Time start;
             Execute(cmd);
+            Time stop;
+            stringstream s;
+            s << "\"" + cmd + "\" completed in ";
+            s << stop.DiffUSecs(start) /1000 << "ms" << endl;;
+            term->PutString(s.str());
         } catch ( Commands::ExecutionError& e ) {
             term->PutString(e.msg + "\n");
         }
