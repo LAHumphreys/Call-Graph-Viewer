@@ -47,6 +47,16 @@ alias p previous
 alias g "goto \"${1}\""
 alias f "find \"${1}\""
 
+// ---------------------------------
+// --      Display Configurations
+// ---------------------------------
+alias setdisplay   "display \\\"${1*}\\\""
+alias basic        "display \"Ir\""
+alias branches     "setdisplay Ir Bc Bcm Bi Bim"
+alias cache        "setdisplay Ir D1mr D1mw DLmr DLmw"
+alias lastcache    "setdisplay Ir DLmr DLmw"
+alias fullcache    "setdisplay Ir I1mr D1mr D1mw ILmr DLmr DLmw"
+
 
 // ---------------------------------
 // --        Initialisation

@@ -1,6 +1,7 @@
 #include "nodeApp.h"
 #include "path.h"
 #include "nodeConfig.h"
+#include <iomanip>
 
 using namespace std;
 using namespace std::placeholders;
@@ -205,6 +206,56 @@ int NodeApp::ListSearch() {
 }
 
 int NodeApp::Display(std::string units) {
-    NodeConfig::Instance().ConfigureDisplay(units);
+    if ( units != "" ) {
+        NodeConfig::Instance().ConfigureDisplay(units);
+    }
+
+    static map<string,string> unitMap({
+        {"Ir",   "Total Instructions Read" },
+        {"I1mr", "Instruction reads which missed L1 cache" },
+        {"ILmr", "Instruction reads which missed the last line of cache" },
+        {"Dr",   "Total memory reads" },
+        {"D1mr", "Memory reads which missed L1 cache" },
+        {"DLmr", "Memory reads which missed the last line of cache" },
+        {"Dw",   "Total memory writes" },
+        {"D1mw", "Memory writes which missed L1 cache" },
+        {"DLmw", "Memory writes which missed the last line of cache" },
+        {"Bc",   "Total conditional branches executed" },
+        {"Bcm",  "Mispredicted conditional branches" },
+        {"Bi",   "Indirect branches (jumps to an unknown location)" },
+        {"Bim",  "Indirect branches mispredicted" }
+    });
+
+    stringstream results;
+    results << "        Enabled"   << endl;
+    results << "      -----------" << endl;
+    results << left << setw(15) << " Unit Name "  << setw(60) << " Description ";
+    results << endl;
+    results << left << setw(15) << "-----------"  << setw(60) << "-------------";
+    results << endl;
+    for ( const size_t& i : NodeConfig::Instance().DisplayIdxs() ) {
+        const string& unitName = NodeConfig::Instance().CostFactory()
+                                    .GetName(i);
+        results << left << setw(15) << " " + unitName;
+        results << left << setw(60) << unitMap[unitName];
+        results << endl;
+    }
+    results << "        Available"   << endl;
+    results << "      -------------" << endl;
+    results << left << setw(15) << " Unit Name "  << setw(60) << " Description ";
+    results << endl;
+    results << left << setw(15) << "-----------"  << setw(60) << "-------------";
+    results << endl;
+    for ( size_t i = 0; 
+          i < NodeConfig::Instance().CostFactory().NumElements();
+          ++i)
+    {
+        const string& unitName = NodeConfig::Instance().CostFactory()
+                                    .GetName(i);
+        results << left << setw(15) << " " + unitName;
+        results << left << setw(60) << unitMap[unitName];
+        results << endl;
+    }
+    output->PutString(results.str() + "\n");
     return 0;
 }
