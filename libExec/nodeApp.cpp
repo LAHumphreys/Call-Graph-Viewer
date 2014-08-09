@@ -31,6 +31,7 @@ int NodeApp::RegisterCommands(Commands& dispatcher) {
     dispatcher.AddCommand("tree",f_tree, "tree <max depth>");
     dispatcher.AddCommand("search",f_search, "search <max depth> <pattern>");
     dispatcher.AddCommand("next",std::bind(&NodeApp::Next,this));
+    dispatcher.AddCommand("previous",std::bind(&NodeApp::Previous,this));
     dispatcher.AddCommand("display",f_display,"display <units to print>");
     return 0;
 }
