@@ -4,6 +4,7 @@ MAKE_DIRS= DEV_TOOLS libSource libProfData libCallgrindData libExec Tests Binari
 #
 # Luke Humphreys 2012
 ALL_WARNINGS=YES
+LINK_CEF_RESOURCES=YES
 
 MODE=CPP
 

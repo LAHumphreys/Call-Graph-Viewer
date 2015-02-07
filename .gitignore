@@ -36,3 +36,4 @@ dumptree
 callgrind.out.*
 Tests/toy.out
 Tests/toy.data
+Tests/toy_cache.data
