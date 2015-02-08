@@ -30,7 +30,7 @@ public:
 	 * This method is responsible for setting the initial paramaters of the window
 	 * (including its url).
 	 *
-	 * Finally the method creates a new instance of GCGVBrowser_Callbacks, which is
+	 * Finally the method creates a new instance of GCGV_Callbacks, which is
 	 * used by this window for event handling.
 	 *
 	 */
