@@ -21,10 +21,10 @@ before_install:
 script: 
   - g++-4.8 --version
   - ./getCEF.sh
-  - CEF_DIR=$PWD/CEF_3.2/cef_binary_3.2171.1979_linux64/ TOOL_CHAIN=TRAVIS make -j 2
-  - CEF_DIR=$PWD/CEF_3.2/cef_binary_3.2171.1979_linux64/ TOOL_CHAIN=TRAVIS make -j 2 memtest
-  - CEF_DIR=$PWD/CEF_3.2/cef_binary_3.2171.1979_linux64/ TOOL_CHAIN=TRAVIS make -j 2 clean
-  - CEF_DIR=$PWD/CEF_3.2/cef_binary_3.2171.1979_linux64/ TOOL_CHAIN=TRAVIS make -j 2 cover
+  - CEF_DIR=$PWD/CEF_3.2/cef_binary_3.2171.1979_linux64/ TOOL_CHAIN=TRAVIS make 
+  - CEF_DIR=$PWD/CEF_3.2/cef_binary_3.2171.1979_linux64/ TOOL_CHAIN=TRAVIS make memtest
+  - CEF_DIR=$PWD/CEF_3.2/cef_binary_3.2171.1979_linux64/ TOOL_CHAIN=TRAVIS make clean
+  - CEF_DIR=$PWD/CEF_3.2/cef_binary_3.2171.1979_linux64/ TOOL_CHAIN=TRAVIS make cover
 after_success:
   - cd exports/objs/
   - coveralls --gcov gcov-4.8 --verbose 
