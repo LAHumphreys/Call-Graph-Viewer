@@ -11,14 +11,20 @@ before_install:
   - sudo apt-get install libplplot-dev
   - sudo apt-get install libboost-filesystem-dev
   - sudo apt-get install valgrind
+  - sudo apt-get install p7zip-full
+  - sudo apt-get install libgtk2.0-dev
+  - sudo apt-get install libgl-dev
+  - sudo apt-get install ncurses-dev
+  - sudo apt-get install libudev-dev
   - sudo pip install cpp-coveralls --use-mirrors
 
 script: 
   - g++-4.8 --version
-  - TOOL_CHAIN=TRAVIS make 
-  - TOOL_CHAIN=TRAVIS make memtest 
-  - TOOL_CHAIN=TRAVIS make clean
-  - TOOL_CHAIN=TRAVIS make cover
+  - ./getCEF.sh
+  - CEF_DIR=$PWD/CEF_3.2/cef_binary_3.2171.1979_linux64/ TOOL_CHAIN=TRAVIS make 
+  - CEF_DIR=$PWD/CEF_3.2/cef_binary_3.2171.1979_linux64/ TOOL_CHAIN=TRAVIS make memtest
+  - CEF_DIR=$PWD/CEF_3.2/cef_binary_3.2171.1979_linux64/ TOOL_CHAIN=TRAVIS make clean
+  - CEF_DIR=$PWD/CEF_3.2/cef_binary_3.2171.1979_linux64/ TOOL_CHAIN=TRAVIS make cover
 after_success:
   - cd exports/objs/
   - coveralls --gcov gcov-4.8 --verbose 

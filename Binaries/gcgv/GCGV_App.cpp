@@ -6,7 +6,7 @@
 
 #include <string>
 
-#include "GCGVBrowser_Callbacks.h"
+#include "GCGV_Callbacks.h"
 #include "include/cef_browser.h"
 #include "include/cef_command_line.h"
 #include "include/wrapper/cef_helpers.h"

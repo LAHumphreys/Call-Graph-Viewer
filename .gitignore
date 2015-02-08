@@ -42,3 +42,6 @@ Tests/toy_cache.data
 .cproject
 .project
 .settings
+
+#CEF
+CEF_3.2
