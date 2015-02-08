@@ -10,7 +10,6 @@ LINKED_LIBS= libExec libCallgrindData libProfData libExec libSource\
 EXECUTABLE=gcgv
 MODE=CPP
 CPP_TAGS_FILE=profiler-gprofile-c++.tags
-EXTERNAL_LIBS=-lncurses
 USE_CEF=YES
 USE_GTK=YES
 

@@ -2,7 +2,7 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
-#include "cefsimple/simple_app.h"
+#include "GCGV_App.h"
 
 #include <X11/Xlib.h>
 
@@ -35,7 +35,11 @@ int main(int argc, char* argv[]) {
   
   // SimpleApp implements application-level callbacks. It will create the first
   // browser instance in OnContextInitialized() after CEF has initialized.
-  CefRefPtr<SimpleApp> app(new SimpleApp);
+  CefRefPtr<GCGV_App> app(new GCGV_App);
+
+  /************************************************************
+   *                  Sub-process Handling
+   ************************************************************/
 
   // CEF applications have multiple sub-processes (render, plugin, GPU, etc)
   // that share the same executable. This function checks the command-line and,
@@ -46,7 +50,10 @@ int main(int argc, char* argv[]) {
     return exit_code;
   }
 
-  // Specify CEF global settings here.
+  /************************************************************
+   *                  Main (Browser) Handling
+   ************************************************************/
+
   CefSettings settings;
 
   // Install xlib error handlers so that the application won't be terminated
@@ -61,7 +68,6 @@ int main(int argc, char* argv[]) {
   // called.
   CefRunMessageLoop();
 
-  // Shut down CEF.
   CefShutdown();
 
   return 0;
