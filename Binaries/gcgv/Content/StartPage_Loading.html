@@ -14,7 +14,7 @@
     <link href="css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap theme -->
     <link href="css/bootstrap-theme.min.css" rel="stylesheet">
-            
+      
     <!-- Alertify -->
     <link href="css/alertify.css">
     <link href="css/alertify-bootstrap-3.css">
@@ -67,17 +67,26 @@
         <p> 
             Call-Graph Viewer is a performance analysis tool. Get started by loading a new profile to analyse.
        </p>
-        <form class="navbar-form navbar">
+        <form class="navbar-form navbar" >
             <div class="form-group">
-              <input type="text" placeholder="callgrind.out" class="form-control" style="width:300px">
+              <input disabled type="text" placeholder="callgrind.out" class="form-control" style="width:300px">
             </div>
-            <button type="submit" class="btn btn-success">Start Analysing</button>
+            <button disabled type="submit" class="btn btn-success">Analysing...</button>
         </form>
       </div>
-        
-
-        
-
+      <div clas="loading">
+        <div class="row">
+          <div class="col-sm-12">
+            <div class="loading-spinner">
+            </div>     
+          </div><!-- /.col-sm-12 -->
+        </div>
+        <div class="row">
+          <div class="col-sm-12 loading-spinner-caption">
+            <label> One moment, I'm opening the file...</label>
+          </div><!-- /.col-sm-12 -->
+        </div>
+      </div>
 
     </div> <!-- /container -->
 
@@ -94,5 +103,7 @@
     ================================================== -->
       <script src="js/Analysis.js"></script>
       <script src="js/Actions.js"></script>
+      <script src="js/spin.js"></script>
+      <script src="js/alertify.min.js"></script>
   </body>
 </html>

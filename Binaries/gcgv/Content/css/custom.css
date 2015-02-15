@@ -1,3 +1,25 @@
 input .filepath-input {
     width: 500px;
 }
+
+div.loading-spinner {
+    height: 60px;
+}
+
+div.loading-spinner-caption {
+    align-content: center;
+    text-align: center;
+}
+div.loading-spinner label {
+   text-align: center;
+}
+
+
+div.filter-panel-body div.filter-control
+{
+    width: 100%;
+}
+
+div.filter-panel-body div.filter-control input.search-box {
+    width: 90%;
+}
