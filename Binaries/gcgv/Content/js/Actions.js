@@ -1,4 +1,4 @@
-/*global $, document, alert, Spinner, alertify, installNavbar, console */
+/*global $, document, alert, Spinner, alertify, installNavbar, console, Logging, Select */
 var Application;
 
 var ModelPrototype = {
@@ -21,6 +21,28 @@ var ViewPrototype = {
     setup: function () {
         "use strict";
         Application.viewCreated();
+    },
+    
+    /********************************************************************
+     *                         Notifications
+     ********************************************************************/
+    
+    sendErrorNotification: function (msg) {
+        "use strict";
+        alertify.error(msg);
+    },
+    
+    /*
+     * Display a message to the user, and ask them to make a choice between 
+     * two options
+     */
+    getUserYesNoChoice: function (msg, yesChoice, noChoice, fn) {
+        "use strict";
+        alertify.set({labels : {
+            ok: yesChoice,
+            cancel: noChoice
+        }});
+        alertify.confirm(msg, fn);
     }
 };
 
@@ -151,6 +173,16 @@ Application = {
         "use strict";
         console.log("Starting Application...");
         Application.presenter.start();
+    },
+    /********************************************************************
+     *                         Timmers
+     ********************************************************************/
+    /*
+     * Do an action in <timems> mili-seconds time
+     */
+    delayAction: function (action, timems) {
+        "use strict";
+        return window.setTimeout(action, timems);
     }
 };
 
@@ -187,5 +219,7 @@ Application.constructor();
  */
 $(document).ready(function () {
     "use strict";
+    Logging.debugMode();
+    Select.debugMode();
     Application.start();
 });

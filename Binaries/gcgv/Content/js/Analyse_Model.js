@@ -5,6 +5,21 @@
  */
 var Analyse = {
     /********************************************************************
+     *                    Model Interface
+     *   Implement methods on the model interface
+     ********************************************************************/
+    /*
+     * Setup the model
+     */
+    initialise: function () {
+        "use strict";
+        this.initialiseAnalysisMode();
+        this.initialiseDataTypes();
+        
+        Application.modelReady();
+    }
+
+    /********************************************************************
      *                    Analysis Mode
      *  The analysis mode switches our view on the data. (By default we 
      *  can view the data either as raw sum, or as the average time per 
@@ -88,7 +103,6 @@ var Analyse = {
                 } else {
                     ptype[name] = id;
                     this.ids[id] = { name: name, type: type, id: id };
-                    console.log("IDs: " + this.ids);
                 }
             }
         }
@@ -181,15 +195,4 @@ var Analyse = {
         }
         return ok;
     },
-
-    /*
-     * Setup the model
-     */
-    initialise: function () {
-        "use strict";
-        this.initialiseAnalysisMode();
-        this.initialiseDataTypes();
-        
-        Application.modelReady();
-    }
 };

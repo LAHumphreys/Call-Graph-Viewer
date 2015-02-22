@@ -7,6 +7,7 @@
 #include <X11/Xlib.h>
 
 #include "include/base/cef_logging.h"
+#include <iostream>
 
 namespace {
 
@@ -55,6 +56,13 @@ int main(int argc, char* argv[]) {
    ************************************************************/
 
   CefSettings settings;
+
+  if ( !settings.remote_debugging_port)
+  {
+      settings.remote_debugging_port = 9222;
+  }
+  std::cout << "Remote port: " << settings.remote_debugging_port << std::endl;
+
 
   // Install xlib error handlers so that the application won't be terminated
   // on non-fatal errors.

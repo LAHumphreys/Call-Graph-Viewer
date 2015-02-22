@@ -1,6 +1,6 @@
 SOURCES=$(shell echo *.cpp)
 
-LINKED_LIBS= libExec libCallgrindData libProfData libExec libSource\
+LINKED_LIBS= libCEF libExec libCallgrindData libProfData libExec libSource\
              libCommands \
 			 libMeta  \
 			 libString \

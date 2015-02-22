@@ -130,7 +130,6 @@ var NavBar = {
      */
     setDataType: function (name) {
         "use strict";
-        console.log("Updating: " + name.name);
         $("span.data-model-label").text(name.name);
     }
     
