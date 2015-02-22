@@ -32,7 +32,7 @@ test.full_log
 # PROFILER
 profile
 cgv
-dumptree
+gcgv
 callgrind.out.*
 Tests/toy.out
 Tests/toy.data
@@ -45,3 +45,13 @@ Tests/toy_cache.data
 
 #CEF
 CEF_3.2
+
+# Linked CEF resources
+cef.pak
+cef_100_percent.pak
+cef_200_percent.pak
+chrome-sandbox
+devtools_resources.pak
+icudtl.dat
+locales
+
