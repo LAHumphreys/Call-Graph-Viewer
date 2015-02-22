@@ -1,4 +1,4 @@
-MAKE_DIRS= DEV_TOOLS libSource libProfData libCallgrindData libExec libGCGVCallbacks libGCGVApp Tests Binaries
+MAKE_DIRS= DEV_TOOLS CoreLibs GCGVLibs Tests Binaries
 
 # makefile tools library  for bulding multi-directory projects
 #
