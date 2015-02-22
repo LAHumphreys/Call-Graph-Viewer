@@ -16,4 +16,4 @@ USE_GTK=YES
 
 
 
-include ../makefile.include
+include ../makefile.gcgv.include

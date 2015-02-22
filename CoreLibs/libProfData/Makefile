@@ -9,4 +9,4 @@ TAGS_FILE=profiler-libdata-c++.tags
 
 LINKED_LIBS=libSource libString libIOInterface libUtils 
 
-include ../makefile.include
+include ../makefile.core.include

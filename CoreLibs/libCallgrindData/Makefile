@@ -9,4 +9,4 @@ LINKED_LIBS=libSource libIOInterface libUtils libString libProfData
 
 ADDITIONAL_INCLUDE_FLAGS+="../libExec/"
 
-include ../makefile.include
+include ../makefile.core.include

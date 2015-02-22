@@ -1,0 +1,6 @@
+MODE=CPP
+#
+# include the root makefile - note that this will be called from our
+# sub-directories
+#
+include ../../makefile.include

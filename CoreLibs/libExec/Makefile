@@ -7,4 +7,4 @@ TAGS_FILE=profiler-libexec-c++.tags
 
 LINKED_LIBS=libSource libProfData libScreen libCommands libMeta libString libIOInterface libUtils
 
-include ../makefile.include
+include ../makefile.core.include
