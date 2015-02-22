@@ -1,7 +1,7 @@
 SOURCES=$(shell echo *.cpp)
 EXPORT_INCLUDES=$(shell echo *.h)
 
-LINKED_LIBS= libCEF libExec libCallgrindData libProfData libExec libSource\
+LINKED_LIBS= libGTK libCEF libExec libCallgrindData libProfData libExec libSource\
              libCommands \
 			 libMeta  \
 			 libString \
