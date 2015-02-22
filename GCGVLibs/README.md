@@ -13,6 +13,7 @@ Library | Purpose
 --------- | -----------
 libGCGVApp | Implements CefApp, which handles application level events
 libGCGVCallbacks | Implements CefClient, which defines handlers for Cef Events
+libGCGVJS | Defines java-script functions, and handles inter-processing message routing for java script callbacks
 
 libGCGVApp
 ---------
@@ -26,3 +27,9 @@ CefClient handles events within existing Browser / Renderer processes. These inc
 - Display changes (such as a window title) which require the underlying display library (GTK) to be notified
 - Page navigation (the browser process is notified at the start / end of a frame load)
 - Creation / Destruction of new browsers (when the last browser closes we must terminate the application)
+
+libGCGVJS
+-----
+Defines extensions to the java-script interface. This library is responsible for
+- Defining new functions available in js
+- Handling async requests from the render and routing them to the browser process

@@ -1,6 +1,6 @@
 SOURCES=$(shell echo *.cpp)
 
-LINKED_LIBS= libGCGVApp libGCGVCallbacks libCEF libGTK libExec libCallgrindData libProfData libExec libSource\
+LINKED_LIBS= libGCGVApp libGCGVJS libGCGVCallbacks libCEF libGTK libExec libCallgrindData libProfData libExec libSource\
              libCommands \
 			 libMeta  \
 			 libString \

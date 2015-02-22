@@ -11,6 +11,8 @@
 #include "include/base/cef_bind.h"
 #include "include/cef_app.h"
 
+#include "GCGV_Callbacks.h"
+
 GCGVBrowser_Callbacks_LifeSpan::GCGVBrowser_Callbacks_LifeSpan()
     : is_closing_(false)
 {
@@ -48,6 +50,8 @@ void GCGVBrowser_Callbacks_LifeSpan::OnBeforeClose(
 		// All browser windows have closed. Quit the application message loop.
 		CefQuitMessageLoop();
 	}
+
+	GCGV_Callbacks::GetInstance()->GetJSHandler()->OnBeforeClose(browser);
 }
 
 bool GCGVBrowser_Callbacks_LifeSpan::DoClose(CefRefPtr<CefBrowser> browser) {
