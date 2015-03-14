@@ -6,10 +6,7 @@
 #define CEF_TESTS_CEFSIMPLE_SIMPLE_HANDLER_H_
 
 #include "include/cef_client.h"
-#include "GCGVBrowser_Callbacks_Display.h"
-#include "GCGVBrowser_Callbacks_LifeSpan.h"
-#include "GCGV_Callbacks_Loading.h"
-#include "GCGVBrowserRequsts.h"
+#include <CefBaseClient.h>
 #include <GCGVJSHandler.h>
 
 /**
@@ -24,6 +21,9 @@
  */
 class GCGV_Callbacks: public CefClient {
 public:
+
+    static void InstallNewHandlers(CefBaseClient& client);
+
     /**
      * C'tor - Initialise the child handlers
      */
@@ -40,34 +40,6 @@ public:
     /******************************************************
      *              CEF Interface
      ****************************************************/
-
-    /**
-     * Return the object responsible for handling call-backs resulting from changes
-     * that will be displayed to the user.
-     *
-     * Examples include the page title and console logging.
-     */
-    virtual CefRefPtr<CefDisplayHandler> GetDisplayHandler() OVERRIDE;
-
-    /**
-     * Return the object responsible for handling notifications related to the
-     * creation / destruction of browsers.
-     */
-    virtual CefRefPtr<CefLifeSpanHandler> GetLifeSpanHandler() OVERRIDE;
-
-    /**
-     * Return the object responsible for handling load events (including failures)
-     * on the page.
-     *
-     * Note these events could be triggered from either the browser or the
-     * renderer...
-     */
-    virtual CefRefPtr<CefLoadHandler> GetLoadHandler() OVERRIDE;
-
-    /**
-     * Return the object responsible for handling browser requests
-     */
-    virtual CefRefPtr<CefRequestHandler> GetRequestHandler() OVERRIDE;
 
     /*
      * Handle a message from another process.
@@ -90,16 +62,10 @@ public:
 
     private:
 
-        CefRefPtr<GCGVBrowser_Callbacks_Display> displayHandler_;
-        CefRefPtr<GCGVBrowser_Callbacks_LifeSpan> lifeSpanHandler_;
-        CefRefPtr<GCGV_Callbacks_Loading> loadHandler_;
-        CefRefPtr<GCGVBrowser_Requests> requestHandler_;
         CefRefPtr<GCGV_JSHandler> jsHandler_;
 
         // Include the default reference counting implementation.
         IMPLEMENT_REFCOUNTING(GCGV_Callbacks)
-        ;
-    }
-    ;
+    };
 
 #endif  // CEF_TESTS_CEFSIMPLE_SIMPLE_HANDLER_H_

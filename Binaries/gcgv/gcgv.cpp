@@ -2,7 +2,9 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
-#include "GCGV_App.h"
+#include "GCGVBrowser_App.h"
+#include "GCGVRenderer_App.h"
+#include "CefBaseApp.h"
 
 #include <X11/Xlib.h>
 
@@ -36,7 +38,12 @@ int main(int argc, char* argv[]) {
   
   // SimpleApp implements application-level callbacks. It will create the first
   // browser instance in OnContextInitialized() after CEF has initialized.
-  CefRefPtr<GCGV_App> app(new GCGV_App);
+  CefRefPtr<CefBaseApp> app(new CefBaseApp);
+
+  app->Browser().InstallHandler(
+      std::shared_ptr<CefBrowserProcessHandler>(new GCGVBrowser_App));
+  app->Renderer().InstallHandler(
+      std::shared_ptr<CefRenderProcessHandler>(new GCGVRenderer_App));
 
   /************************************************************
    *                  Sub-process Handling

@@ -7,56 +7,67 @@
 #include <sstream>
 #include <string>
 
+#include "CefBaseDisplayGTKDefaultHandler.h"
+#include "GCGVBrowser_Callbacks_LifeSpan.h"
+#include <CefBaseLoadDefaultHandler.h>
+#include "GCGVBrowserRequsts.h"
+#include <CefBaseLifeSpanDefaultHandler.h>
+
 #include <logger.h>
 
 namespace {
 
-GCGV_Callbacks* g_instance = NULL;
+    GCGV_Callbacks* g_instance = NULL;
 
 }  // namespace
 
+void GCGV_Callbacks::InstallNewHandlers(CefBaseClient& client) {
+    client.InstallMessagerHandler(
+        std::shared_ptr<CefClient>(new GCGV_Callbacks));
+
+    client.DisplayHandler().InstallHandler(
+        std::shared_ptr<CefDisplayHandler>(
+            new CefBaseDisplayDefaultGTKHandler));
+
+    client.LifeSpanHandler().InstallHandler(
+        std::shared_ptr<CefLifeSpanHandler>(
+            new CefBaseLifeSpanDefaultHandler));
+
+    client.LifeSpanHandler().InstallHandler(
+        std::shared_ptr<CefLifeSpanHandler>(
+            new GCGVBrowser_Callbacks_LifeSpan));
+
+    client.LoadHandler().InstallHandler(
+        std::shared_ptr<CefLoadHandler>(
+            new CefBaseLoadDefaultHandler()));
+
+    client.RequestHandler().InstallHandler(
+        std::shared_ptr<CefRequestHandler>(
+            new GCGVBrowser_Requests));
+}
+
+
 GCGV_Callbacks::GCGV_Callbacks()
-    : displayHandler_(new GCGVBrowser_Callbacks_Display),
-      lifeSpanHandler_(new GCGVBrowser_Callbacks_LifeSpan),
-      loadHandler_(new GCGV_Callbacks_Loading),
-      requestHandler_(new GCGVBrowser_Requests),
-      jsHandler_(new GCGV_JSHandler)
+        : jsHandler_(new GCGV_JSHandler)
 {
-	DCHECK(!g_instance);
-	g_instance = this;
+    DCHECK(!g_instance);
+    g_instance = this;
 }
 
 GCGV_Callbacks::~GCGV_Callbacks() {
-	g_instance = NULL;
+    g_instance = NULL;
 }
 
 // static
 GCGV_Callbacks* GCGV_Callbacks::GetInstance() {
-    if ( !g_instance)
-    {
+    if (!g_instance) {
         LOG_FROM(
             LOG_ERROR,
             "GCGV_Callbacks::GetInstance",
             "FATAL: There is no instance to return!");
         abort();
     }
-	return g_instance;
-}
-
-CefRefPtr<CefDisplayHandler> GCGV_Callbacks::GetDisplayHandler() {
-	return displayHandler_;
-}
-
-CefRefPtr<CefLifeSpanHandler> GCGV_Callbacks::GetLifeSpanHandler() {
-	return lifeSpanHandler_;
-}
-
-CefRefPtr<CefLoadHandler> GCGV_Callbacks::GetLoadHandler() {
-	return loadHandler_;
-}
-
-CefRefPtr<CefRequestHandler> GCGV_Callbacks::GetRequestHandler() {
-    return requestHandler_;
+    return g_instance;
 }
 
 CefRefPtr<GCGV_JSHandler> GCGV_Callbacks::GetJSHandler() {
@@ -77,3 +88,4 @@ bool GCGV_Callbacks::OnProcessMessageReceived(
 
     return handled;
 }
+

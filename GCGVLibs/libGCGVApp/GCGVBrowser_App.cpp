@@ -24,7 +24,8 @@ void GCGVBrowser_App::OnContextInitialized() {
 	CefWindowInfo window_info;
 
 	// SimpleHandler implements browser-level callbacks.
-	CefRefPtr<GCGV_Callbacks> handler(new GCGV_Callbacks());
+	CefRefPtr<CefBaseClient> handler(new CefBaseClient);
+	GCGV_Callbacks::InstallNewHandlers(*(handler.get()));
 
 	// Specify CEF browser settings here.
 	CefBrowserSettings browser_settings;
