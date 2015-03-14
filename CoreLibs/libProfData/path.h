@@ -50,6 +50,9 @@ public:
     Path(const std::vector<std::string>::const_iterator& beg, 
          const std::vector<std::string>::const_iterator& end);
 
+    Path(const std::vector<std::string>::const_reverse_iterator& beg,
+         const std::vector<std::string>::const_reverse_iterator& end);
+
     /*
      * This is the iterator for walking the call graph
      */

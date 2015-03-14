@@ -19,7 +19,8 @@ public:
     bool operator==(const NodePtr&rhs) { return p == rhs.p; }
     inline bool IsNull() { return p == nullptr;} 
 
-private: Node*    p;
+private:
+    Node*    p;
 };
 
 /*

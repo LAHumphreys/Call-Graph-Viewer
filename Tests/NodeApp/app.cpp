@@ -41,8 +41,8 @@ int main(int argc, const char *argv[])
 }
 
 int Initialisation(testLogger& log) {
-    TestTerminal tester; 
-    NodeApp app(native.RootNode(),tester);
+    TestTerminal tester;
+    NodeUserApp app(native.RootNode(),&tester);
     app.PWD();
     if ( tester.OutputAsString() != "ROOT" ) {
         log << "Failed to initialised in the root node: " << tester.OutputAsString();
@@ -73,7 +73,7 @@ int Initialisation(testLogger& log) {
 
 int CD(testLogger& log) {
     TestTerminal tester; 
-    NodeApp app(native.RootNode(),tester);
+    NodeUserApp app(native.RootNode(),&tester);
     DIRECT_CALL ("Change into main", "ROOT/\n  main", 
         app.CD("main");
         app.PWD();
@@ -118,7 +118,7 @@ int CD(testLogger& log) {
 
 int PUSHD(testLogger& log) {
     TestTerminal tester; 
-    NodeApp app(native.RootNode(),tester);
+    NodeUserApp app(native.RootNode(),&tester);
     
     DIRECT_CALL ("Push root on to the stack", "ROOT/main\nROOT\nROOT/\n  main", 
         app.PUSHD("main");
@@ -145,7 +145,7 @@ int PUSHD(testLogger& log) {
 
 int Scripting(testLogger& log) {
     TestTerminal tester;
-    NodeUserApp app(native.RootNode(),tester);;
+    NodeUserApp app(native.RootNode(),&tester);;
 
     string code = R"CODE(
         pushd main

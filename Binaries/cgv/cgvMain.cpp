@@ -45,7 +45,7 @@ int main(int argc, const char *argv[])
     /*
      * Initialise the actual application and load user configuration
      */
-    application = new NodeUserApp(data->RootNode());
+    application = new NodeUserApp(data->RootNode(),nullptr);
     application->CommandDispatcher().AddCommand("annotate",&PrintAnnotation);
 
     if ( ENV::IsSet("CGV_CONFIG_FILE") ) { 

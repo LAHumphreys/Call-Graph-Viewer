@@ -12,7 +12,7 @@
 
 class NodeUserApp {
 public:
-    NodeUserApp(NodePtr root);
+    NodeUserApp(NodePtr root, OutputTerminal* _term = nullptr);
 
     /*
      * Run the main loop, executing commands until 
@@ -32,7 +32,6 @@ public:
     void SetMainTerminal(OutputTerminal& _term) {
         term = &_term;
     }
-    NodeUserApp(NodePtr root, OutputTerminal& term);
 
     int OutputOn();
     int OutputOff();
@@ -46,7 +45,31 @@ public:
     }
     Commands& CommandDispatcher() { return dispatcher;}
 
+    /***************************
+     *        Commands
+     **************************/
+    /*
+     * Write the path of the current working node to the output
+     */
+    int PWD();
+
+    /*
+     * Change into node at path...
+     */
+    int CD(std::string s);
+
+    /*
+     * Change to another directory, but add the pwd to the popd stack
+     */
+    int PUSHD(std::string s);
+    int POPD();
+
 private:
+    /*
+     * Utility functions
+     */
+    std::string PrintPopdStack();
+
     void Initialise();
     // Call this to exit run next time it drops back to the main loop
     int Exit() { 
@@ -62,6 +85,17 @@ private:
     Commands dispatcher;
     NodeApp  application;
     bool     exit;
+
+    std::forward_list<NodePtr> popdstack;
+
+
+    /***************************
+     *        Commands
+     **************************/
+    std::function<int()> f_pwd;
+    std::function<int(std::string)> f_cd;
+    std::function<int(std::string)> f_pushd;
+    std::function<int()> f_popd;
 
 };
 #endif

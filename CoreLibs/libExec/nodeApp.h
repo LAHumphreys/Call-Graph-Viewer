@@ -35,17 +35,18 @@ public:
     /*
      * Write the path of the current working node to the output
      */
-    int PWD();
-    /*
-     * Change into node at path...
-     */
-    int CD(std::string s);
+    Path PWD();
 
-    /*
-     * Change to another directory, but add the pwd to the popd stack
+    /**
+     * Change into node at path...
+     *
+     * @param path    The path to change into
+     *
+     * @returns TRUE if the node was found and is now the pwd, FALSE otherwise
      */
-    int PUSHD(std::string s);
-    int POPD();
+    bool CD(std::string path);
+
+    void CD(NodePtr node);
 
     /*
      * Create a local flat view
@@ -89,10 +90,6 @@ public:
     }
 
 private:
-    /*
-     * Utility functions
-     */
-    std::string PrintPopdStack();
 
     /*
      * Data
@@ -101,8 +98,6 @@ private:
     NodePtr   root;
     NodePtr   pwd;
 
-    std::forward_list<NodePtr> popdstack;
-
     // Where to send output to
     OutputTerminal* output;
 
@@ -110,14 +105,9 @@ private:
     RegSearch      finder;
     SearchResult*  result = nullptr;
 
-
     /*
      * Commands
      */
-    std::function<int()> f_pwd;
-    std::function<int(std::string)> f_cd;
-    std::function<int(std::string)> f_pushd;
-    std::function<int()> f_popd;
     std::function<int(int,int,std::string)> f_flat;
     std::function<int(int)> f_tree;
     std::function<int(int,std::string)> f_search;

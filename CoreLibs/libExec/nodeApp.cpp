@@ -8,10 +8,6 @@ using namespace std::placeholders;
 
 NodeApp::NodeApp(NodePtr _root, OutputTerminal& _output) 
     : root(_root), pwd(_root), output(&_output),
-     f_pwd(std::bind(&NodeApp::PWD,this)),
-     f_cd(std::bind(&NodeApp::CD,this,_1)),
-     f_pushd(std::bind(&NodeApp::PUSHD,this,_1)),
-     f_popd(std::bind(&NodeApp::POPD,this)),
      f_flat(std::bind(&NodeApp::Flat,this,_1,_2,_3)),
      f_tree(std::bind(&NodeApp::Tree,this,_1)),
      f_search(std::bind(&NodeApp::Search,this,_1,_2)),
@@ -22,11 +18,11 @@ NodeApp::~NodeApp() {
     delete result;
 }
 
+void NodeApp::CD(NodePtr node) {
+    pwd = node;
+}
+
 int NodeApp::RegisterCommands(Commands& dispatcher) {
-    dispatcher.AddCommand("pwd",f_pwd);
-    dispatcher.AddCommand("cd",f_cd, "cd <node name>");
-    dispatcher.AddCommand("pushd",f_pushd,"pushd <node name>");
-    dispatcher.AddCommand("popd",f_popd);
     dispatcher.AddCommand("flat",f_flat, "flat <max depth> <max rows> [pattern]");
     dispatcher.AddCommand("tree",f_tree, "tree <max depth>");
     dispatcher.AddCommand("search",f_search, "search <max depth> <pattern>");
@@ -36,18 +32,9 @@ int NodeApp::RegisterCommands(Commands& dispatcher) {
     return 0;
 }
 
-int NodeApp::PWD() {
-    string path = pwd->Name();
-    for ( NodePtr i = pwd->Parent(); !i.IsNull(); i = i->Parent() ) {
-        path = i->Name() + "/\n  " + path;
-    }
-    output->PutString(path + "\n");
-    return 0;
-}
 
-
-int NodeApp::CD(string path_string) {
-    int ret = 0;
+bool NodeApp::CD(string path_string) {
+    bool ret = false;
     NodePtr working = nullptr;
     if ( path_string == "ROOT" ) {
         working = root;
@@ -62,58 +49,22 @@ int NodeApp::CD(string path_string) {
             }
         }
     }
+
     if ( !working.IsNull() ) {
         pwd = working;
-    } else {
-        Search(1,"^" + path_string);
-        //output->PutString("error, no such node: " + path_string + "\n");
-        //ret = 1;
+        ret = true;
     }
+
     return ret;
 }
 
-int NodeApp::PUSHD(string path_string) {
-    NodePtr startingDir = pwd;
-    int ret  = CD(path_string);
-    if ( ret == 0 ) {
-        popdstack.push_front(startingDir);
-        output->PutString(PrintPopdStack());
+Path NodeApp::PWD() {
+    static std::vector<std::string> path;
+    path.clear();
+    for ( NodePtr i = pwd; !i.IsNull(); i = i->Parent() ) {
+        path.push_back(i->Name());
     }
-    return ret;
-}
-
-std::string NodeApp::PrintPopdStack() {
-    std::string lines;
-
-    if ( pwd->Parent().IsNull() ) {
-        lines += pwd->Name();
-    } else {
-        lines += pwd->Parent()->Name() + "/" + pwd->Name();
-    }
-
-    for ( const NodePtr& node: popdstack ) {
-        lines += "\n";
-        if ( node->Parent().IsNull() ) {
-            lines += node->Name();
-        } else {
-            lines += node->Parent()->Name() + "/" + node->Name();
-        }
-    }
-    lines += "\n";
-    return lines;
-}
-
-int NodeApp::POPD() {
-    int ret = 0;
-    if ( popdstack.empty() ) {
-        ret = 1;
-        output->PutString("error: Node stack is empty!\n");
-    } else {
-        pwd = popdstack.front();
-        popdstack.pop_front();
-        output->PutString(PrintPopdStack());
-    }
-    return ret;
+    return Path(path.rbegin(),path.rend());
 }
 
 int NodeApp::Flat(int depth, int max, std::string pattern) {

@@ -22,6 +22,12 @@ Path::Path(const std::vector<std::string>::const_iterator& beg,
 {
 }
 
+Path::Path(const std::vector<std::string>::const_reverse_iterator& beg,
+           const std::vector<std::string>::const_reverse_iterator& end)
+    : path(beg,end)
+{
+}
+
 Path::Path(const Path& rhs) 
     :path(rhs.path)
 {
