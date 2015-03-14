@@ -8,7 +8,11 @@ LINK_CEF_RESOURCES=YES
 
 MODE=CPP
 
-dummy: makefile.include all
+#
+# We do the sym_link job before anything else to make sure libCef is available
+# to link against!
+#
+dummy: makefile.include sym_link all
 
 makefile.include: 
 	$(MAKE) -C DEV_TOOLS/Config/Makefiles/
