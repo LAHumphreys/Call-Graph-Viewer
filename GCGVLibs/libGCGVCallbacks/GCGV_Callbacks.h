@@ -7,7 +7,7 @@
 
 #include "include/cef_client.h"
 #include <CefBaseClient.h>
-#include <GCGVJSHandler.h>
+#include <CefBaseJSHandler.h>
 
 /**
  * Handle events that occur in the application. Note that this could be in
@@ -34,38 +34,21 @@ public:
      */
     virtual ~GCGV_Callbacks();
 
-    // Provide access to the single global instance of this object.
-    static GCGV_Callbacks* GetInstance();
-
     /******************************************************
-     *              CEF Interface
-     ****************************************************/
+    *              Custom Members
+    ****************************************************/
 
-    /*
-     * Handle a message from another process.
-     *
-     * Note that we do not know what process we are on when the function is called..
-     */
-    virtual bool OnProcessMessageReceived(
-        CefRefPtr<CefBrowser> browser,
-        CefProcessId source_process,
-        CefRefPtr<CefProcessMessage> message);
+    /**
+    * Return the Java Script handler
+    */
+    CefRefPtr<CefBaseJSHandler> GetJSHandler();
 
-        /******************************************************
-         *              Custom Members
-         ****************************************************/
+private:
 
-        /**
-         * Return the Java Script handler
-         */
-        CefRefPtr<GCGV_JSHandler> GetJSHandler();
+    CefRefPtr<CefBaseJSHandler> jsHandler_;
 
-    private:
-
-        CefRefPtr<GCGV_JSHandler> jsHandler_;
-
-        // Include the default reference counting implementation.
-        IMPLEMENT_REFCOUNTING(GCGV_Callbacks)
-    };
+    // Include the default reference counting implementation.
+    IMPLEMENT_REFCOUNTING(GCGV_Callbacks)
+};
 
 #endif  // CEF_TESTS_CEFSIMPLE_SIMPLE_HANDLER_H_

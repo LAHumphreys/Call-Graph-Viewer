@@ -8,6 +8,8 @@
 #ifndef GCGVBROWSERAPP_H_
 #define GCGVBROWSERAPP_H_
 
+class CefBaseApp;
+
 #include <include/cef_browser_process_handler.h>
 
 /**
@@ -22,7 +24,7 @@ public:
 	/**
 	 * Default C'tor - nothing to do.
 	 */
-	GCGVBrowser_App();
+	GCGVBrowser_App(CefBaseApp& app);
 
 	/**
 	 * The CEF context has been created. Create a new window and display it.
@@ -49,6 +51,8 @@ private:
 	 * @returns The url that the browser should initialise to
 	 */
 	std::string GetStartUrl();
+
+	CefBaseApp& app;
 
 	// Include the default reference counting implementation.
     IMPLEMENT_REFCOUNTING(GCGVBrowser_App)

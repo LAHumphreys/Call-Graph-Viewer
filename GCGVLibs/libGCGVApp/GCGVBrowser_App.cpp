@@ -12,8 +12,9 @@
 
 #include <env.h>
 
-GCGVBrowser_App::GCGVBrowser_App() {
-
+GCGVBrowser_App::GCGVBrowser_App(CefBaseApp& _app)
+    : app(_app)
+{
 }
 
 void GCGVBrowser_App::OnContextInitialized() {
@@ -23,18 +24,18 @@ void GCGVBrowser_App::OnContextInitialized() {
 	// Information used when creating the native window.
 	CefWindowInfo window_info;
 
-	// SimpleHandler implements browser-level callbacks.
-	CefRefPtr<CefBaseClient> handler(new CefBaseClient);
-	GCGV_Callbacks::InstallNewHandlers(*(handler.get()));
-
 	// Specify CEF browser settings here.
 	CefBrowserSettings browser_settings;
 
 	std::string url = GetStartUrl();
 
 	// Create the first browser window.
-	CefBrowserHost::CreateBrowser(window_info, handler.get(), url,
-			browser_settings, NULL);
+    CefBrowserHost::CreateBrowser(
+        window_info,
+        app.GetClient(),
+        url,
+        browser_settings,
+        NULL);
 }
 
 GCGVBrowser_App::~GCGVBrowser_App() {

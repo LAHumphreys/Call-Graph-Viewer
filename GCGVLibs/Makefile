@@ -1,4 +1,4 @@
-MAKE_DIRS= libGCGVJS libGCGVCallbacks libGCGVApp 
+MAKE_DIRS= libGCGVCallbacks libGCGVApp 
 
 MODE=CPP
 

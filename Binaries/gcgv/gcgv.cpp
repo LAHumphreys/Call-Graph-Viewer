@@ -3,8 +3,8 @@
 // can be found in the LICENSE file.
 
 #include "GCGVBrowser_App.h"
-#include "GCGVRenderer_App.h"
 #include "CefBaseApp.h"
+#include <GCGV_Callbacks.h>
 
 #include <X11/Xlib.h>
 
@@ -40,10 +40,12 @@ int main(int argc, char* argv[]) {
   // browser instance in OnContextInitialized() after CEF has initialized.
   CefRefPtr<CefBaseApp> app(new CefBaseApp);
 
+
   app->Browser().InstallHandler(
-      std::shared_ptr<CefBrowserProcessHandler>(new GCGVBrowser_App));
-  app->Renderer().InstallHandler(
-      std::shared_ptr<CefRenderProcessHandler>(new GCGVRenderer_App));
+      std::shared_ptr<CefBrowserProcessHandler>(
+          new GCGVBrowser_App(*app.get())));
+
+  GCGV_Callbacks::InstallNewHandlers(app->Client());
 
   /************************************************************
    *                  Sub-process Handling
