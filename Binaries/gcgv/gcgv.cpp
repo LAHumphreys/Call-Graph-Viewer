@@ -5,6 +5,7 @@
 #include "GCGVBrowser_App.h"
 #include "CefBaseApp.h"
 #include <GCGV_Callbacks.h>
+#include "CefBaseMainLoop.h"
 
 // Entry point function for all processes.
 int main(int argc, char* argv[]) {
@@ -20,6 +21,6 @@ int main(int argc, char* argv[]) {
 
   GCGV_Callbacks::InstallNewHandlers(app->Client());
 
-  return app->Main(argc,argv);
+  return CefBaseAppUtils::Main(argc,argv,app);
 
 }
