@@ -16,6 +16,7 @@ before_install:
   - sudo apt-get install libgl1-mesa-dev-lts-trusty
   - sudo apt-get install ncurses-dev
   - sudo apt-get install libudev-dev
+  - sudo apt-get install chromium-browser
   - sudo pip install cpp-coveralls --use-mirrors
 
 script: 
