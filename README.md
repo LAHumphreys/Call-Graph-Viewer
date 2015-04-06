@@ -1,6 +1,6 @@
-Call-Graph-Viewer [![Build Status](https://travis-ci.org/Grauniad/Call-Graph-Viewer.png)](https://travis-ci.org/Grauniad/Call-Graph-Viewer) [![Coverage Status](https://coveralls.io/repos/Grauniad/Call-Graph-Viewer/badge.png?branch=master)](https://coveralls.io/r/Grauniad/Call-Graph-Viewer?branch=master)
+Call-Graph-Viewer [![Build Status](https://travis-ci.org/Grauniad/Call-Graph-Viewer.png)](https://travis-ci.org/Grauniad/Call-Graph-Viewer) 
 ==================
-!["Example screen shot showing the annotation, list and tree views"](https://raw.githubusercontent.com/Grauniad/Call-Graph-Viewer/master/ExampleScreenshot.png "Example screen shot showing the annotation, list and tree view in a split-pane mode")
+!["Expample screen shots"](https://raw.githubusercontent.com/Grauniad/Call-Graph-Viewer/master/ExampleScreenshot.png "Example screen shot showing the initial CEF GUI screens")
 
 
 A simple tool for profiling processes using callgraph data.
@@ -16,5 +16,3 @@ It already provides:
 * Simple CSV based input allows manual profile data to be used (e.g see the TCL pluging provided)
 * Configure your own commands in the rc file
 
-Comming Soon:
-* readline integration
