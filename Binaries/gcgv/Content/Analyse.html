@@ -15,16 +15,20 @@
     <!-- Bootstrap theme -->
     <link href="css/bootstrap-theme.min.css" rel="stylesheet">
       
+    <!-- Alertify -->
+    <link href="css/alertify.css" rel="stylesheet">
+    <link href="css/alertify-bootstrap-3.css" rel="stylesheet">
+      
+      
     <!-- Apply our local ovverides -->
     <link href="css/custom.css" rel="stylesheet">
   </head>
 
   <body role="document">
       
-        <!-- Fixed navbar -->
+    <!-- Fixed navbar -->
     <div class="navbar-placeholder"> </div>
 
-      
     <div class="container theme-showcase" role="main">
 
         
@@ -37,10 +41,10 @@
                 <div class="panel-heading">
                   <h3 class="panel-title">Graph Depth</h3>
                 </div>
-                <div class="panel-body">
+                <div class="panel-body depthController">
                   <label> Child Functions: </label> 
-                  <input type="range" name="depth" min="0" max="100" value="20">                 
-                  <span> Maximum Depth: 20</span>
+                  <input type="range" name="depth" min="1" max="100" value="20">                 
+                  <span> Maximum Depth: <span class="depthLabel" > 0 </span></span>
                 </div>
               </div>
             </div><!-- /.col-sm-6 -->
@@ -53,7 +57,7 @@
                   <form class="navbar-form navbar">
                     <div class="input-group">
                       <span class="input-group-addon" id="basic-addon1">Filter</span>
-                      <input type="text" class="form-control" placeholder="main(.*" aria-describedby="basic-addon1">
+                      <input type="text" class="form-control searchFilterBox" placeholder="main(.*" aria-describedby="basic-addon1">
                     </div>
                   </form>
                 </div>
@@ -79,21 +83,49 @@
         </div> <!-- panel-body -->
       </div>     
     </div> <!-- /container -->
-
+      
+      
+    <div id="flatView"> 
+      <table class="table table-hover">
+          <thead>
+              <th> Function Name </th>
+              <th> Calls </th>
+              <th> Total Instructions </th>
+              <th> Average Instructions </th>
+          </thead>
+          <tbody>
+              <tr>
+                  <td>main(int argc, char**argv)</td>
+                  <td>1</td>
+                  <td>54539</td>
+                  <td>54539</td>
+              </tr>
+          </tbody>
+      </table>
+    </div>
 
     <!-- Bootstrap core JavaScript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
     <script src="js/jquery-2.1.3.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
+      
+    <!-- ALERTIFY core JavaScript
+    ================================================== -->
+    <script src="js/alertify.js"></script>
+      
           <!-- Custom Javascript 
   ================================================== -->
+      <script src="js/Logging.js"></script>
+      <script src="js/SelectionTools.js"></script>
       <script src="js/Actions.js"></script>
       <script src="js/Analyse_Model.js"></script>
       <script src="js/Analyse_Navbar.js"></script>
       <script src="js/Analyse_View.js"></script>
       <script src="js/Analyse_Presenter.js"></script>
       <script src="js/Analysis.js"></script>
+        
+        
 
       <script src="js/Analyse_Navbar.js"></script>
   </body>

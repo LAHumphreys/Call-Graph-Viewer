@@ -1,4 +1,4 @@
-/*global $, document, alert, Application, console */
+/*global $, document, alert, Application, console, Logging */
 
 /*
  * Code for interacting with the analysis data-model
@@ -14,10 +14,229 @@ var Analyse = {
     initialise: function () {
         "use strict";
         this.initialiseAnalysisMode();
-        this.initialiseDataTypes();
+        
+        this.startRequest(
+            "GetGraphDetails",
+            {
+            },
+            this.detailsHandler,
+            function (code, msg) {
+                Logging.warning(
+                    "Analyse_Initialise",
+                    "FATAL ERROR: Failed to get graph details:\n" + msg
+                );
+            }
+        );
+    },
+    
+    detailsHandler: function (details) {
+        "use strict";
+        var self;
+        self = Application.model;
+        self.fileName = details.fileName;
+        
+        self.initialiseDataTypes(details);
+        
+        Logging.log_debug_msg(
+            "Analyse_Model.detailsHandler",
+            "Found " + details.units.length + " units"
+        );
+        
+        Application.model.getFlatView();
         
         Application.modelReady();
-    }
+    },
+    
+    /********************************************************************
+     *                    Callgrind file 
+     ********************************************************************/
+    
+    fileName: "",
+    
+    getFileName: function () {
+        "use strict";
+        return this.fileName;
+    },
+    
+    /********************************************************************
+     *                    depth 
+     ********************************************************************/
+    
+    depth: 1,
+    
+    getDepth: function () {
+        "use strict";
+        return this.depth;
+    },
+    
+    setDepth: function (depth) {
+        "use strict";
+        this.depth = depth;
+        Application.presenter.depthChanged(this.depth);
+        
+        this.getFlatView();
+    },
+    
+    /********************************************************************
+     *                    search Text 
+     ********************************************************************/
+    filter: null,
+    
+    clearFilter: function () {
+        "use strict";
+        var updateRequired = false;
+        if (this.filter) {
+            this.filter = null;
+            updateRequired = true;
+        }
+        
+        if (updateRequired) {
+            this.getFlatView();
+        }
+    },
+    
+    setFilter: function (pattern) {
+        "use strict";
+        this.filter = null;
+        
+        var updateRequired = false;
+        if (this.filter) {
+            if (this.filter !== pattern) {
+                this.filter = pattern;
+                updateRequired = true;
+            } // else no update required
+        } else {
+            updateRequired = true;
+            this.filter = pattern;
+        }
+        
+        if (updateRequired) {
+            this.getFlatView();
+        }
+    },
+    
+    getFilter: function () {
+        "use strict";
+        if (this.filter) {
+            return this.filter;
+        } else {
+            return "";
+        }
+    },
+    
+    /********************************************************************
+     *                    Request table data 
+     ********************************************************************/
+    
+    currentFlatSearch: null,
+    nextFlatSearch: null,
+    
+    /**
+     * Entry point for an external party wishing to update the flat view with new data.
+     *
+     * If there is no on-going query we can schedule it immediately. If there is an 
+     * ongoing query, queue the new query (cancelling any currently waiting to be 
+     * dispatched).
+     */
+    getFlatView: function () {
+        "use strict";
+        var filter;
+        
+        this.nextFlatSearch = {
+            depth: this.getDepth(),
+            pageSize: 25,
+            sortMethod: "Total Time"
+        };
+        
+        filter = this.getFilter();
+        if (filter !== "") {
+            this.nextFlatSearch.filter = filter;
+        }
+        
+        this.getNextFlatView();
+    },
+    
+    /*
+     * Manages our queue
+     */
+    getNextFlatView: function () {
+        "use strict";
+        
+        if (this.nextFlatSearch) {
+            if (this.currentFlatSearch) {
+                Logging.log_debug_msg(
+                    "Analyse_Model.getNextFlatView",
+                    "Ongoing search, cannot re-schedule"
+                );
+            } else {
+                this.startFlatViewSearch();
+            }
+        } else {
+            Logging.log_debug_msg(
+                "Analyse_Model.getNextFlatView",
+                "No next search to schedule"
+            );
+        }
+    },
+    
+    /*
+     * Dispatch the query
+     */
+    startFlatViewSearch: function () {
+        "use strict";
+        this.currentFlatSearch = this.nextFlatSearch;
+        this.nextFlatSearch = null;
+        
+        Logging.log_debug_msg(
+            "AnalyseModel.getFlatView",
+            "Sending Request"
+        );
+        
+        this.startRequest(
+            "GetFlatView",
+            this.currentFlatSearch,
+            this.flatViewHandler,
+            this.flatViewError
+        );
+    },
+    
+    /*
+     * Handle a query reject, and flush the queue
+     */
+    flatViewError: function (code, msg) {
+        "use strict";
+        Logging.warning(
+            "AnalyseModel.FlatViewFailed",
+            "Failed to get flat view data: " + msg
+        );
+        
+        Application.presenter.dataLoadFailed("Flat View", msg);
+        
+        var self;
+        
+        self = Application.model;
+        
+        self.currentFlatSearch = null;
+        self.getNextFlatView();
+    },
+    
+    /*
+     * Handle query data, and flush the results
+     */
+    flatViewHandler: function (response) {
+        "use strict";
+        var data, self;
+        Logging.log_debug_msg(
+            "AnalyseModel.FlatViewData",
+            "Got " + response.data.length.toString() + " rows of data"
+        );
+        Application.presenter.setFlatViewData(response.data);
+        
+        self = Application.model;
+        
+        self.currentFlatSearch = null;
+        self.getNextFlatView();
+    },
 
     /********************************************************************
      *                    Analysis Mode
@@ -116,43 +335,62 @@ var Analyse = {
         return $.extend(true, {}, this.dataTypes.types);
     },
     
-    initialiseDataTypes: function () {
+    addDataType: function (code) {
         "use strict";
-        this.dataTypes.add("Total instructions", "Basic Performance", "Ir");
-        this.dataTypes.add("Total memory reads", "Basic Performance", "Dr");
-        this.dataTypes.add("Total memory writes", "Basic Performance", "Dw");
+        if (code === "Ir") {
+            this.dataTypes.add("Total instructions", "Basic Performance", "Ir");
+        } else if (code === "Dr") {
+            this.dataTypes.add("Total memory reads", "Basic Performance", "Dr");
+        } else if (code === "Dw") {
+            this.dataTypes.add("Total memory writes", "Basic Performance", "Dw");
+        } else if (code === "DLmr") {
+            this.dataTypes.add(
+                "Read misses (last line)",
+                "Cache Performance (Cache misses)",
+                "DLmr"
+            );
+        } else if (code === "DLmw") {
+            this.dataTypes.add(
+                "Write misses (last line)",
+                "Cache Performance (Cache misses)",
+                "DLmw"
+            );
+        } else if (code === "ILmr") {
+            this.dataTypes.add(
+                "Instruction misses (last line)",
+                "Cache Performance (Cache misses)",
+                "ILmr"
+            );
+        } else if (code === "D1mr") {
+            this.dataTypes.add(
+                "Read misses (first line)",
+                "First Line Cache Performance (L1 Cache misses)",
+                "D1mr"
+            );
+        } else if (code === "D1mw") {
+            this.dataTypes.add(
+                "Write misses (first line)",
+                "First Line Cache Performance (L1 Cache misses)",
+                "D1mw"
+            );
+        } else if (code === "I1mr") {
+            this.dataTypes.add(
+                "Instruction misses (first line)",
+                "First Line Cache Performance (L1 Cache misses)",
+                "I1mr"
+            );
+        } else {
+            this.dataTypes.add(code, "Other", code);
+        }
+    },
+    
+    initialiseDataTypes: function (details) {
+        "use strict";
+        var i;
         
-        this.dataTypes.add(
-            "Read misses (last line)",
-            "Cache Performance (Cache misses)",
-            "DLmr"
-        );
-        this.dataTypes.add(
-            "Write misses (last line)",
-            "Cache Performance (Cache misses)",
-            "DLmw"
-        );
-        this.dataTypes.add(
-            "Instruction misses (last line)",
-            "Cache Performance (Cache misses)",
-            "ILmr"
-        );
-        
-        this.dataTypes.add(
-            "Read misses (first line)",
-            "First Line Cache Performance (L1 Cache misses)",
-            "D1mr"
-        );
-        this.dataTypes.add(
-            "Write misses (first line)",
-            "First Line Cache Performance (L1 Cache misses)",
-            "D1mw"
-        );
-        this.dataTypes.add(
-            "Instruction misses (first line)",
-            "First Line Cache Performance (L1 Cache misses)",
-            "I1mr"
-        );
+        for (i = 0; i < details.units.length; i += 1) {
+            this.addDataType(details.units[i]);
+        }
         
         this.dataType = this.dataTypes.ids.Ir;
         // TODO: One day this will involve a c++ invocation...
@@ -194,5 +432,5 @@ var Analyse = {
             );
         }
         return ok;
-    },
+    }
 };

@@ -9,6 +9,30 @@ var ModelPrototype = {
         "use strict";
         // Default setup method - do nothing;
         Application.modelReady();
+    },
+    
+    /*
+     * Request data from the backend
+     */
+    startRequest: function (name, request, onSuccess, onFailure) {
+        "use strict";
+        var reqString = "REQUEST_GCGV" + name + " " + JSON.stringify(request);
+        window.gcgvQuery({
+            request: reqString,
+            onSuccess:  function (response) {
+                var resp = JSON.parse(response);
+                onSuccess(resp);
+            },
+            onFailure: onFailure
+        });
+        
+        if (Logging.debugLogging) {
+            Logging.log_debug_msg(
+                "Model.startRequest",
+                "Started request: " + name + "\n" +
+                    "Request Data:\n" + reqString
+            );
+        }
     }
 };
 
@@ -220,6 +244,6 @@ Application.constructor();
 $(document).ready(function () {
     "use strict";
     Logging.debugMode();
-    Select.debugMode();
+    Select.releaseMode();
     Application.start();
 });

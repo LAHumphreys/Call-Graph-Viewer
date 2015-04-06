@@ -1,4 +1,4 @@
-/*global $, document, navbar, Select, Application, alertify, Spinner */
+/*global $, document, navbar, Select, Application, alertify, Spinner, Logging */
 
 var Start_View = {
     /********************************************************************
@@ -63,9 +63,27 @@ var Start_View = {
     initialiseFileInput: function () {
         "use strict";
         var self = this;
+        Application.presenter.fileListPatternChanged("");
+        
         this.getFileInput().keypress(function (e) {
             self.fileInputKeyPressHandler(e);
         });
+        
+        this.getFileInput().keyup(function (e) {
+            Application.presenter.fileListPatternChanged(this.value);
+        });
+        
+        this.setFileInputSuggestions(["Hello", "World"]);
+    },
+    
+    setFileInputSuggestions: function (suggestions) {
+        "use strict";
+        this.getFileInput().autocomplete({
+            source: suggestions,
+            delay: 0
+        });
+        
+        this.getFileInput().autocomplete("search", this.getFileInput().val());
     },
     
     fileInputKeyPressHandler: function (e) {

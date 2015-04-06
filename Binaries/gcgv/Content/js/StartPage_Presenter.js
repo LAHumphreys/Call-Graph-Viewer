@@ -18,6 +18,22 @@ var Start_Presenter = {
     },
     
     /********************************************************************
+     *                         File finding...
+     ********************************************************************/
+    
+    fileListChanged: function () {
+        "use strict";
+        Application.view.setFileInputSuggestions(
+            Application.model.getMatchingFiles()
+        );
+    },
+    
+    fileListPatternChanged: function (patt) {
+        "use strict";
+        Application.model.updateMatchingFiles(patt + "*");
+    },
+    
+    /********************************************************************
      *                         Load Handling...
      ********************************************************************/
     

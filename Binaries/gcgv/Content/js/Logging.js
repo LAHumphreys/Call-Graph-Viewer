@@ -32,7 +32,7 @@ var Logging = {
     
     debug: function (context, msg) {
         "use strict";
-        console.log(DEV_TOOLS_Log_Format("DBEUG 1", context, msg));
+        console.log(DEV_TOOLS_Log_Format("DEBUG 1", context, msg));
     },
     
     logElement: function (name, pattern, items, level) {
@@ -54,6 +54,8 @@ var Logging = {
                 level = "WARNING";
             }
         }
+        
         console.log(DEV_TOOLS_Log_Format(level, name, msg));
+        
     }
 };
