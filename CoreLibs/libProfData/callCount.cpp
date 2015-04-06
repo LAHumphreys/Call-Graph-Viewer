@@ -140,15 +140,9 @@ void CallCount::PopulateTables( unsigned tableSize,
                                 vector<call_pair>& mostTotalTime, 
                                 vector<call_pair>& mostTimePerCall) const
 {
-    mostTotalTime.resize(tableSize);
-    mostTimePerCall.resize(tableSize);
+    GetMostTotalTime(mostTotalTime,tableSize);
 
-    // Select the tableSize most expensive function in terms of total time
-    partial_sort_copy(fcalls.begin(),fcalls.end(),
-                      mostTotalTime.begin(),mostTotalTime.end(),
-                      [] (const call_pair& lhs, const call_pair& rhs) -> bool {
-                          return lhs.second[0] > rhs.second[0];
-                      });
+    mostTimePerCall.resize(tableSize);
 
     // Select the tableSize most expensive function in terms time per call
     partial_sort_copy(fcalls.begin(),fcalls.end(),
@@ -163,6 +157,7 @@ void CallCount::PopulateTables( unsigned tableSize,
                       });
 }
 
+
 void CallCount::PopulateTables( unsigned tableSize, 
                                 vector<call_pair>& mostTotalTime, 
                                 vector<call_pair>& mostTimePerCall,
@@ -173,28 +168,16 @@ void CallCount::PopulateTables( unsigned tableSize,
     /*
      * First filter the list...
      */
-    filteredCalls.reserve(fcalls.size());
-    for ( const call_pair& call : fcalls) {
-        if ( patternRegex.Search(call.first) ) {
-            filteredCalls.push_back(call);
-        }
-    }
+    GetFilteredSelection(patternRegex, filteredCalls);
 
     if ( tableSize > filteredCalls.size() ) {
-        mostTotalTime.resize(filteredCalls.size());
         mostTimePerCall.resize(filteredCalls.size());
     } else {
-        mostTotalTime.resize(tableSize);
         mostTimePerCall.resize(tableSize);
     }
 
+    SortByMostTime(filteredCalls,mostTotalTime,tableSize);
 
-    // Select the tableSize most expensive function in terms of total time
-    partial_sort_copy(filteredCalls.begin(),filteredCalls.end(),
-                      mostTotalTime.begin(),mostTotalTime.end(),
-                      [=, &patternRegex] (const call_pair& lhs, const call_pair& rhs) -> bool {
-                          return lhs.second[0] > rhs.second[0];
-                      });
 
     partial_sort_copy(filteredCalls.begin(),filteredCalls.end(),
                       mostTimePerCall.begin(),mostTimePerCall.end(),
@@ -208,6 +191,22 @@ void CallCount::PopulateTables( unsigned tableSize,
                                      rhs.second[0] /rhs.second.calls);
                       });
 }
+
+void CallCount::GetFilteredSelection(
+    const RegPattern& patternRegex,
+    vector<call_pair>& filteredCalls) const
+{
+    /*
+     * First filter the list...
+     */
+    filteredCalls.reserve(fcalls.size());
+    for (const call_pair& call : fcalls) {
+        if (patternRegex.Search(call.first)) {
+            filteredCalls.push_back(call);
+        }
+    }
+}
+
 
 void CallCount::PrintWideRow(stringstream& output,
                              const std::string& name, 
@@ -318,4 +317,56 @@ void CallCount::PrintTable(const string& name,
         }
         output << it.first << endl;
     }
+}
+
+void CallCount::GetMostTotalTime(
+    std::vector<call_pair>& sortedCalls,
+    unsigned tableSize) const
+{
+    if (tableSize > fcalls.size()) {
+        tableSize = fcalls.size();
+    }
+
+    sortedCalls.resize(tableSize);
+
+    // Select the tableSize most expensive function in terms of total time
+    partial_sort_copy(fcalls.begin(),fcalls.end(),
+                      sortedCalls.begin(),sortedCalls.end(),
+                      [] (const call_pair& lhs, const call_pair& rhs) -> bool {
+                          return lhs.second[0] > rhs.second[0];
+                      });
+
+}
+
+void CallCount::GetMostTotalTime(
+    SortedCallList& sortedCalls,
+    const RegPattern& patternRegex,
+    unsigned tableSize) const
+{
+    vector<call_pair> filteredCalls;
+    /*
+     * First filter the list...
+     */
+    GetFilteredSelection(patternRegex, filteredCalls);
+
+    SortByMostTime(filteredCalls,sortedCalls,tableSize);
+}
+
+void CallCount::SortByMostTime(
+    const std::vector<call_pair>& filteredCalls,
+    std::vector<call_pair>& mostTotalTime,
+    unsigned tableSize) const
+{
+
+    if ( tableSize > filteredCalls.size() ) {
+        mostTotalTime.resize(filteredCalls.size());
+    } else {
+        mostTotalTime.resize(tableSize);
+    }
+    // Select the tableSize most expensive function in terms of total time
+    partial_sort_copy(filteredCalls.begin(),filteredCalls.end(),
+                      mostTotalTime.begin(),mostTotalTime.end(),
+                      [=] (const call_pair& lhs, const call_pair& rhs) -> bool {
+                          return lhs.second[0] > rhs.second[0];
+                      });
 }

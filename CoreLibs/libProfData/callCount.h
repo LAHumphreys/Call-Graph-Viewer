@@ -36,6 +36,7 @@ public:
     };
 
     using call_pair = std::pair<std::string,Calls>;
+    using SortedCallList = std::vector<call_pair>;
 
     /*
      * Register a new call with the class
@@ -54,6 +55,17 @@ public:
     std::string WidePrint(unsigned tableSize=0) const;
 
     std::string FilteredPrint(const std::string& pattern, unsigned tableSize = 0) const;
+
+    void GetMostTotalTime(
+        SortedCallList& sortedCalls,
+        unsigned tableSize = 0) const;
+
+    void GetMostTotalTime(
+        SortedCallList& sortedCalls,
+        const RegPattern& patternRegex,
+        unsigned tableSize = 0) const;
+
+
 private:
     /*
      * Helper function to draw a results table. If average is set to
@@ -77,6 +89,15 @@ private:
                       const std::string& name, 
                       const int& calls, 
                       const long& usecs) const;
+
+    void GetFilteredSelection(
+        const RegPattern& patternRegex,
+        std::vector<call_pair>& filteredCalls) const;
+
+    void SortByMostTime(
+        const std::vector<call_pair>& filteredCalls,
+        std::vector<call_pair>& mostTotalTime,
+        unsigned tableSize) const;
 
     std::unordered_map<std::string,Calls> fcalls;
   

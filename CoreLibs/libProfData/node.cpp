@@ -351,9 +351,7 @@ string Node::Tabulate( int depth,
                        const string& filter ) {
     CallCount counter;
 
-    ForEach([=, &counter] (NodePtr node) -> void {
-        node->AddChildren(counter,depth);
-    });
+    Tabulate(counter,depth);
 
     stringstream output;
 
@@ -368,4 +366,11 @@ string Node::Tabulate( int depth,
     }
 
     return output.str();
+}
+
+
+void Node::Tabulate(CallCount& counter, int depth) {
+    ForEach([=, &counter] (NodePtr node) -> void {
+        node->AddChildren(counter,depth);
+    });
 }

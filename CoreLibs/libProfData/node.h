@@ -93,6 +93,11 @@ public:
     // Add all of our children to the counter;
     void AddChildren(CallCount& counter, int depth);
 
+    /**
+     * Tabulate the child nodes.
+     */
+    void Tabulate(CallCount& counter,int depth =1);
+
     /*
      * Return a string detailing the children of this node...
      */
