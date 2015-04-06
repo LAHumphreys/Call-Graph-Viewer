@@ -7,6 +7,8 @@
 
 #include "GCGVBrowser_App.h"
 #include "GCGV_Callbacks.h"
+#include "GCGVReqNavigate.h"
+#include <memory>
 
 #include "include/wrapper/cef_helpers.h"
 
@@ -27,6 +29,8 @@ void GCGVBrowser_App::OnContextInitialized() {
 	// Specify CEF browser settings here.
 	CefBrowserSettings browser_settings;
 
+	browser_settings.file_access_from_file_urls = STATE_ENABLED;
+
 	std::string url = GetStartUrl();
 
 	// Create the first browser window.
@@ -39,6 +43,14 @@ void GCGVBrowser_App::OnContextInitialized() {
 }
 
 GCGVBrowser_App::~GCGVBrowser_App() {
+}
+
+void GCGVBrowser_App::InstallHandlers(GCGV_Callbacks& callbacks) {
+    std::shared_ptr<GCGVReqNavigate> navHandler(new GCGVReqNavigate(this));
+
+    callbacks.GetJSHandler()->ReqReps().InstallHandler(
+        "GCGVNavigate",
+        navHandler);
 }
 
 std::string GCGVBrowser_App::GetStartUrl() {
@@ -55,5 +67,14 @@ std::string GCGVBrowser_App::GetStartUrl() {
 		std::string pwd = ENV::GetEnvString("PWD");
 		url = "file://" + pwd + "/Binaries/gcgv/Content/StartPage.html";
 	}
+
+	size_t prefixIdx = url.rfind("/");
+
+	if ( prefixIdx != url.npos ) {
+	    baseUrl = url.substr(0,prefixIdx);
+	} else {
+	    baseUrl = url;
+	}
+
 	return url;
 }

@@ -11,6 +11,7 @@
 class CefBaseApp;
 
 #include <include/cef_browser_process_handler.h>
+#include <GCGV_Callbacks.h>
 
 /**
  * Handles application level events in the UI thread (Browser). Its primary
@@ -25,6 +26,8 @@ public:
 	 * Default C'tor - nothing to do.
 	 */
 	GCGVBrowser_App(CefBaseApp& app);
+
+    void InstallHandlers(GCGV_Callbacks& callbacks);
 
 	/**
 	 * The CEF context has been created. Create a new window and display it.
@@ -42,6 +45,8 @@ public:
 	 * D'tor - nothing to do (but see reference counting...)
 	 */
 	virtual ~GCGVBrowser_App();
+
+	const std::string& GetBaseUrl() const { return baseUrl; }
 private:
 	/**
 	 * Calculate the starting URL. This will default to the Content provided by the
@@ -53,6 +58,7 @@ private:
 	std::string GetStartUrl();
 
 	CefBaseApp& app;
+	std::string baseUrl;
 
 	// Include the default reference counting implementation.
     IMPLEMENT_REFCOUNTING(GCGVBrowser_App)

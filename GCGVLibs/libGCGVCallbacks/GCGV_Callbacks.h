@@ -4,6 +4,7 @@
 #include "include/cef_client.h"
 #include <CefBaseClient.h>
 #include <CefBaseJSHandler.h>
+#include <GCGVCallgraph.h>
 
 /**
  * Handle events that occur in the application. Note that this could be in
@@ -18,7 +19,11 @@
 class GCGV_Callbacks: public CefClient {
 public:
 
-    static void InstallNewHandlers(CefBaseClient& client);
+    static std::shared_ptr<GCGV_Callbacks> InstallNewHandlers(
+        CefBaseClient& client,
+        bool testLibs=false);
+
+    static void InstallWhiteList();
 
     /**
      * C'tor - Initialise the child handlers
@@ -42,6 +47,7 @@ public:
 private:
 
     CefRefPtr<CefBaseJSHandler> jsHandler_;
+    GCGV_Callgraph              callGraph_;
 
     // Include the default reference counting implementation.
     IMPLEMENT_REFCOUNTING(GCGV_Callbacks)

@@ -14,12 +14,15 @@ int main(int argc, char* argv[]) {
   // browser instance in OnContextInitialized() after CEF has initialized.
   CefRefPtr<CefBaseApp> app(new CefBaseApp);
 
+  std::shared_ptr<GCGVBrowser_App> browser(new GCGVBrowser_App(*app.get()));
 
   app->Browser().InstallHandler(
-      std::shared_ptr<CefBrowserProcessHandler>(
-          new GCGVBrowser_App(*app.get())));
+      std::shared_ptr<CefBrowserProcessHandler>(browser));
 
-  GCGV_Callbacks::InstallNewHandlers(app->Client());
+  std::shared_ptr<GCGV_Callbacks> callbacks =
+          GCGV_Callbacks::InstallNewHandlers(app->Client());
+
+  browser->InstallHandlers(*callbacks);
 
   return CefBaseAppUtils::Main(argc,argv,app);
 
