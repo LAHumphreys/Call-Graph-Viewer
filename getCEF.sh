@@ -16,8 +16,8 @@ rm cef_binary_3.2171.1979_linux64.7z
 
 pushd cef_binary_3.2171.1979_linux64
 
-CXX=g++-4.8 make -j 8 libcef_dll_wrapper BUILDTYPE=Debug
-CXX=g++-4.8 make -j 8 libcef_dll_wrapper BUILDTYPE=Release
+CXX=g++-4.9 make -j 8 libcef_dll_wrapper BUILDTYPE=Debug
+CXX=g++-4.9 make -j 8 libcef_dll_wrapper BUILDTYPE=Release
 
 mv  Debug/* out/Debug/
 mv  Release/* out/Release/
