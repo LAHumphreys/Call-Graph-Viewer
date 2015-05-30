@@ -4,6 +4,7 @@
 using namespace std;
 
 int FromString(testLogger& log);
+int ToString(testLogger& log);
 int Copy(testLogger& log);
 int TrailingSlash(testLogger& log);
 int Extend(testLogger& log);
@@ -12,6 +13,7 @@ int SplicingPath(testLogger& log);
 int main(int argc, const char *argv[])
 {
     Test("Creating Path From String..",FromString).RunTest(); 
+    Test("Creating string from path",ToString).RunTest();
     Test("Creating Path From String, testing trailing '/'..",TrailingSlash).RunTest(); 
     Test("Creating Path From Copy..",Copy).RunTest(); 
     Test("Creating Path with extension...",Extend).RunTest(); 
@@ -77,6 +79,17 @@ int CheckRefPath(testLogger& log, const Path& path) {
 int FromString(testLogger& log) {
     Path path(refPath);
     return CheckRefPath(log,path);
+}
+
+int ToString(testLogger& log) {
+    Path path(refPath);
+    Path newPath(path.ToString());
+
+    if (refPath != path.ToString()) {
+        log << "Unexpected string for path: " << path.ToString();
+        return 0;
+    }
+    return CheckRefPath(log,newPath);
 }
 
 int TrailingSlash(testLogger& log) {

@@ -83,7 +83,7 @@ public:
     }
 
     // Add a node, and all of its descedents to the cache
-    void AddTree(NodePtr& node);
+    void AddTree(NodePtr& node, int depth = -1);
 
     // Search for entries in the tree
     SearchResult Search ( const std::string& name);

@@ -53,6 +53,14 @@ public:
     Path(const std::vector<std::string>::const_reverse_iterator& beg,
          const std::vector<std::string>::const_reverse_iterator& end);
 
+    /**
+        * Populate the destination array with a full copy of the path. Each
+        * item represents a node in the path, with the first item being ROOT,
+        * and the final item being the current node.
+        */
+    void GetPath(std::vector<std::string>& dest);
+
+
     /*
      * This is the iterator for walking the call graph
      */
@@ -62,6 +70,7 @@ public:
             std::vector<std::string>::const_iterator c,
             const std::vector<std::string>& v)
           : current(c) ,path(v) {}
+
 
         // Return a Path object terminating at this node
         Path GetPath() const;
@@ -87,6 +96,8 @@ public:
     size_t Length() const { 
         return path.size();
     }
+
+    std::string ToString() const;
 
     /*
      * Return a node pointer for walking the tree

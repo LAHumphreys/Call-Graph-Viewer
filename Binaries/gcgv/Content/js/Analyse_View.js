@@ -1,4 +1,4 @@
-/*global $, document, NavBar, Application, extend, console, self, Select */
+/*global $, document, NavBar, Application, extend, console, self, Select, Finder */
 
 var Analyse_View = {
     /*
@@ -10,11 +10,13 @@ var Analyse_View = {
     setup: function () {
         "use strict";
         extend(this, NavBar);
+        extend(this, Finder);
         
         this.setupDepthSlider();
         this.setupSearchBox();
         
         this.installNavbar();
+        this.installFinder();
     },
     
     setupDepthSlider: function () {
@@ -70,6 +72,27 @@ var Analyse_View = {
         );
     },
     
+    /**
+     * Return the ordered list containing the nodes making up the pwd
+     */
+    getPWDBreadcrumbs: function () {
+        "use strict";
+        return Select.selectExactly(
+            "Breadcrumbs list",
+            "ol.breadcrumb",
+            1
+        );
+    },
+    
+    getPWDBreadcrumbsTitle: function () {
+        "use strict";
+        return Select.selectExactly(
+            "Breadcrumbs Ttile",
+            "h3#breadcrumbsTitle",
+            1
+        );
+    },
+    
     /********************************************************************
      *                             Search Box
      ********************************************************************/
@@ -108,6 +131,36 @@ var Analyse_View = {
     },
     
     /********************************************************************
+     *                         Bread Crumbs
+     *******************************************************************/
+    
+    clearPWD: function () {
+        "use strict";
+        this.getPWDBreadcrumbs().empty();
+    },
+    
+    addChildNodeToPWD: function (node, path) {
+        "use strict";
+        var item, link, breadcrumbs;
+        
+        // Deactivate the pwd
+        breadcrumbs =  this.getPWDBreadcrumbs();
+        
+        breadcrumbs.children("li:last").removeClass("active");
+        
+        item = $("<li></li>");
+        link = $("<a href='#'>" + node + "</a>");
+        link.click(function (e) {
+            Application.presenter.nodeSelected(path);
+        });
+        item.append(link);
+        item.addClass("active");
+        breadcrumbs.append(item);
+        
+        this.getPWDBreadcrumbsTitle().text(node);
+    },
+    
+    /********************************************************************
      *                         Flat-View Data
      ********************************************************************/
     
@@ -118,14 +171,16 @@ var Analyse_View = {
     
     addRow: function (row) {
         "use strict";
-        this.getTableBody().append(
-            $("<tr>"
+        var dom_row =  $("<tr>"
                 + "<td>" + row.name + "</td>"
                 + "<td>" + row.calls + "</td>"
                 + "<td>" + row.total + "</td>"
                 + "<td>" + row.average + "</td>" +
-                "</tr>")
-        );
+                "</tr>");
+        this.getTableBody().append(dom_row);
+        dom_row.click(function (e) {
+            Application.presenter.rowSelected(row.name);
+        });
     },
     
     /*
@@ -137,7 +192,7 @@ var Analyse_View = {
     componentDone: function () {
         "use strict";
         
-        if (this.navbarReady) {
+        if (this.navbarReady && this.finderReady) {
             Application.viewCreated();
         }
     }

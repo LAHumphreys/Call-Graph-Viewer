@@ -14,6 +14,9 @@
     <link href="css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap theme -->
     <link href="css/bootstrap-theme.min.css" rel="stylesheet">
+
+    <!-- Jquery UI CSSc -->
+    <link rel="stylesheet" href="css/jquery-ui.css">
       
     <!-- Alertify -->
     <link href="css/alertify.css" rel="stylesheet">
@@ -35,6 +38,22 @@
         
               <div class="panel panel-default">
         <div class="panel-body">
+          <div class="row">
+            <div class="col-sm-12">
+              <div class="panel panel-default">
+                <div class="panel-heading">
+                  <h3 class="panel-title" id="breadcrumbsTitle">Render(int count, void* data)</h3>
+                </div>
+                <div class="panel-body">
+                  <ol class="breadcrumb">
+                    <li><a href="#">main</a></li>
+                    <li><a href="#">UpdateScreen</a></li>
+                    <li class="active">Render</li>
+                  </ol>
+                </div>
+              </div>
+            </div><!-- /.col-sm-12 -->
+          </div>
           <div class="row">
             <div class="col-sm-6">
               <div class="panel panel-default">
@@ -64,25 +83,12 @@
               </div>
             </div><!-- /.col-sm-6 -->
           </div>   
-          <div class="row">
-            <div class="col-sm-12">
-              <div class="panel panel-default">
-                <div class="panel-heading">
-                  <h3 class="panel-title">Render(int count, void* data)</h3>
-                </div>
-                <div class="panel-body">
-                  <ol class="breadcrumb">
-                    <li><a href="#">main</a></li>
-                    <li><a href="#">UpdateScreen</a></li>
-                    <li class="active">Render</li>
-                  </ol>
-                </div>
-              </div>
-            </div><!-- /.col-sm-12 -->
-          </div>
         </div> <!-- panel-body -->
       </div>     
     </div> <!-- /container -->
+      
+    <div class="Analyse-Finder-Placceholder">
+    </div>
       
       
     <div id="flatView"> 
@@ -104,6 +110,9 @@
       </table>
     </div>
 
+    <div class="Analyse-Finder-Placeholder">
+    </div>
+
     <!-- Bootstrap core JavaScript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
@@ -113,6 +122,10 @@
     <!-- ALERTIFY core JavaScript
     ================================================== -->
     <script src="js/alertify.js"></script>
+
+    <!-- JQUERY UI
+    ================================================== -->
+    <script src="js/jquery-ui.min.js"></script>
       
           <!-- Custom Javascript 
   ================================================== -->
@@ -121,6 +134,7 @@
       <script src="js/Actions.js"></script>
       <script src="js/Analyse_Model.js"></script>
       <script src="js/Analyse_Navbar.js"></script>
+      <script src="js/Analyse_Finder.js"></script>
       <script src="js/Analyse_View.js"></script>
       <script src="js/Analyse_Presenter.js"></script>
       <script src="js/Analysis.js"></script>

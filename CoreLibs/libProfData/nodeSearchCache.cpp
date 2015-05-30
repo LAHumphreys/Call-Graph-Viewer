@@ -29,10 +29,14 @@ SearchCache::SearchCache() {
     theCache["__NULL__"];
 }
 
-void SearchCache::AddTree(NodePtr& node ) {
+void SearchCache::AddTree(NodePtr& node, int depth) {
     AddNode(node);
-    node->ForEach([=] ( NodePtr&& node ) -> void {
-        this->AddTree(node); });
+    --depth;
+    if (depth != -1) {
+        node->ForEach([=] ( NodePtr&& node ) -> void {
+            this->AddTree(node, depth);
+        });
+    }
 }
 
 
@@ -58,7 +62,8 @@ void RegSearch::AddTree(NodePtr& node, int depth) {
     --depth;
     if ( depth != 0 ) {
         node->ForEach([=] ( NodePtr&& node ) -> void {
-            this->AddTree(node, depth); });
+            this->AddTree(node, depth);
+        });
     }
 }
 

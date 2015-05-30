@@ -12,6 +12,8 @@
 #include <OSTools.h>
 #include "GCGVReqGraphDetails.h"
 #include <GCGVReqFlatView.h>
+#include <GCGVReqChangeNode.h>
+#include <GCGVReqGetNodes.h>
 
 /****************************************************************************
  *                      Load a new callgrind file
@@ -71,7 +73,8 @@ private:
  ****************************************************************************/
 
 GCGV_Callgraph::GCGV_Callgraph()
-    :cwd(nullptr)
+    :cwd(nullptr),
+     root(nullptr)
 {
 }
 
@@ -93,6 +96,16 @@ void GCGV_Callgraph::InstallHandlers(CefBaseJSRequestReplyHandler& ReqReps) {
         new GCGVReqFlatView(this));
 
     ReqReps.InstallHandler("GCGVGetFlatView",flatHandler);
+
+    std::shared_ptr<GCGV_ReqChangeNode> cdHandler (
+        new GCGV_ReqChangeNode(this));
+
+    ReqReps.InstallHandler("GCGVChangeNode",cdHandler);
+
+    std::shared_ptr<GCGV_ReqGetNodes> getNodesHandler (
+        new GCGV_ReqGetNodes(this));
+
+    ReqReps.InstallHandler("GCGVFindNodes",getNodesHandler);
 }
 
 bool GCGV_Callgraph::LoadGraph(const std::string& fname) {
@@ -106,10 +119,42 @@ bool GCGV_Callgraph::LoadGraph(const std::string& fname) {
 
     if (ok) {
         this->fname = OS::Basename(fname);
-        cwd = graph->RootNode();
+        root = graph->RootNode();
+        cwd = root;
     } else {
         graph.reset(nullptr);
     }
 
     return ok;
+}
+
+Path GCGV_Callgraph::PWD() const {
+    return GetPath(cwd);
+}
+
+Path GCGV_Callgraph::GetPath(NodePtr node) {
+    static std::vector<std::string> path;
+    path.clear();
+    for ( NodePtr i = node; !i.IsNull(); i = i->Parent() ) {
+        path.push_back(i->Name());
+    }
+    return Path(path.rbegin(),path.rend());
+}
+
+bool GCGV_Callgraph::ChangeNode(const Path& path) {
+    bool changed = false;
+    NodePtr node = nullptr;
+
+    if (path.Root().Name() == "ROOT") {
+        node = root->GetNode(path.Root().Next());
+    } else {
+        node = cwd->GetNode(path);
+    }
+
+    if (!node.IsNull()) {
+        cwd = node;
+        changed = true;
+    }
+
+    return changed;
 }

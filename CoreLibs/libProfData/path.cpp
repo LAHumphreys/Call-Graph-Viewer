@@ -38,6 +38,23 @@ Path::Path(Path&& rhs)
 {
 }
 
+std::string Path::ToString() const {
+    static std::string pwd;
+    pwd.clear();
+
+    bool first = true;
+    for ( PathNode n = Root(); !n.IsEnd(); ++n) {
+        if ( first ) {
+            first = false;
+            pwd = n.Name();
+        } else {
+            pwd += "/" + n.Name();
+        }
+    }
+
+    return pwd;
+}
+
 Path& Path::operator=(Path&& rhs) {
     path = std::move(rhs.path);
     return *this;
@@ -62,3 +79,6 @@ Path Path::PathNode::GetPath() const {
     return Path(path.begin(),current+1);
 }
 
+void Path::GetPath(std::vector<std::string>& dest) {
+    dest = path;
+}

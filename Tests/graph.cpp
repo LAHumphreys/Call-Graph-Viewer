@@ -13,6 +13,7 @@ int CheckResultsWithCosts(testLogger& log);
 int CheckShortResults(testLogger& log);
 int PathAccess(testLogger& log);
 int Search(testLogger& log);
+int SearchMaxDepth(testLogger& log);
 int CheckRegSearch(testLogger& log);
 int CheckLocalRegSearch(testLogger& log);
 int MakeNode(testLogger& log);
@@ -35,6 +36,7 @@ int main(int argc, const char *argv[])
     Test("Printing Results for two units...",CheckResultsWithCosts).RunTest();
     Test("Printing Short Results...",CheckShortResults).RunTest();
     Test("Seaching the graph",Search).RunTest();
+    Test("Seaching the graph with a limited depth",SearchMaxDepth).RunTest();
     Test("Seaching the graph with regex",CheckRegSearch).RunTest();
     Test("Seaching the local graph with regex",CheckLocalRegSearch).RunTest();
     Test("Testing child creation",MakeNode).RunTest();
@@ -775,6 +777,99 @@ int Search(testLogger& log) {
     }
 
     ++f3_result;
+    ++f3_result;
+
+    if ( f3_result.Remaining() != 0 ) {
+        log << "Search returned non-zero when past the end of a search" << endl;
+        log << f3_result.Remaining();
+        return 1;
+    }
+
+    if ( f3_result.Ok() ) {
+        log << "Search returned ok when past the end of a search" << endl;
+        return 1;
+    }
+
+
+    if ( !f3_result.Node().IsNull() ) {
+        log << "Result is not null when past the end of the search!" << endl;
+        return 1;
+    }
+
+    return 0;
+}
+
+int SearchMaxDepth(testLogger& log) {
+    Node rootNode;
+    Path rootPath("");
+
+    Path mainPath("main");
+    Path f1path("main/f1");
+
+    /*
+     * ROOT
+     * |
+     * main---F1 (2x101)---F2 (2x102)--NULL
+     *      |            |
+     *      |            --F3 (1x103)--NULL
+     *      --F3 (2x103)
+     */
+
+    // Add main to root
+    rootNode.AddCall(rootPath.Root(),"main",100);
+
+    // Add F1 to main
+    rootNode.AddCall(mainPath.Root(),"f1",101);
+
+    // Add F2 and F3 to F1
+    rootNode.AddCall(f1path.Root(),"f2",102);
+    rootNode.AddCall(f1path.Root(),"f2",102);
+    rootNode.AddCall(f1path.Root(),"f3",103);
+
+    // Add F3 to main
+    rootNode.AddCall(mainPath.Root(),"f3",103);
+    rootNode.AddCall(mainPath.Root(),"f3",103);
+
+    // Add F1 to main (again)
+    rootNode.AddCall(mainPath.Root(),"f1",101);
+
+    SearchCache cache;
+    NodePtr rootPtr = rootNode.THIS();
+
+    cache.AddTree(rootPtr,2);
+
+    SearchResult result = cache.Search("XXX");
+
+    if ( result.Ok() ) {
+        log << "Search returned ok from a stupid search! " << endl;
+        return 1;
+    }
+
+    if ( result.Remaining() != 0 ) {
+        log << "Search returned non-zero from a stupid search! " << endl;
+        log << result.Remaining();
+        return 1;
+    }
+
+    if ( !result.Node().IsNull() ) {
+        log << "Result is not null from a stupid search!" << endl;
+        return 1;
+    }
+
+    SearchResult f3_result = cache.Search("f3");
+
+    if ( f3_result.Remaining() != 0 ) {
+        log << "Expected only no more results!" << endl;
+        log << f3_result.Remaining();
+        return 1;
+    }
+
+    if ( f3_result.Node()->Parent()->Name() != "main" ) {
+        log << "I thought the frist result would be main :(" << endl;
+        log << f3_result.Node()->Parent()->Name() << endl;
+        return 1;
+    }
+
     ++f3_result;
 
     if ( f3_result.Remaining() != 0 ) {

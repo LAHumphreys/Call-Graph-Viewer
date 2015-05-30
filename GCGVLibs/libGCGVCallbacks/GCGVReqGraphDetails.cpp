@@ -13,6 +13,8 @@ std::string GCGVCallgraph_GetGraphDetails::OnRequest(RequestContext& context) {
 
     reply.Get<fileName>() = parent->FileName();
 
+    parent->PWD().GetPath(reply.Get<path>());
+
     LookupUnits();
 
     return reply.GetJSONString();

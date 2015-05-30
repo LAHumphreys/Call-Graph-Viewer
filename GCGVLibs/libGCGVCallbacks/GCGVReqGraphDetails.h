@@ -24,8 +24,9 @@
  *
  * REPLY:
  *    {
- *        fileName:  "gather.out"
- *        units: ["Ir", "Dr"]
+ *        fileName:  "gather.out",
+ *        units: ["Ir", "Dr"],
+ *        path: ["ROOT"]
  *    }
  */
 class GCGVCallgraph_GetGraphDetails: public CefBaseJSRequestReply {
@@ -41,7 +42,8 @@ private:
     void LookupUnits();
     NewStringField(fileName);
     NewStringArrayField(units);
-    typedef SimpleParsedJSON<fileName,units> Reply;
+    NewStringArrayField(path);
+    typedef SimpleParsedJSON<fileName,units,path> Reply;
 
     Reply   reply;
 

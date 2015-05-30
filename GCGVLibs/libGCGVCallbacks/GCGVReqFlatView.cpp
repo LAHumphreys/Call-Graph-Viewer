@@ -28,10 +28,10 @@ std::string GCGVReqFlatView::OnRequest(RequestContext& context) {
         long average = double(total) / calls.calls;
 
         builder.StartAnonymousObject();
-        builder.Add("name",name);
-        builder.Add("calls",calls.calls);
-        builder.Add("total",total);
-        builder.Add("average",average);
+            builder.Add("name",name);
+            builder.Add("calls",calls.calls);
+            builder.Add("total",total);
+            builder.Add("average",average);
         builder.EndObject();
     }
 

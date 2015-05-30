@@ -67,7 +67,21 @@ var ViewPrototype = {
             cancel: noChoice
         }});
         alertify.confirm(msg, fn);
-    }
+    },
+
+    /********************************************************************
+     *                         Utility Methods
+     ********************************************************************/
+
+     getScreenWidth: function () {
+         "use strict";
+         return $(window).width();
+     },
+
+     getScreenHeight: function () {
+         "use strict";
+         return $(window).height();
+     },
 };
 
 var PresenterPrototpye = {
@@ -243,7 +257,7 @@ Application.constructor();
  */
 $(document).ready(function () {
     "use strict";
-    Logging.debugMode();
+    Logging.releaseMode();
     Select.releaseMode();
     Application.start();
 });

@@ -23,3 +23,32 @@ div.filter-panel-body div.filter-control
 div.filter-panel-body div.filter-control input.search-box {
     width: 90%;
 }
+
+table.selectionTable {
+    width: 100%;
+    table-layout: fixed;
+}
+
+table.selectionTable td.name {
+    width: 50%;
+}
+
+table.selectionTable th.name {
+    width: 50%;
+}
+
+table.selectionTable td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+table.selectionTable tr {
+    cursor: pointer;
+}
+
+table.selectionTable tr.info td {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+}

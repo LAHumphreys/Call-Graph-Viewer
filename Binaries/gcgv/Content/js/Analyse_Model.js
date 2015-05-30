@@ -36,6 +36,8 @@ var Analyse = {
         self.fileName = details.fileName;
         
         self.initialiseDataTypes(details);
+
+        self.setPWD(details.path);
         
         Logging.log_debug_msg(
             "Analyse_Model.detailsHandler",
@@ -57,7 +59,24 @@ var Analyse = {
         "use strict";
         return this.fileName;
     },
+
+    /********************************************************************
+     *                    Path to Current Node
+     ********************************************************************/
+
+    pwd: [],
+
+    getPWD: function () {
+        "use strict";
+        return this.pwd;
+    },
     
+    setPWD: function (newPwd) {
+        "use strict";
+        this.pwd = newPwd;
+        Application.presenter.pwdChanged(this.pwd);
+    },
+
     /********************************************************************
      *                    depth 
      ********************************************************************/
@@ -237,7 +256,144 @@ var Analyse = {
         self.currentFlatSearch = null;
         self.getNextFlatView();
     },
-
+    
+    /********************************************************************
+     *                    Find nodes matching a name 
+     ********************************************************************/
+    
+    findNode: function (path) {
+        "use strict";
+        this.nextNodeSearch = {
+            name: path,
+            depth: this.getDepth(),
+            sortBy: "cost"
+        };
+        
+        this.startNextFind();
+    },
+    
+    currentNodeSearch: null,
+    nextNodeSearch: null,
+    
+    /*
+     * Dispatch the query
+     */
+    startNodeFind: function () {
+        "use strict";
+        this.currentNodeSearch = this.nextNodeSearch;
+        this.nextNodeSearch = null;
+        
+        Logging.log_debug_msg(
+            "AnalyseModel.startNodeFind",
+            "Sending Request"
+        );
+        
+        this.startRequest(
+            "FindNodes",
+            this.currentNodeSearch,
+            this.nodeFindHandler,
+            this.nodeFindError
+        );
+    },
+    
+    /*
+     * Handle a query reject, and flush the queue
+     */
+    nodeFindError: function (code, msg) {
+        "use strict";
+        Logging.warning(
+            "AnalyseModel.nodeFindError",
+            "Failed to find nodes: " + msg
+        );
+        
+        Application.presenter.nodeFindFailed(msg);
+        
+        var self;
+        
+        self = Application.model;
+        
+        self.currentNodeSearch = null;
+        self.getNextFlatView();
+    },
+    
+    /*
+     * Handle query data, and flush the results
+     */
+    nodeFindHandler: function (response) {
+        "use strict";
+        var data, self;
+        Logging.log_debug_msg(
+            "AnalyseModel.nodeFindHandler",
+            "Got " + response.nodes.length.toString() + " rows of data"
+        );
+        Application.presenter.setFinderData(response.nodes);
+        
+        self = Application.model;
+        
+        self.currentNodeSearch = null;
+        self.startNextFind();
+    },
+    
+    /*
+     * Manages our queue
+     */
+    startNextFind: function () {
+        "use strict";
+        
+        if (this.nextNodeSearch) {
+            if (this.currentNodeSearch) {
+                Logging.log_debug_msg(
+                    "Analyse_Model.startNextFind",
+                    "Ongoing search, cannot re-schedule"
+                );
+            } else {
+                this.startNodeFind();
+            }
+        } else {
+            Logging.log_debug_msg(
+                "Analyse_Model.startNextFind",
+                "No next search to schedule"
+            );
+        }
+    },
+    
+    /********************************************************************
+     *                    Goto a different Node 
+     ********************************************************************/
+    
+    gotoNode: function (path) {
+        "use strict";
+        var request = {
+            node: path
+        };
+        this.startRequest(
+            "ChangeNode",
+            request,
+            this.changedNode,
+            this.gotoNodeError
+        );
+    },
+    
+    changedNode: function (details) {
+        "use strict";
+        Logging.log_debug_msg(
+            "Analyse_Model.startNextFind",
+            "Successfully changed node, updating the flat view..."
+        );
+        Application.model.setPWD(details.pwd);
+        
+        Application.model.getFlatView();
+    },
+    
+    gotoNodeError: function (code, msg) {
+        "use strict";
+        Logging.warning(
+            "AnalyseModel.gotoNodeError",
+            "Failed to change into the new node: " + msg
+        );
+        
+        Application.presenter.dataLoadFailed("Flat View", msg);
+    },
     /********************************************************************
      *                    Analysis Mode
      *  The analysis mode switches our view on the data. (By default we 
