@@ -5,6 +5,9 @@
  * and apply their resulting changes to the model.
  */
 var Analyse_Presenter = {
+    
+    visualisationMode: null,
+    
     /********************************************************************
      *                         Installation
      ********************************************************************/
@@ -16,6 +19,7 @@ var Analyse_Presenter = {
         Application.view.setDataType(Application.model.getDataType());
         Application.view.setFilename(Application.model.getFileName());
         Application.view.setDepth(Application.model.getDepth());
+        this.switchToTableVisualisation();
     },
     
     /********************************************************************
@@ -115,14 +119,41 @@ var Analyse_Presenter = {
     
     /********************************************************************
      *                         Flat View
+     * Various flat-view visualisations:
+     *    o A simple table view of the data
+     *    o A pie chart of the data
      *******************************************************************/
     
     setFlatViewData: function (rows) {
         "use strict";
-        var i;
+        var i, data, row, shortName;
         Application.view.clearData();
-        for (i = 0; i < rows.length; i += 1) {
-            Application.view.addRow(rows[i]);
+        if (this.visualisationMode === "Simple Table") {
+            for (i = 0; i < rows.length; i += 1) {
+                Application.view.addRow(rows[i]);
+            }
+        } else if (this.visualisationMode === "Pie Chart") {
+            data = [];
+            for (i = 0; i < rows.length; i += 1) {
+                row = rows[i];
+                if (row.name.length > 60) {
+                    shortName = row.name.substr(0, 57) + "...";
+                } else {
+                    shortName = row.name;
+                }
+                data.push(
+                    {
+                        name: row.name,
+                        short_name: shortName,
+                        y: row.total
+                    }
+                );
+            }
+            Application.view.setPieData(data);
+        } else {
+            Application.view.sendErrorNotification(
+                this.visualisationMode + " is not supported yet!"
+            );
         }
     },
     
@@ -136,6 +167,24 @@ var Analyse_Presenter = {
             "Failed to load '" + type + "':<br> &nbsp;&nbsp;&nbsp;&nbsp;   " + reason
         );
         Application.view.clearData();
+    },
+    
+    switchToTableVisualisation: function () {
+        "use strict";
+        this.visualisationMode = "Simple Table";
+        Application.view.setActiveVisualisation(this.visualisationMode);
+        Application.view.hidePieChart();
+        Application.view.showTable();
+        Application.model.renotifyFlatViewData();
+    },
+    
+    switchToPieChartVisualisation: function () {
+        "use strict";
+        this.visualisationMode = "Pie Chart";
+        Application.view.setActiveVisualisation(this.visualisationMode);
+        Application.view.hideTable();
+        Application.view.showPieChart();
+        Application.model.renotifyFlatViewData();
     },
     
     /********************************************************************

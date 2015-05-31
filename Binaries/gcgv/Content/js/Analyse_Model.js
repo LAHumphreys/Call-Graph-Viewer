@@ -149,6 +149,7 @@ var Analyse = {
     
     currentFlatSearch: null,
     nextFlatSearch: null,
+    flatData: null,
     
     /**
      * Entry point for an external party wishing to update the flat view with new data.
@@ -244,17 +245,40 @@ var Analyse = {
      */
     flatViewHandler: function (response) {
         "use strict";
-        var data, self;
+        var self;
+        
+        self = Application.model;
+        
+        self.flatData = response.data;
+        
         Logging.log_debug_msg(
             "AnalyseModel.FlatViewData",
             "Got " + response.data.length.toString() + " rows of data"
         );
-        Application.presenter.setFlatViewData(response.data);
         
-        self = Application.model;
+        Application.presenter.setFlatViewData(response.data);
         
         self.currentFlatSearch = null;
         self.getNextFlatView();
+    },
+    
+    /**
+     * Re-notify the presenter of the current flat-view data. 
+     *
+     * If there is no current flatView data the request is dropped.
+     * 
+     * (This can be used to trigger a re-draw after a visualisation switch) 
+     */
+    renotifyFlatViewData: function () {
+        "use strict";
+        if (this.flatData !== null) {
+            Application.presenter.setFlatViewData(this.flatData);
+        } else {
+            Logging.log_debug_msg(
+                "AnalyseModel.renotifyFlatViewData",
+                "Dropping renotify request: No data to renotify the presenter of!"
+            );
+        }
     },
     
     /********************************************************************

@@ -1,4 +1,4 @@
-/*global $, document, alert, Analyse, Application, console */
+/*global $, document, alert, Analyse, Application, console, Select */
 
 var NavBar = {
     navbarReady: false,
@@ -24,6 +24,7 @@ var NavBar = {
         var self = Application.view;
         
         self.setupAnalysisModeMenu();
+        self.setupVisualisationMenu();
         
         // We're done - Notify the view
         self.navbarReady = true;
@@ -131,11 +132,82 @@ var NavBar = {
     setDataType: function (name) {
         "use strict";
         $("span.data-model-label").text(name.name);
-    }
+    },
     
     /********************************************************************
      *                    Visualisation Mode
      ********************************************************************/
+    getVisualisationSelector: function () {
+        "use strict";
+        return Select.selectExactly(
+            "Visualisation Menu",
+            "ul.visualisation-selctor",
+            1
+        );
+    },
+
+    getVisualisationTitle: function () {
+        "use strict";
+        return Select.selectExactly(
+            "Selected Visualisation",
+            "span.visualisation-mode-label",
+            1
+        );
+    },
+    
+    setActiveVisualisation: function (name) {
+        "use strict";
+        this.getVisualisationTitle().text(name);
+    },
+    
+    getActiveVisualisation: function () {
+        "use strict";
+        return this.getVisualisationTitle().text();
+    },
+    
+    setupVisualisationMenu: function () {
+        "use strict";
+        this.setupSimpleTableVisualisation();
+        this.setupPieChartVisualisation();
+        this.setupUnimplementedVisualisation("Source Code");
+        this.setupUnimplementedVisualisation("Call Graph");
+        this.setupUnimplementedVisualisation("Tree Map");
+    },
+    
+    setupSimpleTableVisualisation: function () {
+        "use strict";
+        var item = null;
+        item = $("<li><a href='#'>Simple Table</href></li>");
+        item.children("a").click(function (e) {
+            Application.presenter.switchToTableVisualisation();
+        });
+        this.getVisualisationSelector().append(item);
+        
+    },
+    
+    setupPieChartVisualisation: function () {
+        "use strict";
+        var item = null;
+        item = $("<li><a href='#'>Pie Chart</href></li>");
+        item.children("a").click(function (e) {
+            Application.presenter.switchToPieChartVisualisation();
+        });
+        this.getVisualisationSelector().append(item);
+        
+    },
+    
+    setupUnimplementedVisualisation: function (name) {
+        "use strict";
+        var item = null;
+        item = $("<li><a href='#'>" + name + "</href></li>");
+        item.children("a").click(function (e) {
+            Application.view.sendErrorNotification(
+                "I'm sorry, the " + name + " visualisation has not been implemented yet!"
+            );
+        });
+        this.getVisualisationSelector().append(item);
+    }
+    
 
     /********************************************************************
      *                         View Switches

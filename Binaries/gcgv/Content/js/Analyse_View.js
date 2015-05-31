@@ -1,4 +1,4 @@
-/*global $, document, NavBar, Application, extend, console, self, Select, Finder */
+/*global $, document, NavBar, Application, extend, console, self, Select, Finder, Highcharts */
 
 var Analyse_View = {
     /*
@@ -35,6 +35,19 @@ var Analyse_View = {
         });
     },
     
+    /*
+     * Used by our individual components to signal they are ready
+     * 
+     * If this is the last component, signal to the application that we 
+     * have completed setup
+     */
+    componentDone: function () {
+        "use strict";
+        
+        if (this.navbarReady && this.finderReady) {
+            Application.viewCreated();
+        }
+    },
     /********************************************************************
      *                         Accessors
      ********************************************************************/
@@ -47,6 +60,16 @@ var Analyse_View = {
     getTableBody: function () {
         "use strict";
         return Select.selectExactly("Flat View Data", "#flatView tbody", 1);
+    },
+    
+    getTableContainer: function () {
+        "use strict";
+        return Select.selectExactly("Table Div", "#flatView", 1);
+    },
+    
+    getPieChartContainer: function () {
+        "use strict";
+        return Select.selectExactly("Pie Chart Div", "#pieChart", 1);
     },
     
     getDepthSlider: function () {
@@ -161,7 +184,7 @@ var Analyse_View = {
     },
     
     /********************************************************************
-     *                         Flat-View Data
+     *                         Flat-View Table Data
      ********************************************************************/
     
     clearData: function () {
@@ -183,17 +206,71 @@ var Analyse_View = {
         });
     },
     
-    /*
-     * Used by our individual components to signal they are ready
-     * 
-     * If this is the last component, signal to the application that we 
-     * have completed setup
-     */
-    componentDone: function () {
+    hideTable: function () {
         "use strict";
-        
-        if (this.navbarReady && this.finderReady) {
-            Application.viewCreated();
-        }
+        this.getTableContainer().hide();
+    },
+    
+    showTable: function () {
+        "use strict";
+        this.getTableContainer().show();
+    },
+    
+    /********************************************************************
+     *                         Flat-View Pie Chart Data
+     ********************************************************************/
+    hidePieChart: function () {
+        "use strict";
+        this.getPieChartContainer().hide();
+    },
+    
+    showPieChart: function () {
+        "use strict";
+        this.getPieChartContainer().show();
+    },
+    
+    setPieData: function (data) {
+        "use strict";
+        var graph = null;
+        this.getPieChartContainer().empty();
+        this.getPieChartContainer().highcharts({
+            chart: {
+                plotBackgroundColor: null,
+                plotBorderWidth: null,
+                plotShadow: false
+            },
+            title: {
+                text: null
+            },
+            tooltip: {
+                pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+            },
+            plotOptions: {
+                pie: {
+                    allowPointSelect: true,
+                    cursor: 'pointer',
+                    dataLabels: {
+                        enabled: true,
+                        format: '<b>{point.short_name}</b>: {point.percentage:.1f} %',
+                        style: {
+                            color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+                        }
+                    },
+                    point: {
+                        events: {
+                            click: function (event) {
+                                Application.presenter.rowSelected(this.name);
+                            }
+                        }
+                    }
+                }
+            },
+            series: [{
+                type: 'pie',
+                name: 'Total Instructions',
+                data: data
+            }]
+        });
     }
+    
 };

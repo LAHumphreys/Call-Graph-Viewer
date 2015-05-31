@@ -52,3 +52,9 @@ table.selectionTable tr.info td {
     text-overflow: clip;
     white-space: normal;
 }
+
+div.pieContainer {
+    align-content: center;
+    width: 100%;
+    margin: 0 auto;
+}
