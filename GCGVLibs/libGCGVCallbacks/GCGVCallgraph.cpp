@@ -14,6 +14,11 @@
 #include <GCGVReqFlatView.h>
 #include <GCGVReqChangeNode.h>
 #include <GCGVReqGetNodes.h>
+#include <GCGVReqGraph.h>
+#include <util_time.h>
+#include <stack.h>
+#include <csv.h>
+#include <stdReader.h>
 
 /****************************************************************************
  *                      Load a new callgrind file
@@ -106,26 +111,40 @@ void GCGV_Callgraph::InstallHandlers(CefBaseJSRequestReplyHandler& ReqReps) {
         new GCGV_ReqGetNodes(this));
 
     ReqReps.InstallHandler("GCGVFindNodes",getNodesHandler);
+
+    std::shared_ptr<GCGVCallgraph_ReqGraph> getGraphHandler (
+        new GCGVCallgraph_ReqGraph(this));
+
+    ReqReps.InstallHandler("GCGVGetGraph",getGraphHandler);
 }
 
 bool GCGV_Callgraph::LoadGraph(const std::string& fname) {
     bool ok = false;
 
-    // TODO: Fix this singleton pattern!
-    NodeConfig::Instance().Reset();
-    graph.reset(new CallgrindNative(fname));
-
-    ok = !graph->RootNode().IsNull() && graph->RootNode()->NumChildren() > 0;
-
-    if (ok) {
-        this->fname = OS::Basename(fname);
-        root = graph->RootNode();
-        cwd = root;
+    size_t len = fname.length();
+    size_t extension = len - 4;
+    if ( len > 4 && fname.substr(extension,len) == ".csv") {
+        ok = store.LoadStack(fname);
     } else {
-        graph.reset(nullptr);
+        ok = store.LoadGraph(fname);
     }
 
+    if (ok)
+    {
+        LoadGraph(fname,store.RootNode());
+    }
+
+
     return ok;
+}
+
+bool GCGV_Callgraph::LoadGraph(const std::string& fname, NodePtr rootNode) {
+
+    this->fname = OS::Basename(fname);
+    root = rootNode;
+    cwd = rootNode;
+
+    return true;
 }
 
 Path GCGV_Callgraph::PWD() const {
@@ -157,4 +176,83 @@ bool GCGV_Callgraph::ChangeNode(const Path& path) {
     }
 
     return changed;
+}
+
+GCGV_Callgraph::GraphStorage::GraphStorage()
+   : root(nullptr),
+     graph(nullptr)
+{
+}
+
+
+bool GCGV_Callgraph::GraphStorage::LoadStack(const std::string& fname) {
+    bool ok = true;
+
+    NodeConfig::Instance().Reset();
+    NodeConfig::Instance().ConfigureCostFactory("us");
+    root = new Node();
+
+    CallStack stack(root);
+
+    struct Direction {
+        struct ParseError { };
+        Direction (const std::string& token) {
+            if (token == "ENTER") {
+                entry = true;
+            } else if (token == "LEAVE") {
+                entry = false;
+            } else {
+                throw ParseError();
+            }
+        }
+        bool entry;
+    };
+    long dummy = 0;
+    typedef CSV<Time,Direction,std::string> DataFile;
+    const size_t TIME = 0;
+    const size_t DIRECTION = 1;
+    const size_t NAME = 2;
+
+    IFStreamReader reader(fname.c_str());
+    try {
+        DataFile calls(DataFile::LoadCSV(reader));
+
+        for (int i = 0; i < calls.Rows(); ++i) {
+            const std::string& name = calls.GetCell<NAME>(i);
+            const Time& eventTime = calls.GetCell<TIME>(i);
+            const bool& newFrame = calls.GetCell<DIRECTION>(i).entry;
+
+            if (newFrame) {
+                stack.AddFrame(name,eventTime);
+            } else {
+                stack.LeaveFrame(name,eventTime,dummy,true);
+            }
+        }
+    } catch (Direction::ParseError& error) {
+        ok = false;
+    }
+
+    return ok;
+}
+
+bool GCGV_Callgraph::GraphStorage::LoadGraph(const std::string& fname) {
+    // TODO: Fix this singleton pattern!
+    bool ok = true;
+    NodeConfig::Instance().Reset();
+
+    graph.reset(new CallgrindNative(fname));
+
+    ok = !graph->RootNode().IsNull() && graph->RootNode()->NumChildren() > 0;
+
+    if (ok) {
+        root = graph->RootNode();
+    } else {
+        graph.reset(nullptr);
+    }
+
+    return ok;
+}
+
+NodePtr GCGV_Callgraph::GraphStorage::RootNode() {
+    return root;
 }

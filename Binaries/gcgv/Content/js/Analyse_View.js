@@ -1,4 +1,4 @@
-/*global $, document, NavBar, Application, extend, console, self, Select, Finder, Highcharts */
+/*global $, document, NavBar, Application, extend, console, self, Select, Finder, Highcharts, Tree, Radial */
 
 var Analyse_View = {
     /*
@@ -70,6 +70,16 @@ var Analyse_View = {
     getPieChartContainer: function () {
         "use strict";
         return Select.selectExactly("Pie Chart Div", "#pieChart", 1);
+    },
+    
+    getCallGraphContainer: function () {
+        "use strict";
+        return Select.selectExactly("Call Graph Div", "#treeChart", 1);
+    },
+    
+    getRadialContainer: function () {
+        "use strict";
+        return Select.selectExactly("Radial Div", "#sunChart", 1);
     },
     
     getDepthSlider: function () {
@@ -271,6 +281,61 @@ var Analyse_View = {
                 data: data
             }]
         });
-    }
+    },
     
+    /********************************************************************
+     *                         Tree-View Graph
+     ********************************************************************/
+    tree: null,
+    treeSelector: "#treeChart div.tree",
+    
+    hideCallGraph: function () {
+        "use strict";
+        this.getCallGraphContainer().hide();
+    },
+    
+    showCallGraph: function () {
+        "use strict";
+        this.getCallGraphContainer().show();
+    },
+    
+    setTreeData: function (graph) {
+        "use strict";
+        if (this.tree) {
+            this.tree.remove();
+            this.tree = null;
+        }
+        this.getCallGraphContainer().append($("<div class='tree'></div>"));
+        this.tree = new Tree(graph, this.treeSelector);
+        this.tree.draw();
+    },
+    
+    /********************************************************************
+     *                         Radial-View Graph
+     ********************************************************************/
+    
+    radial: null,
+    radialSelector: "#sunChart div.radial",
+    
+    hideRadial: function () {
+        "use strict";
+        this.getRadialContainer().hide();
+    },
+    
+    showRadial: function () {
+        "use strict";
+        this.getRadialContainer().show();
+    },
+    
+    setRadialData: function (graph) {
+        "use strict";
+        this.getRadialContainer().hide();
+        if (this.radial) {
+            this.radial.remove();
+            this.radial = null;
+        }
+        this.getRadialContainer().append($("<div class='radial'></div>"));
+        this.radial = new Radial(graph, this.radialSelector);
+        this.getRadialContainer().show();
+    }
 };

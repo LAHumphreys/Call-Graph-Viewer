@@ -16,13 +16,18 @@
 
 int Files(CefTestContext& context);
 int LoadGraph(CefTestContext& context);
+int LoadStack(CefTestContext& context);
 int GetFileName(CefTestContext& context);
+int GetFileNameStack(CefTestContext& context);
 int GetUnits(CefTestContext& context);
+int GetUnitsStack(CefTestContext& context);
 int FlatView(CefTestContext& context);
 int FilteredFlatView(CefTestContext& context);
 int ChangeNode(CefTestContext& context);
 int FindNodes(CefTestContext& context);
 int GetInitialPath(CefTestContext& context);
+int GetInitialPathStack(CefTestContext& context);
+int GetGraph(CefTestContext& context);
 
 int main(int argc, char **argv) {
 
@@ -41,16 +46,32 @@ int main(int argc, char **argv) {
         LoadGraph);
 
     DummyCefApp::Instance().AddTest(
+        "Open a callstack file.",
+        LoadStack);
+
+    DummyCefApp::Instance().AddTest(
         "Get the name of the opened file.",
         GetFileName);
+
+    DummyCefApp::Instance().AddTest(
+        "Get the name of the opened file (stack).",
+        GetFileNameStack);
 
     DummyCefApp::Instance().AddTest(
         "Get the initial path once a file has been opened.",
         GetInitialPath);
 
     DummyCefApp::Instance().AddTest(
+        "Get the initial path once a file has been opened (stack).",
+        GetInitialPathStack);
+
+    DummyCefApp::Instance().AddTest(
         "Get the units used by the file",
         GetUnits);
+
+    DummyCefApp::Instance().AddTest(
+        "Get the units used by the stack file",
+        GetUnitsStack);
 
     DummyCefApp::Instance().AddTest(
         "Flat view",
@@ -67,6 +88,10 @@ int main(int argc, char **argv) {
     DummyCefApp::Instance().AddTest(
         "Find nodes",
         FindNodes);
+
+    DummyCefApp::Instance().AddTest(
+        "Get Call Graph",
+        GetGraph);
 
     DummyCefApp::Instance().RunTestsAndExit(argc, argv);
 
@@ -237,6 +262,77 @@ int LoadGraph(CefTestContext& context) {
 
 }
 
+int LoadStack(CefTestContext& context) {
+
+    context.Log() << "Sending request..." << endl;
+    context.ExecuteCleanJS(R"JSCODE(
+        var result="READY";
+
+        function Success(response) {
+            DEV_TOOLS_Test_Log(">>> Request handled successfully!");
+            result = "OPENED";
+        }
+
+        function Failure(err_code, err_message) {
+            DEV_TOOLS_Test_Log(
+                ">>> Failed to handle query: " + err_message + "(" + err_code + ")");
+            result = "FAIL: " + err_message;
+        }
+
+        DEV_TOOLS_Test_Log("Sending ping request");
+
+
+        result;
+    )JSCODE" , "READY");
+
+    context.ExecuteCleanJS(R"JSCODE(
+        result="RUNNING";
+
+        var request = {
+            file: "../data/basicInput.csv"
+        };
+
+        window.gcgvQuery({
+            request: "REQUEST_GCGVLoadGraph " + JSON.stringify(request),
+            onSuccess: Success,
+            onFailure: Failure });
+
+        result;
+    )JSCODE" , "RUNNING");
+
+    context.WaitForResult([&] () -> bool {
+        context.ExecuteCleanJS(R"JSCODE(
+            result;
+        )JSCODE" , "FAIL: ../data/basicInput.csv is not a valid call-grind file.");
+        return true;
+    },1e6, "Waiting for the framework to reject invalid csv file",5e5);
+
+    context.ExecuteCleanJS(R"JSCODE(
+        result="RUNNING";
+
+        var request = {
+            file: "../data/exampleGraph.csv"
+        };
+
+        window.gcgvQuery({
+            request: "REQUEST_GCGVLoadGraph " + JSON.stringify(request),
+            onSuccess: Success,
+            onFailure: Failure });
+
+        result;
+    )JSCODE" , "RUNNING");
+
+    context.WaitForResult([&] () -> bool {
+        context.ExecuteCleanJS(R"JSCODE(
+            result;
+        )JSCODE" , "OPENED");
+        return true;
+    },1e6, "Waiting for the framework to open our stack");
+
+    return 0;
+
+}
+
 int GetFileName(CefTestContext& context) {
 
     context.Log() << "Sending request..." << endl;
@@ -303,6 +399,79 @@ int GetFileName(CefTestContext& context) {
         context.ExecuteCleanJS(R"JSCODE(
             result;
         )JSCODE" , "flist.callgrind");
+        return true;
+    },1e6, "Waiting for the framework to handle our load request");
+
+    return 0;
+
+}
+
+int GetFileNameStack(CefTestContext& context) {
+
+    context.Log() << "Sending request..." << endl;
+    context.ExecuteCleanJS(R"JSCODE(
+        var result="READY";
+
+        function Success(response) {
+            DEV_TOOLS_Test_Log(">>> Request handled successfully!");
+            result = "OPENED";
+        }
+
+        function Failure(err_code, err_message) {
+            DEV_TOOLS_Test_Log(
+                ">>> Failed to handle query: " + err_message + "(" + err_code + ")");
+            result = "FAIL: " + err_message;
+        }
+
+        DEV_TOOLS_Test_Log("Sending ping request");
+
+
+        result;
+    )JSCODE" , "READY");
+
+    context.ExecuteCleanJS(R"JSCODE(
+        result="RUNNING";
+
+        var request = {
+            file: "../data/exampleGraph.csv"
+        };
+
+        window.gcgvQuery({
+            request: "REQUEST_GCGVLoadGraph " + JSON.stringify(request),
+            onSuccess: Success,
+            onFailure: Failure });
+
+        result;
+    )JSCODE" , "RUNNING");
+
+    context.WaitForResult([&] () -> bool {
+        context.ExecuteCleanJS(R"JSCODE(
+            result;
+        )JSCODE" , "OPENED");
+        return true;
+    },1e6, "Waiting for the framework to handle our load request");
+
+    context.ExecuteCleanJS(R"JSCODE(
+        result="RUNNING";
+
+        var request = {};
+
+
+        window.gcgvQuery({
+            request: "REQUEST_GCGVGetGraphDetails " + JSON.stringify(request),
+            onSuccess: function (resp) {
+                var response = JSON.parse(resp);
+                result = response.fileName;
+            },
+            onFailure: Failure });
+
+        result;
+    )JSCODE" , "RUNNING");
+
+    context.WaitForResult([&] () -> bool {
+        context.ExecuteCleanJS(R"JSCODE(
+            result;
+        )JSCODE" , "exampleGraph.csv");
         return true;
     },1e6, "Waiting for the framework to handle our load request");
 
@@ -377,7 +546,75 @@ int GetInitialPath(CefTestContext& context) {
     },1e6, "Waiting for the framework to handle our load request");
 
     return 0;
+}
 
+int GetInitialPathStack(CefTestContext& context) {
+
+    context.Log() << "Sending request..." << endl;
+    context.ExecuteCleanJS(R"JSCODE(
+        var result="READY";
+
+        function Success(response) {
+            DEV_TOOLS_Test_Log(">>> Request handled successfully!");
+            result = "OPENED";
+        }
+
+        function Failure(err_code, err_message) {
+            DEV_TOOLS_Test_Log(
+                ">>> Failed to handle query: " + err_message + "(" + err_code + ")");
+            result = "FAIL: " + err_message;
+        }
+
+        result;
+    )JSCODE" , "READY");
+
+    context.ExecuteCleanJS(R"JSCODE(
+        result="RUNNING";
+
+        var request = {
+            file: "../data/exampleGraph.csv"
+        };
+
+        window.gcgvQuery({
+            request: "REQUEST_GCGVLoadGraph " + JSON.stringify(request),
+            onSuccess: Success,
+            onFailure: Failure });
+
+        result;
+    )JSCODE" , "RUNNING");
+
+    context.WaitForResult([&] () -> bool {
+        context.ExecuteCleanJS(R"JSCODE(
+            result;
+        )JSCODE" , "OPENED");
+        return true;
+    },1e6, "Waiting for the framework to handle our load request");
+
+    context.ExecuteCleanJS(R"JSCODE(
+        result="RUNNING";
+
+        var request = {};
+
+
+        window.gcgvQuery({
+            request: "REQUEST_GCGVGetGraphDetails " + JSON.stringify(request),
+            onSuccess: function (resp) {
+                var response = JSON.parse(resp);
+                result = response.path.toString();
+            },
+            onFailure: Failure });
+
+        result;
+    )JSCODE" , "RUNNING");
+
+    context.WaitForResult([&] () -> bool {
+        context.ExecuteCleanJS(R"JSCODE(
+            result;
+        )JSCODE" , "ROOT");
+        return true;
+    },1e6, "Waiting for the framework to handle our details request");
+
+    return 0;
 }
 
 int GetUnits(CefTestContext& context) {
@@ -453,10 +690,170 @@ int GetUnits(CefTestContext& context) {
     },1e6, "Waiting for the framework to handle our details request");
 
     return 0;
+}
 
+int GetUnitsStack(CefTestContext& context) {
+
+    context.Log() << "Sending request..." << endl;
+    context.ExecuteCleanJS(R"JSCODE(
+        var result="READY";
+
+        function Success(response) {
+            DEV_TOOLS_Test_Log(">>> Request handled successfully!");
+            result = "OPENED";
+        }
+
+        function Failure(err_code, err_message) {
+            DEV_TOOLS_Test_Log(
+                ">>> Failed to handle query: " + err_message + "(" + err_code + ")");
+            result = "FAIL: " + err_message;
+        }
+
+        DEV_TOOLS_Test_Log("Sending ping request");
+
+
+        result;
+    )JSCODE" , "READY");
+
+    context.ExecuteCleanJS(R"JSCODE(
+        result="RUNNING";
+
+        var request = {
+            file: "../data/exampleGraph.csv"
+        };
+
+        window.gcgvQuery({
+            request: "REQUEST_GCGVLoadGraph " + JSON.stringify(request),
+            onSuccess: Success,
+            onFailure: Failure });
+
+        result;
+    )JSCODE" , "RUNNING");
+
+    context.WaitForResult([&] () -> bool {
+        context.ExecuteCleanJS(R"JSCODE(
+            result;
+        )JSCODE" , "OPENED");
+        return true;
+    },1e6, "Waiting for the framework to handle our load request");
+
+    context.ExecuteCleanJS(R"JSCODE(
+        result="RUNNING";
+
+        var request = {};
+
+
+        window.gcgvQuery({
+            request: "REQUEST_GCGVGetGraphDetails " + JSON.stringify(request),
+            onSuccess: function (resp) {
+                var i, response = JSON.parse(resp);
+                result = "";
+                for ( i = 0; i < response.units.length; i += 1) {
+                    result += response.units[i];
+                }
+            },
+            onFailure: Failure });
+
+        result;
+    )JSCODE" , "RUNNING");
+
+    context.WaitForResult([&] () -> bool {
+        context.ExecuteCleanJS(R"JSCODE(
+            result;
+        )JSCODE" , "us");
+        return true;
+    },1e6, "Waiting for the framework to handle our details request");
+
+    return 0;
 }
 
 int FlatView(CefTestContext& context) {
+    std::string result = "div: 5,87,17\n";
+    result += "odds: 1,75,75\n";
+    result += "evens: 1,65,65\n";
+
+    context.ExecuteCleanJS(R"JSCODE(
+        var result="RUNNING";
+
+        function Success(response) {
+            DEV_TOOLS_Test_Log(">>> Request handled successfully!");
+            result = "OPENED";
+        }
+
+        function Failure(err_code, err_message) {
+            DEV_TOOLS_Test_Log(
+                ">>> Failed to handle query: " + err_message + "(" + err_code + ")");
+            result = "FAIL: " + err_message;
+        }
+
+        var request = {
+            file: "../data/native/flist_costs.callgrind"
+        };
+
+        window.gcgvQuery({
+            request: "REQUEST_GCGVLoadGraph " + JSON.stringify(request),
+            onSuccess: Success,
+            onFailure: Failure });
+
+        result;
+    )JSCODE" , "RUNNING");
+
+    context.WaitForResult([&] () -> bool {
+        context.ExecuteCleanJS(R"JSCODE(
+            result;
+        )JSCODE" , "OPENED");
+        return true;
+    },1e6, "Waiting for the framework to handle our load request");
+
+    context.ExecuteCleanJS(R"JSCODE(
+        result="RUNNING";
+
+        function Success(response) { 
+            DEV_TOOLS_Test_Log( "Got response: " + response);
+
+            result = "";
+            var data, i;
+            data = JSON.parse(response);
+
+
+            for (i = 0; i < data.data.length; i += 1) {
+                result += data.data[i].name + ": " 
+                              + data.data[i].calls + "," 
+                              + data.data[i].total + ","
+                              + data.data[i].average + "\n";
+            }
+        }
+
+        function Failure(err_code, err_message) {
+            DEV_TOOLS_Test_Log(
+                ">>> Failed to handle query: " + err_message + "(" + err_code + ")");
+            result = "FAIL: " + err_message;
+        }
+
+        request = {
+            depth: 5,
+            pageSize: 3,
+            sortMethod: "Total Time"
+        };
+
+        window.gcgvQuery({
+            request: "REQUEST_GCGVGetFlatView " + JSON.stringify(request),
+            onSuccess: Success,
+            onFailure: Failure });
+
+        result;
+    )JSCODE" , "RUNNING");
+
+    context.WaitForResult([&] () -> bool {
+        context.ExecuteCleanJS(R"JSCODE(
+            result;
+        )JSCODE" , result);
+        return true;
+    },1e6, "Waiting for call-graph data...");
+    return 0;
+}
+
+int FlatViewStack(CefTestContext& context) {
     std::string result = "div: 5,87,17\n";
     result += "odds: 1,75,75\n";
     result += "evens: 1,65,65\n";
@@ -963,3 +1360,113 @@ int FindNodes(CefTestContext& context) {
 
     return 0;
 }
+
+int GetGraph(CefTestContext& context) {
+    context.ExecuteCleanJS(R"JSCODE(
+        var result="RUNNING";
+
+        function Success(response) {
+            DEV_TOOLS_Test_Log(">>> Request handled successfully!");
+            result = "OPENED";
+        }
+
+        function Failure(err_code, err_message) {
+            DEV_TOOLS_Test_Log(
+                ">>> Failed to handle query: " + err_message + "(" + err_code + ")");
+            result = "FAIL: " + err_message;
+        }
+
+        var request = {
+            file: "../data/native/flist_costs.callgrind"
+        };
+
+        window.gcgvQuery({
+            request: "REQUEST_GCGVLoadGraph " + JSON.stringify(request),
+            onSuccess: Success,
+            onFailure: Failure });
+
+        result;
+    )JSCODE" , "RUNNING");
+
+    context.WaitForResult([&] () -> bool {
+        context.ExecuteCleanJS(R"JSCODE(
+            result;
+        )JSCODE" , "OPENED");
+        return true;
+    },1e6, "Waiting for the framework to handle our load request");
+
+    context.ExecuteCleanJS(R"JSCODE(
+        var result="RUNNING", nodes = [];
+
+        function Success(response) {
+            var data;
+            DEV_TOOLS_Test_Log(">>> Request handled successfully: " + response);
+            result = response;
+        }
+
+        function Failure(err_code, err_message) {
+            DEV_TOOLS_Test_Log(
+                ">>> Failed to handle query: " + err_message + "(" + err_code + ")");
+            result = "FAIL: " + err_message;
+        }
+
+        var request = {
+            depth: 1
+        };
+
+        window.gcgvQuery({
+            request: "REQUEST_GCGVGetGraph " + JSON.stringify(request),
+            onSuccess: Success,
+            onFailure: Failure });
+        result;
+    )JSCODE" , "RUNNING");
+
+    std::string ROOT_1 = R"JSON({"name":"ROOT","shortName":"ROOT","cost":0,"children":[{"name":"main","shortName":"main","cost":54}]})JSON";
+
+    context.WaitForResult([&] () -> bool {
+        context.ExecuteCleanJS(R"JSCODE(
+            result;
+        )JSCODE" , ROOT_1);
+        return true;
+    },1e6, "Waiting for the framework to handle our find request");
+
+    context.ExecuteCleanJS(R"JSCODE(
+        var result="RUNNING";
+        var request = {
+            depth: 2
+        };
+
+        window.gcgvQuery({
+            request: "REQUEST_GCGVGetGraph " + JSON.stringify(request),
+            onSuccess: Success,
+            onFailure: Failure });
+        result;
+    )JSCODE" , "RUNNING");
+
+    std::string ROOT_2 = R"JSON({"name":"ROOT","shortName":"ROOT","cost":0,"children":[{"name":"main","shortName":"main","cost":54,"children":[{"name":"odds","shortName":"odds","cost":75},{"name":"evens","shortName":"evens","cost":65}]}]})JSON";
+
+    context.WaitForResult([&] () -> bool {
+        context.ExecuteCleanJS(R"JSCODE(
+            result;
+        )JSCODE" , ROOT_2);
+        return true;
+    },1e6, "Waiting for the framework to handle our find request");
+    return 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

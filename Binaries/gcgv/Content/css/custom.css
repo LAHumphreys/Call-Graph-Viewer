@@ -58,3 +58,15 @@ div.pieContainer {
     width: 100%;
     margin: 0 auto;
 }
+
+div.sunContainer {
+    align-content: center;
+    width: 100%;
+    margin: 0 auto;
+}
+
+div.graphContainer {
+    align-content: center;
+    width: 100%;
+    margin: 0 auto;
+}

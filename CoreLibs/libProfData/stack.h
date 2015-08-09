@@ -31,7 +31,8 @@ public:
      */
     bool LeaveFrame(const std::string& name, 
                     const Time& leaveTime,
-                    long& usecs);
+                    long& usecs,
+                    bool longUnwind = false);
 
 private:
     NodePtr            activeNode;

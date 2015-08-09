@@ -169,8 +169,9 @@ var NavBar = {
         "use strict";
         this.setupSimpleTableVisualisation();
         this.setupPieChartVisualisation();
+        this.setupRadialVisualisation();
         this.setupUnimplementedVisualisation("Source Code");
-        this.setupUnimplementedVisualisation("Call Graph");
+        this.setupCallGraphVisualisation("Call Graph");
         this.setupUnimplementedVisualisation("Tree Map");
     },
     
@@ -194,6 +195,27 @@ var NavBar = {
         });
         this.getVisualisationSelector().append(item);
         
+    },
+    
+    setupRadialVisualisation: function () {
+        "use strict";
+        var item = null;
+        item = $("<li><a href='#'>Radial Pie Chart</href></li>");
+        item.children("a").click(function (e) {
+            Application.presenter.switchToRadialVisualisation();
+        });
+        this.getVisualisationSelector().append(item);
+        
+    },
+    
+    setupCallGraphVisualisation: function () {
+        "use strict";
+        var item = null;
+        item = $("<li><a href='#'>Call Graph</href></li>");
+        item.children("a").click(function (e) {
+            Application.presenter.switchToCallGraphVisualisation();
+        });
+        this.getVisualisationSelector().append(item);
     },
     
     setupUnimplementedVisualisation: function (name) {

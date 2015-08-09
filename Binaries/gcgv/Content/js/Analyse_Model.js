@@ -44,7 +44,7 @@ var Analyse = {
             "Found " + details.units.length + " units"
         );
         
-        Application.model.getFlatView();
+        Application.model.getDataForView();
         
         Application.modelReady();
     },
@@ -58,6 +58,33 @@ var Analyse = {
     getFileName: function () {
         "use strict";
         return this.fileName;
+    },
+    
+    /********************************************************************
+     *                    Flat or Graph Data?
+     ********************************************************************/
+    
+    dataMode: "flat",
+    
+    setGraphMode: function () {
+        "use strict";
+        this.dataMode = "graph";
+    },
+    
+    setFlatMode: function () {
+        "use strict";
+        this.dataMode = "flat";
+    },
+    
+    getDataForView: function () {
+        "use strict";
+        if (this.dataMode === "graph") {
+            this.getGraphView();
+            this.flatData = null;
+        } else {
+            this.getFlatView();
+            this.graphData = null;
+        }
     },
 
     /********************************************************************
@@ -93,7 +120,7 @@ var Analyse = {
         this.depth = depth;
         Application.presenter.depthChanged(this.depth);
         
-        this.getFlatView();
+        this.getDataForView();
     },
     
     /********************************************************************
@@ -110,7 +137,7 @@ var Analyse = {
         }
         
         if (updateRequired) {
-            this.getFlatView();
+            this.getDataForView();
         }
     },
     
@@ -130,7 +157,7 @@ var Analyse = {
         }
         
         if (updateRequired) {
-            this.getFlatView();
+            this.getDataForView();
         }
     },
     
@@ -271,13 +298,137 @@ var Analyse = {
      */
     renotifyFlatViewData: function () {
         "use strict";
+        this.setFlatMode();
         if (this.flatData !== null) {
             Application.presenter.setFlatViewData(this.flatData);
         } else {
+            Application.model.getFlatView();
+        }
+    },
+    /********************************************************************
+     *                    Request graph data 
+     ********************************************************************/
+    currentGraphSearch: null,
+    nextGraphSearch: null,
+    graphData: null,
+    
+    /**
+     * Entry point for an external party wishing to update the graph view with new data.
+     *
+     * If there is no on-going query we can schedule it immediately. If there is an 
+     * ongoing query, queue the new query (cancelling any currently waiting to be 
+     * dispatched).
+     */
+    getGraphView: function () {
+        "use strict";
+        
+        this.nextGraphSearch = {
+            depth: this.getDepth()
+        };
+        
+        this.getNextGraphView();
+    },
+    
+    /*
+     * Manages our queue
+     */
+    getNextGraphView: function () {
+        "use strict";
+        
+        if (this.nextGraphSearch) {
+            if (this.currentGraphSearch) {
+                Logging.log_debug_msg(
+                    "Analyse_Model.getNextGraphView",
+                    "Ongoing search, cannot re-schedule"
+                );
+            } else {
+                this.startGraphViewSearch();
+            }
+        } else {
             Logging.log_debug_msg(
-                "AnalyseModel.renotifyFlatViewData",
-                "Dropping renotify request: No data to renotify the presenter of!"
+                "Analyse_Model.getNextGraphView",
+                "No next search to schedule"
             );
+        }
+    },
+    
+    /*
+     * Dispatch the query
+     */
+    startGraphViewSearch: function () {
+        "use strict";
+        this.currentGraphSearch = this.nextGraphSearch;
+        this.nextGraphSearch = null;
+        
+        Logging.log_debug_msg(
+            "AnalyseModel.getGraphView",
+            "Sending Request"
+        );
+        
+        this.startRequest(
+            "GetGraph",
+            this.currentGraphSearch,
+            this.graphViewHandler,
+            this.graphViewError
+        );
+    },
+    
+    /*
+     * Handle a query reject, and flush the queue
+     */
+    graphViewError: function (code, msg) {
+        "use strict";
+        Logging.warning(
+            "AnalyseModel.GraphViewFailed",
+            "Failed to get graph view data: " + msg
+        );
+        
+        Application.presenter.dataLoadFailed("Graph View", msg);
+        
+        var self;
+        
+        self = Application.model;
+        
+        self.currentGraphSearch = null;
+        self.getNextGraphView();
+    },
+    
+    /*
+     * Handle query data, and flush the results
+     */
+    graphViewHandler: function (response) {
+        "use strict";
+        var self;
+        
+        self = Application.model;
+        
+        self.graphData = response;
+        
+        Logging.log_debug_msg(
+            "AnalyseModel.GraphViewData",
+            "Got graph"
+        );
+        
+        Application.presenter.setGraphViewData(response);
+        
+        self.currentGraphSearch = null;
+        self.getNextGraphView();
+    },
+    
+    /**
+     * Re-notify the presenter of the current graph-view data. 
+     *
+     * If there is no current graphView data the request is dropped.
+     * 
+     * (This can be used to trigger a re-draw after a visualisation switch) 
+     */
+    renotifyGraphViewData: function () {
+        "use strict";
+        this.setGraphMode();
+        if (this.graphData !== null) {
+            Application.presenter.setGraphViewData(this.graphData);
+        } else {
+            Application.model.getGraphView();
         }
     },
     
@@ -406,7 +557,7 @@ var Analyse = {
         );
         Application.model.setPWD(details.pwd);
         
-        Application.model.getFlatView();
+        Application.model.getDataForView();
     },
     
     gotoNodeError: function (code, msg) {

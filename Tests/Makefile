@@ -5,7 +5,7 @@ LINKED_LIBS= libSource libExec libCallgrindData libProfData \
 			 libTest
 MAKE_DIRS=NodeApp CefApp
 
-BUILD_TIME_TESTS=config source load path callCount stack graph real
+BUILD_TIME_TESTS=stack config source load path callCount graph real
 CPP_TAGS_FILE=profiler-tests-c++.tags
 MODE=CPP
 

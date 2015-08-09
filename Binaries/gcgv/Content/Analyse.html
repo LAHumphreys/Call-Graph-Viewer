@@ -18,6 +18,10 @@
     <!-- Jquery UI CSSc -->
     <link rel="stylesheet" href="css/jquery-ui.css">
       
+    <!-- D3 Graphs -->
+    <link rel="stylesheet" href="css/tree_style.css">
+    <link rel="stylesheet" href="css/radial_style.css">
+      
     <!-- Alertify -->
     <link href="css/alertify.css" rel="stylesheet">
     <link href="css/alertify-bootstrap-3.css" rel="stylesheet">
@@ -61,7 +65,7 @@
                   <h3 class="panel-title">Graph Depth</h3>
                 </div>
                 <div class="panel-body depthController">
-                  <label> Child Functions: </label> 
+                  <label> Child Functions: </label>     
                   <input type="range" name="depth" min="1" max="100" value="20">                 
                   <span> Maximum Depth: <span class="depthLabel" > 0 </span></span>
                 </div>
@@ -113,6 +117,14 @@
     <div id="pieChart" class="pieContainer"> 
         <h3> Instructions </h3>
     </div>
+      
+    <div id="sunChart" class="sunContainer"> 
+        <h3> Instructions </h3>
+    </div>
+      
+    <div id="treeChart" class="treeContainer"> 
+        <h3> Instructions </h3>
+    </div>
 
     <div class="Analyse-Finder-Placeholder">
     </div>
@@ -135,6 +147,15 @@
     ================================================== -->
     <script src="js/highcharts.js"></script>
       
+    <!-- D3 Graphs
+        o D3 Libary
+        o Custom d3 library for rendering call-graphs
+        o Custom d3 library for rendering sun bursts
+    ================================================== -->
+    <script src="external/d3/d3.js"></script>
+    <script src="js/tree.js"></script>
+    <script src="js/radial.js"></script>
+      
           <!-- Custom Javascript 
   ================================================== -->
       <script src="js/Logging.js"></script>
@@ -146,9 +167,5 @@
       <script src="js/Analyse_View.js"></script>
       <script src="js/Analyse_Presenter.js"></script>
       <script src="js/Analysis.js"></script>
-        
-        
-
-      <script src="js/Analyse_Navbar.js"></script>
   </body>
 </html>

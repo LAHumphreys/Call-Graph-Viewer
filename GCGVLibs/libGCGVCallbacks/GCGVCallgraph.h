@@ -24,6 +24,8 @@ public:
 
     bool LoadGraph(const std::string& fname);
 
+    bool LoadGraph(const std::string& fname, NodePtr root);
+
     const std::string& FileName() const { return fname; }
 
     NodePtr CWD() { return cwd; }
@@ -53,7 +55,20 @@ public:
     bool ChangeNode(const Path& path);
 
 private:
-    std::unique_ptr<CallgrindNative> graph;
+    class GraphStorage {
+    public:
+        GraphStorage ();
+
+        bool LoadGraph(const std::string& fname);
+
+        bool LoadStack(const std::string& fname);
+
+        NodePtr RootNode();
+    private:
+        NodePtr                          root;
+        std::unique_ptr<CallgrindNative> graph;
+    };
+    GraphStorage                     store;
     NodePtr                          cwd;
     NodePtr                          root;
     std::string                      fname;

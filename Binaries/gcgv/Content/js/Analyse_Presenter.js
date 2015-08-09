@@ -157,6 +157,18 @@ var Analyse_Presenter = {
         }
     },
     
+    setGraphViewData: function (rows) {
+        "use strict";
+        if (this.visualisationMode === "Call Graph") {
+            Application.view.setTreeData(rows);
+        } else if (this.visualisationMode === "Radial Pie Chart") {
+            Application.view.setRadialData(rows);
+        } else {
+            Application.view.sendErrorNotification(
+                this.visualisationMode + " is not supported yet!"
+            );
+        }
+    },
     
     /*
      * We failed to get the data for this row 
@@ -174,7 +186,9 @@ var Analyse_Presenter = {
         this.visualisationMode = "Simple Table";
         Application.view.setActiveVisualisation(this.visualisationMode);
         Application.view.hidePieChart();
+        Application.view.hideCallGraph();
         Application.view.showTable();
+        Application.view.hideRadial();
         Application.model.renotifyFlatViewData();
     },
     
@@ -183,8 +197,32 @@ var Analyse_Presenter = {
         this.visualisationMode = "Pie Chart";
         Application.view.setActiveVisualisation(this.visualisationMode);
         Application.view.hideTable();
+        Application.view.hideCallGraph();
         Application.view.showPieChart();
+        Application.view.hideRadial();
         Application.model.renotifyFlatViewData();
+    },
+    
+    switchToCallGraphVisualisation: function () {
+        "use strict";
+        this.visualisationMode = "Call Graph";
+        Application.view.setActiveVisualisation(this.visualisationMode);
+        Application.view.hideTable();
+        Application.view.showCallGraph();
+        Application.view.hidePieChart();
+        Application.view.hideRadial();
+        Application.model.renotifyGraphViewData();
+    },
+    
+    switchToRadialVisualisation: function () {
+        "use strict";
+        this.visualisationMode = "Radial Pie Chart";
+        Application.view.setActiveVisualisation(this.visualisationMode);
+        Application.view.hideTable();
+        Application.view.hideCallGraph();
+        Application.view.hidePieChart();
+        Application.view.showRadial();
+        Application.model.renotifyGraphViewData();
     },
     
     /********************************************************************
