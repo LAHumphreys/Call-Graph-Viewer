@@ -49,8 +49,8 @@ bool CallStack::LeaveFrame(const std::string& name,
                 do
                 {
                     pframe = &stack.back();
-                    success &= LeaveFrame(pframe->name,leaveTime,usecs,false);
                     found = (pframe->name == name);
+                    success &= LeaveFrame(pframe->name,leaveTime,usecs,false);
                 } while (stack.size() > 0 && !found);
 
                 if (!found) {
