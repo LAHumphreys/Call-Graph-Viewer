@@ -290,7 +290,7 @@ std::string Node::PrintInfo(unsigned int indent,
 }
 
 void Node::SortByTime(vector<PAIR>& sortedNodes) {
-    sortedNodes.empty();
+    sortedNodes.clear();
     sortedNodes.resize(children.size());
 
     partial_sort_copy(
