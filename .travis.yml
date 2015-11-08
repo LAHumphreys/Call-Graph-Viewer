@@ -10,10 +10,8 @@ addons:
       - gfortran-4.9 
       - exuberant-ctags
       - libboost1.55-all-dev
-      - libplplot-dev
-      - libboost-filesystem-dev
       - valgrind
-      - ncurses-dev
+      - libncurses5-dev
 
 
 before_install:
