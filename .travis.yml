@@ -8,9 +8,7 @@ addons:
       - g++-4.9
       - gfortran-4.9 
       - exuberant-ctags
-      - libboost-dev
-      - libboost-dev
-      - libboost-regex-dev
+      - libboost-all-dev
       - libplplot-dev
       - libboost-filesystem-dev
       - valgrind
