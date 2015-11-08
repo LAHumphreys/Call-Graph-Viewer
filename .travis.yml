@@ -4,6 +4,7 @@ addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
+      - boost-latest
     packages:
       - g++-4.9
       - gfortran-4.9 
