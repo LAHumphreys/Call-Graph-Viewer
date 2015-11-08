@@ -3,7 +3,7 @@ LINKED_LIBS= libSource libExec libCallgrindData libProfData \
 			 libString \
 			 libIOInterface \
 			 libTest
-MAKE_DIRS=NodeApp CefApp
+MAKE_DIRS=gcgvApp
 
 BUILD_TIME_TESTS=stack config source load path callCount graph real
 CPP_TAGS_FILE=profiler-tests-c++.tags

@@ -11,13 +11,13 @@
 GCGVReqFlatView::~GCGVReqFlatView() {
 }
 
-std::string GCGVReqFlatView::OnRequest(RequestContext& context) {
-    SetupRequest(context);
+std::string GCGVReqFlatView::OnRequest(const char* JSON) {
+    SetupRequest(JSON);
     CallCount counter;
 
     CalculateCount(counter);
 
-    builder.Add("Page",1);
+    builder.Add("page",1);
     builder.StartArray("data");
 
     for (const CallCount::call_pair& pair: callList) {
@@ -40,22 +40,20 @@ std::string GCGVReqFlatView::OnRequest(RequestContext& context) {
     return builder.GetAndClear();
 }
 
-void GCGVReqFlatView::SetupRequest(RequestContext& context) {
+void GCGVReqFlatView::SetupRequest(const char* JSON) {
     builder.Clear();
     request.Clear();
     callList.clear();
     static std::string error;
-    if (!request.Parse(context.request.c_str(), error)) {
-        throw CefBaseInvalidRequestException { 0, error };
+    if (!request.Parse(JSON, error)) {
+        throw InvalidRequestException { 0, error };
     }
     if (request.Get<sortMethod>() != "Total Time") {
-        throw CefBaseInvalidRequestException { 0, "Unknown sort method: "
-                                                  + request.Get<sortMethod>() };
+        throw InvalidRequestException { 0, "Unknown sort method: "
+                                           + request.Get<sortMethod>() };
     }
     if (parent->CWD().IsNull()) {
-        throw CefBaseInvalidRequestException {
-            0,
-            "No callgraph has been loaded!" };
+        throw InvalidRequestException { 0, "No callgraph has been loaded!" };
     }
 }
 
@@ -78,7 +76,7 @@ void GCGVReqFlatView::CalculateCount(CallCount counter) {
     } catch ( RegError& e ) {
         std::string error = "Invalid regular expression: \n";
         error += e.what();
-        throw CefBaseInvalidRequestException{0,error};
+        throw InvalidRequestException{0,error};
     }
 }
 

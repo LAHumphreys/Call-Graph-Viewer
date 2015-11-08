@@ -9,11 +9,10 @@
 #include <nodeSearchCache.h>
 
 GCGV_ReqGetNodes::~GCGV_ReqGetNodes() {
-    // TODO Auto-generated destructor stub
 }
 
-std::string GCGV_ReqGetNodes::OnRequest(RequestContext& context) {
-    SetupRequest(context);
+std::string GCGV_ReqGetNodes::OnRequest(const char* JSON) {
+    SetupRequest(JSON);
 
     FindNodes();
 
@@ -22,15 +21,15 @@ std::string GCGV_ReqGetNodes::OnRequest(RequestContext& context) {
     return reply.GetAndClear();
 }
 
-void GCGV_ReqGetNodes::SetupRequest(RequestContext& context) {
+void GCGV_ReqGetNodes::SetupRequest(const char* JSON) {
     std::string error;
     request.Clear();
     reply.Clear();
     sortedNodes.clear();
     sort = COST;
 
-    if (!request.Parse(context.request.c_str(), error)) {
-        throw CefBaseInvalidRequestException { 0, error };
+    if (!request.Parse(JSON, error)) {
+        throw InvalidRequestException { 0, error };
     }
     if (request.Get<sortBy>() == "cost") {
         sort = COST;
@@ -38,7 +37,7 @@ void GCGV_ReqGetNodes::SetupRequest(RequestContext& context) {
         sort = AV_COST;
     } else {
         error = "Invalid sort type: " + request.Get<sortBy>();
-        throw CefBaseInvalidRequestException { 0, error };
+        throw InvalidRequestException { 0, error };
     }
 }
 
@@ -108,7 +107,7 @@ void GCGV_ReqGetNodes::SortedNodes::AddNode(NodePtr node, SORT_BY sort) {
             idx = node->Costs()[0] / node->Calls();
             break;
         default:
-            throw CefBaseInvalidRequestException { 0, "Invalid Sort Type" };
+            throw InvalidRequestException { 0, "Invalid Sort Type" };
     }
 
     insert(SortedNodes::value_type(idx, node));

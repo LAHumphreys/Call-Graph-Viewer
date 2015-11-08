@@ -13,6 +13,7 @@ var Analyse = {
      */
     initialise: function () {
         "use strict";
+        this.initialiseRequestManager();
         this.initialiseAnalysisMode();
         
         this.startRequest(

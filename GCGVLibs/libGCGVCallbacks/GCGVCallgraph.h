@@ -14,11 +14,13 @@
 
 class CefBaseJSRequestReplyHandler;
 
+class RequestServer;
+
 class GCGV_Callgraph {
 public:
     GCGV_Callgraph();
 
-    void InstallHandlers(CefBaseJSRequestReplyHandler& ReqReps);
+    void InstallHandlers(RequestServer& ReqReps);
 
     virtual ~GCGV_Callgraph();
 

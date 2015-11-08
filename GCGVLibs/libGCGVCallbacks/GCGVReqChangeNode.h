@@ -8,9 +8,9 @@
 #ifndef GCGVREQCHANGENODE_H_
 #define GCGVREQCHANGENODE_H_
 
-#include "GCGV_Callbacks.h"
+#include "GCGVCallgraph.h"
 #include <SimpleJSON.h>
-#include <CefBaseRequestReplies.h>
+#include <ReqServer.h>
 
 /****************************************************************************
  *                   Return a calculated flat view
@@ -28,12 +28,12 @@
  *        pwd: ["ROOT","previous","path","path","to","nagivate","to"]
  *    }
  */
-class GCGV_ReqChangeNode: public CefBaseJSRequestReply {
+class GCGV_ReqChangeNode: public RequestReplyHandler {
 public:
     GCGV_ReqChangeNode(GCGV_Callgraph* ptr)
         : parent(ptr) { }
 
-    virtual std::string OnRequest(RequestContext& context);
+    virtual std::string OnRequest(const char* JSON);
 
     virtual ~GCGV_ReqChangeNode();
 private:

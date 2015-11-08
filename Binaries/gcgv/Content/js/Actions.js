@@ -2,13 +2,18 @@
 var Application;
 
 var ModelPrototype = {
+    _serverConnection: null,
     /*
      * The document is ready, start the model
      */
     initialise: function () {
         "use strict";
-        // Default setup method - do nothing;
         Application.modelReady();
+    },
+
+    initialiseRequestManager: function () {
+        "use strict";
+        this._serverConnection = wsrequest_NewRequestManager("ws://127.0.0.1:9003");
     },
     
     /*
@@ -16,21 +21,17 @@ var ModelPrototype = {
      */
     startRequest: function (name, request, onSuccess, onFailure) {
         "use strict";
-        var reqString = "REQUEST_GCGV" + name + " " + JSON.stringify(request);
-        window.gcgvQuery({
-            request: reqString,
-            onSuccess:  function (response) {
-                var resp = JSON.parse(response);
-                onSuccess(resp);
-            },
-            onFailure: onFailure
+        this._serverConnection.newRequest(name,request, {
+            onResponse: onSuccess,
+            onError: onFailure
         });
         
         if (Logging.debugLogging) {
+            // TODO: Move to request module.
             Logging.log_debug_msg(
                 "Model.startRequest",
                 "Started request: " + name + "\n" +
-                    "Request Data:\n" + reqString
+                    "Request Data:\n" + JSON.stringify(request)
             );
         }
     }

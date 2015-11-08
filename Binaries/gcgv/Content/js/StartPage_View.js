@@ -63,8 +63,6 @@ var Start_View = {
     initialiseFileInput: function () {
         "use strict";
         var self = this;
-        Application.presenter.fileListPatternChanged("");
-        
         this.getFileInput().keypress(function (e) {
             self.fileInputKeyPressHandler(e);
         });
@@ -73,7 +71,7 @@ var Start_View = {
             Application.presenter.fileListPatternChanged(this.value);
         });
         
-        this.setFileInputSuggestions(["Hello", "World"]);
+        this.setFileInputSuggestions([]);
     },
     
     setFileInputSuggestions: function (suggestions) {

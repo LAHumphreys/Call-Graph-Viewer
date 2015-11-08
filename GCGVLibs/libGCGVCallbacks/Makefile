@@ -1,7 +1,8 @@
 SOURCES=$(shell echo *.cpp)
 EXPORT_INCLUDES=$(shell echo *.h)
 
-LINKED_LIBS= libGCGVJS libGTK libCEF libExec libCallgrindData libProfData libExec libSource\
+LINKED_LIBS= libGCGVJS libExec libCallgrindData libProfData libExec libSource\
+			 libWebSockets \
              libCommands \
              libJSON \
 			 libMeta  \
@@ -13,9 +14,7 @@ LINKED_LIBS= libGCGVJS libGTK libCEF libExec libCallgrindData libProfData libExe
 TARGET_LIB=libGCGVCallbacks
 
 MODE=CPP
-CPP_TAGS_FILE=profiler-gprofile-c++.tags
-USE_CEF=YES
-USE_GTK=YES
+TAGS_FILE=profiler-gcgv_callbacks-c++.tags
 USE_JSON=YES
 
 

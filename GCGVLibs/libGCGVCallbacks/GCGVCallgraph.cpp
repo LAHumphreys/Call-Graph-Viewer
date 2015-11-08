@@ -7,7 +7,7 @@
 
 #include "GCGVCallgraph.h"
 #include <SimpleJSON.h>
-#include <CefBaseRequestReplies.h>
+#include "ReqServer.h"
 #include <nodeConfig.h>
 #include <OSTools.h>
 #include "GCGVReqGraphDetails.h"
@@ -15,6 +15,7 @@
 #include <GCGVReqChangeNode.h>
 #include <GCGVReqGetNodes.h>
 #include <GCGVReqGraph.h>
+#include <ReqFileList.h>
 #include <util_time.h>
 #include <stack.h>
 #include <csv.h>
@@ -36,25 +37,25 @@
  *    {
  *    }
  */
-class GCGVCallgraph_LoadNewFile: public CefBaseJSRequestReply {
+class GCGVCallgraph_LoadNewFile: public RequestReplyHandler {
 public:
     GCGVCallgraph_LoadNewFile(GCGV_Callgraph* ptr)
         : parent(ptr) { }
 
-    virtual std::string OnRequest(RequestContext& context) {
+    virtual std::string OnRequest(const char* JSON) {
         request.Clear();
 
         static std::string error;
 
-        if ( !request.Parse(context.request.c_str(),error)) {
-            throw CefBaseInvalidRequestException{0,error};
+        if ( !request.Parse(JSON,error)) {
+            throw InvalidRequestException{0,error};
         }
 
         if ( !parent->LoadGraph(request.Get<file>()))
         {
             error = request.Get<file>()  + " is not a valid call-grind file.";
 
-            throw CefBaseInvalidRequestException{0,error};
+            throw InvalidRequestException{0,error};
         }
 
         return reply.GetJSONString();
@@ -86,36 +87,41 @@ GCGV_Callgraph::GCGV_Callgraph()
 GCGV_Callgraph::~GCGV_Callgraph() {
 }
 
-void GCGV_Callgraph::InstallHandlers(CefBaseJSRequestReplyHandler& ReqReps) {
-    std::shared_ptr<GCGVCallgraph_LoadNewFile> loadHandler(
+void GCGV_Callgraph::InstallHandlers(RequestServer& server) {
+
+    std::unique_ptr<RequestReplyHandler> fileHandler(new ReqFileList);
+
+    server.AddHandler("FileList", std::move(fileHandler));
+
+    std::unique_ptr<GCGVCallgraph_LoadNewFile> loadHandler(
         new GCGVCallgraph_LoadNewFile(this));
 
-    ReqReps.InstallHandler("GCGVLoadGraph",loadHandler);
+    server.AddHandler("LoadGraph",std::move(loadHandler));
 
-    std::shared_ptr<GCGVCallgraph_GetGraphDetails> detailsHandler(
+    std::unique_ptr<GCGVCallgraph_GetGraphDetails> detailsHandler(
         new GCGVCallgraph_GetGraphDetails(this));
 
-    ReqReps.InstallHandler("GCGVGetGraphDetails",detailsHandler);
+    server.AddHandler("GetGraphDetails",std::move(detailsHandler));
 
-    std::shared_ptr<GCGVReqFlatView> flatHandler(
+    std::unique_ptr<GCGVReqFlatView> flatHandler(
         new GCGVReqFlatView(this));
 
-    ReqReps.InstallHandler("GCGVGetFlatView",flatHandler);
+    server.AddHandler("GetFlatView",std::move(flatHandler));
 
-    std::shared_ptr<GCGV_ReqChangeNode> cdHandler (
+    std::unique_ptr<GCGV_ReqChangeNode> cdHandler (
         new GCGV_ReqChangeNode(this));
 
-    ReqReps.InstallHandler("GCGVChangeNode",cdHandler);
+    server.AddHandler("ChangeNode",std::move(cdHandler));
 
-    std::shared_ptr<GCGV_ReqGetNodes> getNodesHandler (
+    std::unique_ptr<GCGV_ReqGetNodes> getNodesHandler (
         new GCGV_ReqGetNodes(this));
 
-    ReqReps.InstallHandler("GCGVFindNodes",getNodesHandler);
+    server.AddHandler("FindNodes",std::move(getNodesHandler));
 
-    std::shared_ptr<GCGVCallgraph_ReqGraph> getGraphHandler (
+    std::unique_ptr<GCGVCallgraph_ReqGraph> getGraphHandler (
         new GCGVCallgraph_ReqGraph(this));
 
-    ReqReps.InstallHandler("GCGVGetGraph",getGraphHandler);
+    server.AddHandler("GetGraph",std::move(getGraphHandler));
 }
 
 bool GCGV_Callgraph::LoadGraph(const std::string& fname) {

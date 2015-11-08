@@ -8,10 +8,9 @@
 #ifndef GCGVREQGETNODES_H_
 #define GCGVREQGETNODES_H_
 
-#include "GCGV_Callbacks.h"
 #include <SimpleJSON.h>
-#include <CefBaseRequestReplies.h>
-
+#include <ReqServer.h>
+#include "GCGVCallgraph.h"
 
 /****************************************************************************
  *                Return a list of locations for function name
@@ -49,14 +48,14 @@
  *    array will be returned.
  *
  */
-class GCGV_ReqGetNodes: public CefBaseJSRequestReply {
+class GCGV_ReqGetNodes: public RequestReplyHandler {
 public:
     GCGV_ReqGetNodes(GCGV_Callgraph* ptr)
         : parent(ptr) { }
 
     virtual ~GCGV_ReqGetNodes();
 
-    virtual std::string OnRequest(RequestContext& context);
+    virtual std::string OnRequest(const char* JSON);
 
 private:
     NewIntField(depth);
@@ -84,7 +83,7 @@ private:
 
     Request request;
 
-    void SetupRequest(RequestContext& context);
+    void SetupRequest(const char* JSON);
     void FindNodes();
     void BuildReply();
 };

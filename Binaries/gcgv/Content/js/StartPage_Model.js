@@ -15,6 +15,7 @@ var StartPage = {
      */
     initialise: function () {
         "use strict";
+        this.initialiseRequestManager();
         Application.modelReady();
     },
     

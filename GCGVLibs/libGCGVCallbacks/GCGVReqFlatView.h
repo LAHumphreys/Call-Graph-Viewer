@@ -8,10 +8,10 @@
 #ifndef GCGVREQFLATVIEW_H_
 #define GCGVREQFLATVIEW_H_
 
-#include "GCGV_Callbacks.h"
 #include <SimpleJSON.h>
-#include <CefBaseRequestReplies.h>
+#include <ReqServer.h>
 #include "callCount.h"
+#include "GCGVCallgraph.h"
 
 
 /****************************************************************************
@@ -40,7 +40,7 @@
  *        }]
  *    }
  */
-class GCGVReqFlatView: public CefBaseJSRequestReply {
+class GCGVReqFlatView: public RequestReplyHandler {
 public:
     GCGVReqFlatView(GCGV_Callgraph* ptr)
         : parent(ptr) { }
@@ -48,7 +48,7 @@ public:
     /**
      * Handle a request for a new
      */
-    virtual std::string OnRequest(RequestContext& context);
+    virtual std::string OnRequest(const char* JSON);
 
     virtual ~GCGVReqFlatView();
 private:
@@ -64,7 +64,7 @@ private:
 
     CallCount::SortedCallList callList;
 
-    void SetupRequest(RequestContext& context);
+    void SetupRequest(const char* JSON);
     void CalculateCount(CallCount counter);
 };
 

@@ -8,9 +8,9 @@
 #ifndef GCGVCALLGRAPHGETGRAPH_H_
 #define GCGVCALLGRAPHGETGRAPH_H_
 
-#include "GCGV_Callbacks.h"
 #include <SimpleJSON.h>
-#include <CefBaseRequestReplies.h>
+#include <ReqServer.h>
+#include "GCGVCallgraph.h"
 
 /**
  * Request the callgraph from the current node.
@@ -42,14 +42,14 @@
  *   }
  *
  */
-class GCGVCallgraph_ReqGraph: public CefBaseJSRequestReply {
+class GCGVCallgraph_ReqGraph: public RequestReplyHandler {
 public:
     GCGVCallgraph_ReqGraph(GCGV_Callgraph* ptr)
         : parent(ptr) { }
 
     virtual ~GCGVCallgraph_ReqGraph();
 
-    virtual std::string OnRequest(RequestContext& context);
+    virtual std::string OnRequest(const char* JSON);
 
     /**
      * Add the details of the current node to the result JSON.

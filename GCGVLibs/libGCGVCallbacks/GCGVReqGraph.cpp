@@ -7,17 +7,17 @@
 
 #include "GCGVReqGraph.h"
 
-std::string GCGVCallgraph_ReqGraph::OnRequest(RequestContext& context) {
+std::string GCGVCallgraph_ReqGraph::OnRequest(const char* JSON) {
     std::string error;
     request.Clear();
     builder.Clear();
 
-    if ( !request.Parse(context.request.c_str(),error)) {
-        throw CefBaseInvalidRequestException{0,error};
+    if ( !request.Parse(JSON,error)) {
+        throw InvalidRequestException{0,error};
     }
 
     if (parent->CWD().IsNull()) {
-        throw CefBaseInvalidRequestException {
+        throw InvalidRequestException {
             0,
             "No callgraph has been loaded!" };
     }

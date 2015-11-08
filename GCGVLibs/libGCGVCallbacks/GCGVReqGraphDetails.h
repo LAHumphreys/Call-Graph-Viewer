@@ -7,9 +7,9 @@
 #ifndef GCGVREQGRAPHDETAILS_H_
 #define GCGVREQGRAPHDETAILS_H_
 
-#include "GCGV_Callbacks.h"
 #include <SimpleJSON.h>
-#include <CefBaseRequestReplies.h>
+#include <ReqServer.h>
+#include "GCGVCallgraph.h"
 
 
 /****************************************************************************
@@ -29,12 +29,12 @@
  *        path: ["ROOT"]
  *    }
  */
-class GCGVCallgraph_GetGraphDetails: public CefBaseJSRequestReply {
+class GCGVCallgraph_GetGraphDetails: public RequestReplyHandler {
 public:
     GCGVCallgraph_GetGraphDetails(GCGV_Callgraph* ptr)
         : parent(ptr) { }
 
-    virtual std::string OnRequest(RequestContext& context);
+    virtual std::string OnRequest(const char* JSON);
 
     virtual ~GCGVCallgraph_GetGraphDetails() { }
 private:

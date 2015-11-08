@@ -8,7 +8,7 @@
 #include "GCGVReqGraphDetails.h"
 #include <nodeConfig.h>
 
-std::string GCGVCallgraph_GetGraphDetails::OnRequest(RequestContext& context) {
+std::string GCGVCallgraph_GetGraphDetails::OnRequest(const char* JSON) {
     reply.Clear();
 
     reply.Get<fileName>() = parent->FileName();

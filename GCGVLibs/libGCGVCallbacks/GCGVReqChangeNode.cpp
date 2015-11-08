@@ -7,14 +7,14 @@
 
 #include "GCGVReqChangeNode.h"
 
-std::string GCGV_ReqChangeNode::OnRequest(RequestContext& context) {
+std::string GCGV_ReqChangeNode::OnRequest(const char* JSON) {
     std::string error;
     request.Clear();
     reply.Clear();
     bool ok = true;
 
-    if (!request.Parse(context.request.c_str(), error)) {
-        throw CefBaseInvalidRequestException { 0, error };
+    if (!request.Parse(JSON, error)) {
+        throw InvalidRequestException { 0, error };
     }
 
     Path path(request.Get<node>());
@@ -30,7 +30,7 @@ std::string GCGV_ReqChangeNode::OnRequest(RequestContext& context) {
     }
 
     if (!ok) {
-        throw CefBaseInvalidRequestException {
+        throw InvalidRequestException {
             0,
             "No such node: " + request.Get<node>()
         };
@@ -40,6 +40,5 @@ std::string GCGV_ReqChangeNode::OnRequest(RequestContext& context) {
 }
 
 GCGV_ReqChangeNode::~GCGV_ReqChangeNode() {
-    // TODO Auto-generated destructor stub
 }
 
