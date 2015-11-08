@@ -66,8 +66,11 @@ private:
         bool LoadStack(const std::string& fname);
 
         NodePtr RootNode();
+
+        void NewRootNode();
     private:
         NodePtr                          root;
+        std::unique_ptr<Node>            rootStack;
         std::unique_ptr<CallgrindNative> graph;
     };
     GraphStorage                     store;
