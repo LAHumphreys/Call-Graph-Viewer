@@ -23,12 +23,13 @@ install:
 script: 
   - Scripts/initModules.sh
   - g++-4.9 --version
-  - TOOL_CHAIN=TRAVIS make -j 3
+  - TOOL_CHAIN=TRAVIS make cover
+  - TOOL_CHAIN=TRAVIS make 
   - TOOL_CHAIN=TRAVIS make memtest
   - TOOL_CHAIN=TRAVIS make clean
-  - TOOL_CHAIN=TRAVIS make -j 3 cover
+  - TOOL_CHAIN=TRAVIS make cover
   
 after_success:
   - cd exports/objs/
-  - coveralls --gcov gcov-4.9 --verbose 
+  - coveralls --verbose 
 
