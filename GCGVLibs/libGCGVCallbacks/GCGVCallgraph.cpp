@@ -190,15 +190,19 @@ GCGV_Callgraph::GraphStorage::GraphStorage()
 {
 }
 
+void GCGV_Callgraph::GraphStorage::NewRootNode() {
+    rootStack.reset(new Node());
+    root = rootStack.get();
+}
 
 bool GCGV_Callgraph::GraphStorage::LoadStack(const std::string& fname) {
     bool ok = true;
 
     NodeConfig::Instance().Reset();
     NodeConfig::Instance().ConfigureCostFactory("us");
-    root = new Node();
+    NewRootNode();
 
-    CallStack stack(root);
+    CallStack stack(RootNode());
 
     struct Direction {
         struct ParseError { };
