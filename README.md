@@ -1,4 +1,4 @@
-Call-Graph-Viewer [![Build Status](https://travis-ci.org/Grauniad/Call-Graph-Viewer.png)](https://travis-ci.org/Grauniad/Call-Graph-Viewer) 
+Call-Graph-Viewer [![Build Status](https://travis-ci.org/Grauniad/Call-Graph-Viewer.png)](https://travis-ci.org/Grauniad/Call-Graph-Viewer) [![Coverage Status](https://coveralls.io/repos/Grauniad/Call-Graph-Viewer/badge.svg?branch=master&service=github)](https://coveralls.io/github/Grauniad/Call-Graph-Viewer?branch=master)
 ==================
 !["Expample screen shots"](https://raw.githubusercontent.com/Grauniad/Call-Graph-Viewer/master/ExampleScreenshot.png "Example screen shot showing the initial CEF GUI screens")
 
