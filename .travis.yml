@@ -23,7 +23,6 @@ install:
 script: 
   - Scripts/initModules.sh
   - g++-4.9 --version
-  - TOOL_CHAIN=TRAVIS make cover
   - TOOL_CHAIN=TRAVIS make 
   - TOOL_CHAIN=TRAVIS make memtest
   - TOOL_CHAIN=TRAVIS make clean
