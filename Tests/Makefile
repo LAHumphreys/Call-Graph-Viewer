@@ -10,6 +10,7 @@ CPP_TAGS_FILE=profiler-tests-c++.tags
 MODE=CPP
 
 USE_BOOST=YES
+BOOST_MODULES+=regex
 
 NO_INTEL=YES
 

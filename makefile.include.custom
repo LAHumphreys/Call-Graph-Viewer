@@ -2,7 +2,6 @@ GNU_CPP=g++-4.9.3
 USE_THREADS=NO
 USE_LOCAL_GSL=NO
 USE_LOCAL_BOOST=YES
-EXTERNAL_LIBS+=/usr/lib64/libboost_regex.a
 ifndef USE_CPP14
     USE_CPP14=YES
 endif

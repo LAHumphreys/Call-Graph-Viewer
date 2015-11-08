@@ -20,5 +20,6 @@ MODE=CPP
 USE_JSON=YES
 USE_WEB_SOCKET_CPP=YES
 SUPPRESSED_WARNINGS+="unused-function"
+BOOST_MODULES+=regex
 
 include ../../makefile.include
