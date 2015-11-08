@@ -18,7 +18,7 @@ before_install:
   - git submodule update --init --recursive
 
 install:
-  - pip install --user coveralls
+  - pip install --user cpp-coveralls
   
 script: 
   - Scripts/initModules.sh
@@ -30,5 +30,5 @@ script:
   
 after_success:
   - cd exports/objs/
-  - coveralls --verbose 
+  - coveralls --gcov gcov-4.9 --verbose 
 
