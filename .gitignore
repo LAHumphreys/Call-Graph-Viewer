@@ -33,6 +33,7 @@ test.full_log
 profile
 cgv
 gcgv
+!Binaries/gcgv
 callgrind.out.*
 Tests/toy.out
 Tests/toy.data
@@ -55,3 +56,7 @@ devtools_resources.pak
 icudtl.dat
 locales
 
+
+#Tests
+FullLog_*
+OverviewLog_*

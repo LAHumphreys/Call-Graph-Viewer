@@ -1,0 +1,35 @@
+/*
+ * Luke Humphreys 2015
+ * Styling to acompany tree.js, see js file for acompanying copy-right
+ * notices...
+ *
+ * Again this is pretty much as found, but with as much as is reasonable
+ * removed. Note that this is currently still poluting the global styling and
+ * will need to be re-visited soon!
+ */
+rect {
+    fill: none;
+    pointer-events: all;
+}
+
+line {
+    stroke: #000;
+    stroke-width: 1.5px;
+}
+
+.node circle {
+    cursor: pointer;
+    fill: #fff;
+    stroke: steelblue;
+    stroke-width: 1.5px;
+}
+
+.node text {
+    font-size: 12px;
+}
+
+path.link {
+    fill: none;
+    stroke: #ccc;
+    stroke-width: 1.5px;
+}

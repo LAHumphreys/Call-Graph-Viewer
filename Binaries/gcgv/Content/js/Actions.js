@@ -13,7 +13,7 @@ var ModelPrototype = {
 
     initialiseRequestManager: function () {
         "use strict";
-        this._serverConnection = wsrequest_NewRequestManager("ws://127.0.0.1:9003");
+        this._serverConnection = wsrequest_NewRequestManager("ws://127.0.0.1:9002");
     },
     
     /*
