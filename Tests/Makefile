@@ -1,4 +1,5 @@
 LINKED_LIBS= libSource libExec libCallgrindData libProfData \
+			 libThreadComms \
              libUtils  \
 			 libString \
 			 libIOInterface \

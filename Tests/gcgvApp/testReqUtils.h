@@ -34,7 +34,8 @@ namespace {
         Result res { true, "" };
 
         log << ">> " << msg << endl;
-        res.message = server.HandleMessage(msg);
+        std::shared_ptr<void> dummy(nullptr);
+        res.message = server.HandleMessage(msg, nullptr, dummy);
         log << "<< " << res.message << endl;
         if(res.message.substr(0,6) == "ERROR ") {
             res.error = true;

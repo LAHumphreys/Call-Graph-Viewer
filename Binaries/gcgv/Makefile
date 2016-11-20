@@ -1,6 +1,7 @@
 SOURCES=$(shell echo *.cpp)
 
 LINKED_LIBS= libGCGVCallbacks libWebSockets libExec libCallgrindData libProfData libExec libSource\
+			 libThreadComms \
              libJSON \
              libCommands \
 			 libMeta  \

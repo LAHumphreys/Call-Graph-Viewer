@@ -1,5 +1,6 @@
 LINKED_LIBS= libSource libExec \
 			 libGCGVCallbacks \
+			 libThreadComms \
 			 libWebSockets \
 			 libJSON \
 			 libCommands \

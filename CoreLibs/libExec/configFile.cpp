@@ -1,7 +1,7 @@
 #include "configFile.h"
 #include "logger.h"
 #include <boost/algorithm/string/trim.hpp>
-#include <regex.h>
+#include <regex_utils.h>
 
 using namespace std;
 

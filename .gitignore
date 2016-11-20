@@ -33,6 +33,8 @@ test.full_log
 profile
 cgv
 gcgv
+jsonGen
+publisherSpeed
 !Binaries/gcgv
 callgrind.out.*
 Tests/toy.out
