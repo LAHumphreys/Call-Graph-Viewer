@@ -1,6 +1,6 @@
 [submodule "DEV_TOOLS"]
 	path = DEV_TOOLS
-	url = https://github.com/Grauniad/dev_tools.git
+	url = https://github.com/Grauniad/dev_tools_legacy.git
 [submodule "TCL-CPP-Plugin-API"]
 	path = TCL-CPP-Plugin-API
 	url = https://github.com/Grauniad/TCL-CPP-Plugin-API.git
